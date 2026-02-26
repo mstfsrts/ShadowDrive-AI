@@ -1,0 +1,127 @@
+{
+    "id": "derde_ronde",
+    "title": "Delftse Methode – Derde Ronde",
+    "description": "İleri seviye. Karmaşık konuşmalar ve deyimler.",
+    "emoji": "📕",
+    "color": "rose",
+    "lessons": [
+        {
+            "id": "derde_ronde_les_1",
+            "title": "Les 1 — Sollicitatiegesprek",
+            "scenario": {
+                "title": "Derde Ronde – Les 1: Sollicitatiegesprek",
+                "targetLang": "nl-NL",
+                "nativeLang": "tr-TR",
+                "lines": [
+                    {
+                        "id": 1,
+                        "targetText": "Welkom, gaat u zitten alstublieft.",
+                        "nativeText": "Hoş geldiniz, lütfen oturun.",
+                        "pauseMultiplier": 1.5
+                    },
+                    {
+                        "id": 2,
+                        "targetText": "Kunt u iets over uzelf vertellen?",
+                        "nativeText": "Kendinizden biraz bahseder misiniz?",
+                        "pauseMultiplier": 1.6
+                    },
+                    {
+                        "id": 3,
+                        "targetText": "Ik ben UX designer met vijf jaar ervaring.",
+                        "nativeText": "Beş yıllık deneyimli bir UX tasarımcıyım.",
+                        "pauseMultiplier": 1.7
+                    },
+                    {
+                        "id": 4,
+                        "targetText": "Waarom wilt u bij ons werken?",
+                        "nativeText": "Neden bizimle çalışmak istiyorsunuz?",
+                        "pauseMultiplier": 1.5
+                    },
+                    {
+                        "id": 5,
+                        "targetText": "Uw bedrijf loopt voorop in innovatie.",
+                        "nativeText": "Şirketiniz inovasyonda öncü.",
+                        "pauseMultiplier": 1.5
+                    },
+                    {
+                        "id": 6,
+                        "targetText": "Wat zijn uw sterke punten?",
+                        "nativeText": "Güçlü yönleriniz neler?",
+                        "pauseMultiplier": 1.4
+                    },
+                    {
+                        "id": 7,
+                        "targetText": "Ik ben een echte teamspeler.",
+                        "nativeText": "Gerçek bir takım oyuncusuyum.",
+                        "pauseMultiplier": 1.4
+                    },
+                    {
+                        "id": 8,
+                        "targetText": "We nemen binnenkort contact met u op.",
+                        "nativeText": "Yakında sizinle iletişime geçeceğiz.",
+                        "pauseMultiplier": 1.7
+                    }
+                ]
+            }
+        },
+        {
+            "id": "derde_ronde_les_2",
+            "title": "Les 2 — Maatschappelijke discussie",
+            "scenario": {
+                "title": "Derde Ronde – Les 2: Maatschappelijke discussie",
+                "targetLang": "nl-NL",
+                "nativeLang": "tr-TR",
+                "lines": [
+                    {
+                        "id": 1,
+                        "targetText": "Heb je het nieuws gezien over de woningmarkt?",
+                        "nativeText": "Konut piyasası hakkındaki haberleri gördün mü?",
+                        "pauseMultiplier": 1.7
+                    },
+                    {
+                        "id": 2,
+                        "targetText": "Ja, de huurprijzen zijn belachelijk hoog.",
+                        "nativeText": "Evet, kira fiyatları inanılmaz yüksek.",
+                        "pauseMultiplier": 1.6
+                    },
+                    {
+                        "id": 3,
+                        "targetText": "De overheid moet ingrijpen, vind je niet?",
+                        "nativeText": "Hükümet müdahale etmeli, sence de öyle değil mi?",
+                        "pauseMultiplier": 1.7
+                    },
+                    {
+                        "id": 4,
+                        "targetText": "Daar ben ik het helemaal mee eens.",
+                        "nativeText": "Tamamen katılıyorum.",
+                        "pauseMultiplier": 1.4
+                    },
+                    {
+                        "id": 5,
+                        "targetText": "Het is ook een kwestie van vraag en aanbod.",
+                        "nativeText": "Aynı zamanda arz ve talep meselesi.",
+                        "pauseMultiplier": 1.7
+                    },
+                    {
+                        "id": 6,
+                        "targetText": "Dat klopt, maar er speelt meer mee.",
+                        "nativeText": "Doğru, ama işin içinde başka şeyler de var.",
+                        "pauseMultiplier": 1.6
+                    },
+                    {
+                        "id": 7,
+                        "targetText": "We moeten dit serieus nemen.",
+                        "nativeText": "Bunu ciddiye almalıyız.",
+                        "pauseMultiplier": 1.4
+                    },
+                    {
+                        "id": 8,
+                        "targetText": "Ik hoop dat het snel verandert.",
+                        "nativeText": "Umarım yakında değişir.",
+                        "pauseMultiplier": 1.4
+                    }
+                ]
+            }
+        }
+    ]
+}

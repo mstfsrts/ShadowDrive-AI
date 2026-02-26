@@ -1,0 +1,190 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── ShadowDrive AI — Global Styles ─── */
+/* iOS PWA-optimized, driving-safe, ultra-dark theme */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+/* ─── Base & iOS Compatibility ─── */
+
+html {
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+  /* iOS: prevent rubber-band overscroll on body */
+  overscroll-behavior: none;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #030712;
+  color: #ffffff;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* iOS safe areas: pad content away from notch and home indicator */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* ─── iOS Standalone (PWA) Mode ─── */
+@media (display-mode: standalone) {
+  body {
+    /* Extra padding when running as installed PWA */
+    padding-top: calc(env(safe-area-inset-top) + 8px);
+  }
+
+  /* Hide any browser-like chrome */
+  .browser-only {
+    display: none !important;
+  }
+}
+
+/* ─── Focus & Selection ─── */
+
+*:focus-visible {
+  outline: 2px solid #10b981;
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* Disable text selection on all interactive elements for driving safety */
+button,
+[role="button"],
+.select-none {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Prevent iOS context menu on long press for buttons */
+button {
+  touch-action: manipulation;
+}
+
+/* ─── Custom Scrollbar (Dark Theme) ─── */
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #030712;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #374151;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4b5563;
+}
+
+/* ─── Animations ─── */
+
+/* Pulse animation for "your turn" state */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+
+  50% {
+    transform: scale(1.05);
+    opacity: 0.4;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 2s ease-in-out infinite;
+}
+
+/* Fade-in animation for tab content */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+/* ─── Design Tokens ─── */
+
+/* Gradient text utility */
+.text-gradient {
+  background: linear-gradient(135deg, #10b981 0%, #34d399 50%, #6ee7b7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glassmorphism card */
+.glass-card {
+  background: rgba(17, 24, 39, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  /* iOS Safari */
+  border: 1px solid rgba(75, 85, 99, 0.3);
+}
+
+/* ─── Course & Lesson Cards ─── */
+
+.course-card {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.course-card:hover {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  transform: translateY(-1px);
+}
+
+/* On touch devices, use active instead of hover */
+@media (hover: none) {
+  .course-card:active {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    transform: translateY(-1px);
+  }
+
+  .course-card:hover {
+    box-shadow: none;
+    transform: none;
+  }
+}
+
+.lesson-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* ─── Tab Switcher ─── */
+
+.tab-switcher {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* ─── Playback Lock ─── */
+/* When audio is playing, prevent all scroll and touch interference */
+.playback-active {
+  overflow: hidden;
+  touch-action: none;
+  -webkit-overflow-scrolling: auto;
+}

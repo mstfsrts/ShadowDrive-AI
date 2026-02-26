@@ -1,0 +1,186 @@
+{
+    "id": "groene_boek",
+    "title": "Delftse Methode – Groene Boek",
+    "description": "Temel Hollandaca. Günlük yaşam cümleleri.",
+    "emoji": "📗",
+    "color": "emerald",
+    "lessons": [
+        {
+            "id": "groene_boek_les_1",
+            "title": "Les 1 — Kennis maken",
+            "scenario": {
+                "title": "Groene Boek – Les 1: Kennis maken",
+                "targetLang": "nl-NL",
+                "nativeLang": "tr-TR",
+                "lines": [
+                    {
+                        "id": 1,
+                        "targetText": "Hallo, hoe heet je?",
+                        "nativeText": "Merhaba, adın ne?",
+                        "pauseMultiplier": 1.5
+                    },
+                    {
+                        "id": 2,
+                        "targetText": "Ik heet Anna. En jij?",
+                        "nativeText": "Benim adım Anna. Ya senin?",
+                        "pauseMultiplier": 1.5
+                    },
+                    {
+                        "id": 3,
+                        "targetText": "Ik ben Mehmet. Aangenaam.",
+                        "nativeText": "Ben Mehmet. Memnun oldum.",
+                        "pauseMultiplier": 1.4
+                    },
+                    {
+                        "id": 4,
+                        "targetText": "Waar kom je vandaan?",
+                        "nativeText": "Nerelisin?",
+                        "pauseMultiplier": 1.4
+                    },
+                    {
+                        "id": 5,
+                        "targetText": "Ik kom uit Turkije.",
+                        "nativeText": "Türkiye'den geliyorum.",
+                        "pauseMultiplier": 1.3
+                    },
+                    {
+                        "id": 6,
+                        "targetText": "Hoe gaat het met je?",
+                        "nativeText": "Nasılsın?",
+                        "pauseMultiplier": 1.3
+                    },
+                    {
+                        "id": 7,
+                        "targetText": "Goed, dank je wel!",
+                        "nativeText": "İyiyim, teşekkür ederim!",
+                        "pauseMultiplier": 1.3
+                    },
+                    {
+                        "id": 8,
+                        "targetText": "Leuk je te ontmoeten.",
+                        "nativeText": "Tanıştığımıza memnun oldum.",
+                        "pauseMultiplier": 1.5
+                    }
+                ]
+            }
+        },
+        {
+            "id": "groene_boek_les_2",
+            "title": "Les 2 — Boodschappen doen",
+            "scenario": {
+                "title": "Groene Boek – Les 2: Boodschappen doen",
+                "targetLang": "nl-NL",
+                "nativeLang": "tr-TR",
+                "lines": [
+                    {
+                        "id": 1,
+                        "targetText": "Goedemorgen, kan ik u helpen?",
+                        "nativeText": "Günaydın, size yardımcı olabilir miyim?",
+                        "pauseMultiplier": 1.6
+                    },
+                    {
+                        "id": 2,
+                        "targetText": "Ja, ik zoek brood.",
+                        "nativeText": "Evet, ekmek arıyorum.",
+                        "pauseMultiplier": 1.4
+                    },
+                    {
+                        "id": 3,
+                        "targetText": "Het brood is in gangpad twee.",
+                        "nativeText": "Ekmek ikinci koridorda.",
+                        "pauseMultiplier": 1.5
+                    },
+                    {
+                        "id": 4,
+                        "targetText": "Hoeveel kost de kaas?",
+                        "nativeText": "Peynir ne kadar?",
+                        "pauseMultiplier": 1.4
+                    },
+                    {
+                        "id": 5,
+                        "targetText": "Dat is drie euro vijftig.",
+                        "nativeText": "Üç euro elli sent.",
+                        "pauseMultiplier": 1.4
+                    },
+                    {
+                        "id": 6,
+                        "targetText": "Wilt u een tasje?",
+                        "nativeText": "Poşet ister misiniz?",
+                        "pauseMultiplier": 1.3
+                    },
+                    {
+                        "id": 7,
+                        "targetText": "Nee, dank u. Ik heb een tas.",
+                        "nativeText": "Hayır, teşekkürler. Çantam var.",
+                        "pauseMultiplier": 1.5
+                    },
+                    {
+                        "id": 8,
+                        "targetText": "Alstublieft, de bon.",
+                        "nativeText": "Buyurun, fişiniz.",
+                        "pauseMultiplier": 1.3
+                    }
+                ]
+            }
+        },
+        {
+            "id": "groene_boek_les_3",
+            "title": "Les 3 — De weg vragen",
+            "scenario": {
+                "title": "Groene Boek – Les 3: De weg vragen",
+                "targetLang": "nl-NL",
+                "nativeLang": "tr-TR",
+                "lines": [
+                    {
+                        "id": 1,
+                        "targetText": "Pardon, waar is het station?",
+                        "nativeText": "Affedersiniz, istasyon nerede?",
+                        "pauseMultiplier": 1.5
+                    },
+                    {
+                        "id": 2,
+                        "targetText": "Ga rechtdoor en dan links.",
+                        "nativeText": "Düz gidin ve sonra sola dönün.",
+                        "pauseMultiplier": 1.5
+                    },
+                    {
+                        "id": 3,
+                        "targetText": "Is het ver lopen?",
+                        "nativeText": "Yürüyerek uzak mı?",
+                        "pauseMultiplier": 1.3
+                    },
+                    {
+                        "id": 4,
+                        "targetText": "Nee, het is vijf minuten.",
+                        "nativeText": "Hayır, beş dakika.",
+                        "pauseMultiplier": 1.3
+                    },
+                    {
+                        "id": 5,
+                        "targetText": "Welke bus moet ik nemen?",
+                        "nativeText": "Hangi otobüse binmeliyim?",
+                        "pauseMultiplier": 1.4
+                    },
+                    {
+                        "id": 6,
+                        "targetText": "Neem bus nummer twaalf.",
+                        "nativeText": "On iki numaralı otobüse binin.",
+                        "pauseMultiplier": 1.5
+                    },
+                    {
+                        "id": 7,
+                        "targetText": "Waar is de halte?",
+                        "nativeText": "Durak nerede?",
+                        "pauseMultiplier": 1.3
+                    },
+                    {
+                        "id": 8,
+                        "targetText": "Bedankt voor uw hulp!",
+                        "nativeText": "Yardımınız için teşekkürler!",
+                        "pauseMultiplier": 1.4
+                    }
+                ]
+            }
+        }
+    ]
+}
