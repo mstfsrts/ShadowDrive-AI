@@ -1,0 +1,89 @@
+// ─── Prisma Schema — ShadowDrive AI ───
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int        @id @default(autoincrement())
+  email        String     @unique
+  passwordHash String
+  displayName  String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  progress  Progress[]
+  favorites Favorite[]
+
+  @@map("users")
+}
+
+model Course {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?  @db.Text
+  difficulty  String   // beginner, intermediate, advanced
+  targetLang  String   @default("nl-NL")
+  nativeLang  String   @default("tr-TR")
+  createdAt   DateTime @default(now())
+
+  lessons Lesson[]
+
+  @@map("courses")
+}
+
+model Lesson {
+  id       Int    @id @default(autoincrement())
+  courseId  Int
+  title    String
+  sortOrder Int
+  lines    Json   // DialogueLine[] stored as JSON
+
+  course   Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  progress Progress[]
+
+  @@map("lessons")
+}
+
+model Progress {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  lessonId    Int
+  completed   Boolean   @default(false)
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+  @@map("progress")
+}
+
+model Favorite {
+  id       Int    @id @default(autoincrement())
+  userId   Int
+  type     String // "course" | "scenario"
+  targetId Int
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type, targetId])
+  @@map("favorites")
+}
+
+model GeneratedScenario {
+  id         Int      @id @default(autoincrement())
+  topic      String
+  difficulty String
+  data       Json     // Full Scenario object
+  createdAt  DateTime @default(now())
+
+  @@map("generated_scenarios")
+}

@@ -35,5 +35,19 @@ Desktop.ini
 temp_parser*.js
 *.tmp
 
+# ─── Backend Build ───
+backend/dist/
+
+# ─── Mobile / Expo ───
+mobile/.expo/
+mobile/ios/
+mobile/android/
+
+# ─── Docker ───
+mysql_data/
+
+# ─── Prisma ───
+backend/prisma/migrations/
+
 # ─── Gemini Agent Brain (local only) ───
 .gemini/
