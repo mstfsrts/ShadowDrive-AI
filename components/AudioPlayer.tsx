@@ -27,9 +27,8 @@ export default function AudioPlayer({ scenario, onComplete, onBack }: AudioPlaye
     // Cleanup on unmount
     useEffect(() => {
         return () => {
-            cancelSpeech();
+            try { cancelSpeech(); } catch { /* ignore cleanup errors */ }
             abortControllerRef.current?.abort();
-            // Remove playback lock on unmount
             document.body.classList.remove('playback-active');
         };
     }, []);

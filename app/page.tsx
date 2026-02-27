@@ -16,7 +16,8 @@ import ScenarioForm from '@/components/ScenarioForm';
 import CustomTextForm from '@/components/CustomTextForm';
 import AudioPlayer from '@/components/AudioPlayer';
 import { useToast, ToastContainer } from '@/components/Toast';
-import { Scenario, Difficulty } from '@/types/dialogue';
+import { Scenario, type CEFRLevel } from '@/types/dialogue';
+import GeneratingLoader from '@/components/GeneratingLoader';
 import { getCachedScenario, cacheScenario } from '@/lib/scenarioCache';
 import { getOfflineScenario } from '@/lib/offlineScenarios';
 import { getAllCourses, getCourseById, type Course, type CourseLesson } from '@/lib/offline-courses';
@@ -55,7 +56,7 @@ export default function HomePage() {
     }, [showToast]);
 
     // ─── AI GENERATE HANDLER (Section B — Online) ───
-    const handleGenerate = useCallback(async (topic: string, difficulty: Difficulty) => {
+    const handleGenerate = useCallback(async (topic: string, difficulty: CEFRLevel) => {
         if (isFetchingRef.current) {
             console.warn('[HomePage] Blocked duplicate fetch — already in progress');
             return;
@@ -93,7 +94,7 @@ export default function HomePage() {
                 const errorMsg = errorData.error || `Server error (${response.status})`;
                 console.warn(`[HomePage] API error: ${errorMsg}`);
 
-                const isRateLimit = errorMsg.includes('429') || errorMsg.includes('rate limit') || errorMsg.includes('quota');
+                const isRateLimit = response.status === 429 || errorMsg.includes('429') || errorMsg.includes('rate limit') || errorMsg.includes('quota');
                 showToast(
                     isRateLimit ? 'API meşgul — çevrimdışı ders yükleniyor' : 'API hatası — çevrimdışı ders yükleniyor',
                     'warning'
@@ -344,15 +345,20 @@ export default function HomePage() {
                     <div className="flex items-center gap-2 mb-2">
                         <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
                         <span className="text-xs text-gray-500 uppercase tracking-widest font-medium">
-                            Çevrimiçi · Gemini AI
+                            Çevrimiçi · AI Senaryo
                         </span>
                     </div>
 
-                    <ScenarioForm onSubmit={handleGenerate} isLoading={isGenerating} />
-
-                    <p className="mt-4 text-gray-600 text-xs text-center max-w-xs mx-auto">
-                        Senaryonuzu yazın ve AI sizin için Hollandaca-Türkçe bir ders oluştursun.
-                    </p>
+                    {isGenerating ? (
+                        <GeneratingLoader />
+                    ) : (
+                        <>
+                            <ScenarioForm onSubmit={handleGenerate} isLoading={isGenerating} />
+                            <p className="mt-4 text-gray-600 text-xs text-center max-w-xs mx-auto">
+                                Konunuzu yazın ve AI sizin için Hollandaca-Türkçe bir ders oluştursun.
+                            </p>
+                        </>
+                    )}
                 </div>
             )}
 

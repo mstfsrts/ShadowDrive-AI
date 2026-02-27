@@ -17,7 +17,7 @@ export function isOpenRouterConfigured(): boolean {
  * Generate text via OpenRouter's API.
  * Handles thinking model output (strips <think> blocks).
  */
-export async function generateWithOpenRouter(prompt: string): Promise<string> {
+export async function generateWithOpenRouter(prompt: string, maxTokens: number = 1500): Promise<string> {
     const apiKey = process.env.OPENROUTER_API_KEY;
     const model = process.env.OPENROUTER_MODEL || 'qwen/qwen3-235b-a22b';
 
@@ -42,7 +42,7 @@ export async function generateWithOpenRouter(prompt: string): Promise<string> {
             body: JSON.stringify({
                 model: model,
                 messages: [{ role: 'user', content: prompt }],
-                max_tokens: 1500,
+                max_tokens: maxTokens,
                 temperature: 0.7,
             }),
             signal: controller.signal,

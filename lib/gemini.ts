@@ -114,16 +114,17 @@ export async function generateWithFallback(prompt: string): Promise<string> {
 }
 
 /**
- * Make a single generateContent call with a hard 12-second timeout using AbortSignal.
- * We want the app to FAIL FAST, so the UI can quickly enter the fallback state 
+ * Make a single generateContent call with a hard 15-second timeout using AbortSignal.
+ * We want the app to FAIL FAST, so the UI can quickly enter the fallback state
  * instead of hanging "Generating..." while the user drives.
  */
 async function generateFastWithTimeout(
     model: GenerativeModel,
     prompt: string
 ): Promise<string> {
+    const GEMINI_TIMEOUT_MS = 15_000;
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second limit
+    const timeoutId = setTimeout(() => controller.abort(), GEMINI_TIMEOUT_MS);
 
     try {
         const result = await model.generateContent({
@@ -134,7 +135,7 @@ async function generateFastWithTimeout(
         return result.response.text();
     } catch (err) {
         if (err instanceof Error && err.name === 'AbortError') {
-            throw new Error('Timeout: The AI took longer than 12 seconds to respond. Please try again or use the demo.');
+            throw new Error(`Timeout: AI ${GEMINI_TIMEOUT_MS / 1000} saniye içinde yanıt vermedi. Tekrar deneyin veya çevrimdışı derslerden birini seçin.`);
         }
         throw err;
     } finally {

@@ -33,13 +33,16 @@ export interface PlaybackStatus {
   nativeText?: string;
 }
 
-/** Difficulty levels for scenario generation */
-export type Difficulty = 'beginner' | 'intermediate' | 'advanced';
+/** CEFR language proficiency levels */
+export type CEFRLevel = 'A0-A1' | 'A2' | 'B1' | 'B2' | 'C1-C2';
+
+/** @deprecated Use CEFRLevel instead */
+export type Difficulty = CEFRLevel;
 
 /** Request body for the /api/generate route */
 export interface GenerateRequest {
   topic: string;
-  difficulty: Difficulty;
+  difficulty: CEFRLevel;
 }
 
 // ─── Auth & User Types ───
@@ -88,7 +91,7 @@ export interface CourseRecord {
   id: number;
   title: string;
   description: string | null;
-  difficulty: Difficulty;
+  difficulty: CEFRLevel;
   targetLang: string;
   nativeLang: string;
 }

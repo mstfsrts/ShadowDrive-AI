@@ -1,20 +1,21 @@
 // ─── ShadowDrive AI — AI Generate Route ───
 // POST /api/generate
-// Accepts { topic, difficulty } and returns a Dutch-Turkish dialogue.
+// Accepts { topic, difficulty (CEFR level) } and returns a Dutch-Turkish dialogue.
 // Priority: OpenRouter (Qwen3) → Gemini API (fallback)
 
 import { NextRequest, NextResponse } from 'next/server';
 import { generateWithOpenRouter, isOpenRouterConfigured } from '@/lib/openrouter';
 import { generateWithFallback } from '@/lib/gemini';
 import { z } from 'zod';
+import type { CEFRLevel } from '@/types/dialogue';
 
-// Validate incoming request
+// ─── Request Validation ───
 const RequestSchema = z.object({
     topic: z.string().min(1).max(200),
-    difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
+    difficulty: z.enum(['A0-A1', 'A2', 'B1', 'B2', 'C1-C2']),
 });
 
-// Validate Gemini response matches our Scenario type
+// ─── Response Validation ───
 const DialogueLineSchema = z.object({
     id: z.number(),
     targetText: z.string(),
@@ -28,6 +29,105 @@ const ScenarioSchema = z.object({
     nativeLang: z.string(),
     lines: z.array(DialogueLineSchema).min(4).max(15),
 });
+
+// ─── CEFR-Specific Language Guidelines ───
+const CEFR_GUIDELINES: Record<CEFRLevel, { lineCount: number; maxTokens: number; guide: string }> = {
+    'A0-A1': {
+        lineCount: 6,
+        maxTokens: 1000,
+        guide: `GRAMMAR & VOCABULARY (A0-A1):
+- Use ONLY present tense (tegenwoordige tijd).
+- Maximum 5-7 words per sentence.
+- Basic vocabulary: greetings, numbers, colors, common objects, simple verbs (zijn, hebben, gaan, willen).
+- Simple subject-verb-object structure.
+- No subordinate clauses, no conjunctions beyond "en" and "of".
+- Example complexity: "Hallo, ik ben Mustafa." / "Hoeveel kost dit?" / "Ik wil koffie, alstublieft."`,
+    },
+    'A2': {
+        lineCount: 6,
+        maxTokens: 1100,
+        guide: `GRAMMAR & VOCABULARY (A2):
+- Present tense + basic past tense (heb/ben + voltooid deelwoord).
+- 6-10 words per sentence.
+- Everyday vocabulary: shopping, transport, weather, family, food, work.
+- Simple conjunctions: en, maar, want, omdat, als.
+- Separable verbs: meenemen, opbellen, aankomen.
+- Example: "Ik heb gisteren boodschappen gedaan bij de Albert Heijn." / "Kun je me helpen?"`,
+    },
+    'B1': {
+        lineCount: 8,
+        maxTokens: 1300,
+        guide: `GRAMMAR & VOCABULARY (B1):
+- All basic tenses including future (zullen/gaan) and past continuous.
+- 8-15 words per sentence.
+- Professional vocabulary: office, appointments, small talk with colleagues, healthcare.
+- Subordinate clauses with dat, die, als, wanneer, omdat, hoewel.
+- Modal verbs: moeten, kunnen, willen, mogen, zullen.
+- Polite forms: zou u, kunt u, mag ik.
+- Example: "Ik denk dat we het project volgende week kunnen afronden."`,
+    },
+    'B2': {
+        lineCount: 8,
+        maxTokens: 1400,
+        guide: `GRAMMAR & VOCABULARY (B2):
+- Complex tenses, passive voice (worden/zijn + voltooid deelwoord), conditional (zou/zouden).
+- 10-20 words per sentence.
+- Nuanced vocabulary: opinions, debates, professional discussions, emotions.
+- Relative clauses, indirect speech, comparison structures.
+- Common expressions: "het valt me op dat...", "naar mijn mening...", "het lijkt erop dat..."
+- Discourse markers: trouwens, overigens, eerlijk gezegd, aan de andere kant.
+- Example: "Als ik jou was, zou ik het voorstel nog eens goed bekijken voordat je een beslissing neemt."`,
+    },
+    'C1-C2': {
+        lineCount: 8,
+        maxTokens: 1500,
+        guide: `GRAMMAR & VOCABULARY (C1-C2):
+- All tenses, subjunctive mood, complex passive constructions, nominal style.
+- Natural sentence length with varying rhythm — mix short punchy lines with longer complex ones.
+- Idiomatic expressions, proverbs, slang, humor.
+- Dutch-specific particles and fillers: er, wel, toch, maar, even, hoor, zeg, nou, eigenlijk, best wel.
+- Register switching: formal to informal within same conversation.
+- Colloquial contractions: 't, 'n, d'r, ie.
+- Example: "Nou, daar heb je wel een punt hoor, maar ik zou er toch niet te veel van verwachten als ik jou was."`,
+    },
+};
+
+// ─── Smart Prompt Builder ───
+function buildPrompt(topic: string, level: CEFRLevel): string {
+    const config = CEFR_GUIDELINES[level];
+
+    return `You are an expert Dutch (Nederlands) language coach specializing in **spoken Dutch as used in the Netherlands** (NOT Belgian/Flemish Dutch). You create realistic conversational dialogues for Turkish-speaking professionals (UX designers, psychologists, teachers, office workers) who live and work in the Netherlands.
+
+USER'S REQUESTED TOPIC: "${topic}"
+(Note: the user may have typed in Turkish, Dutch, or English. Interpret the intent regardless of input language and create a scenario about this topic.)
+
+CEFR LEVEL: ${level}
+
+${config.guide}
+
+SCENARIO REQUIREMENTS:
+1. Create a coherent, realistic conversation between 2 people about the given topic.
+2. The conversation MUST flow naturally — each line should logically follow the previous one. Do NOT generate random unrelated sentences.
+3. Include speaker turns (Person A and Person B alternating naturally).
+4. Use spoken Dutch — contractions, particles, filler words that real Dutch people use in everyday speech.
+5. The Turkish translations ("nativeText") must be natural Turkish, not word-for-word translations.
+6. The scenario title should be a short descriptive phrase in Dutch.
+
+TECHNICAL REQUIREMENTS:
+- Generate exactly ${config.lineCount} dialogue lines.
+- "pauseMultiplier": 1.0 for short simple phrases, 1.5 for medium, 2.0 for long complex sentences.
+- Return ONLY raw JSON, no markdown, no code fences, no explanation.
+
+JSON STRUCTURE:
+{
+  "title": "Short descriptive title in Dutch",
+  "targetLang": "nl-NL",
+  "nativeLang": "tr-TR",
+  "lines": [
+    { "id": 1, "targetText": "Dutch phrase", "nativeText": "Türkçe çeviri", "pauseMultiplier": 1.5 }
+  ]
+}`;
+}
 
 export async function POST(request: NextRequest) {
     console.log('\n[API /generate] ========== NEW REQUEST ==========');
@@ -47,36 +147,11 @@ export async function POST(request: NextRequest) {
         }
 
         const { topic, difficulty } = parsed.data;
-        console.log(`[API /generate] Topic: "${topic}", Difficulty: "${difficulty}"`);
+        const config = CEFR_GUIDELINES[difficulty as CEFRLevel];
+        console.log(`[API /generate] Topic: "${topic}", CEFR Level: "${difficulty}", Lines: ${config.lineCount}`);
 
-        // 2. Build the Gemini prompt — Turkish professionals learning Dutch
-        const prompt = `You are an expert Dutch language coach for Turkish-speaking professionals living in the Netherlands (such as UX Designers, Psychologists, teachers, or office workers).
-
-The user wants to practice a scenario about: "${topic}"
-Difficulty level: ${difficulty}
-
-Generate a highly natural, everyday conversational dialogue in Dutch with Turkish translations.
-
-RULES:
-- Generate exactly 8 dialogue lines.
-- "targetText": Natural, casual Dutch — the way real people talk in the Netherlands. Avoid robotic or overly formal phrasing.
-- "nativeText": Accurate, natural Turkish translation.
-- "pauseMultiplier": 1.0 for short phrases, up to 2.0 for complex sentences.
-- For "beginner": use simple, A1-A2 level sentences with basic vocabulary.
-- For "intermediate": use everyday B1 speech — small talk, office chats, appointments.
-- For "advanced": use complex sentences with idioms, opinions, and informal speech patterns.
-
-Return ONLY a raw JSON object (no markdown, no code fences) matching this exact structure:
-{
-  "title": "Short scenario title in English",
-  "targetLang": "nl-NL",
-  "nativeLang": "tr-TR",
-  "lines": [
-    { "id": 1, "targetText": "Dutch phrase", "nativeText": "Türkçe çeviri", "pauseMultiplier": 1.5 }
-  ]
-}
-
-MUST return raw JSON only. No explanation, no markdown.`;
+        // 2. Build smart prompt with CEFR-specific guidelines
+        const prompt = buildPrompt(topic, difficulty as CEFRLevel);
 
         // 3. Call AI — OpenRouter first, Gemini as fallback
         let responseText: string;
@@ -84,11 +159,10 @@ MUST return raw JSON only. No explanation, no markdown.`;
         if (isOpenRouterConfigured()) {
             try {
                 console.log('[API /generate] Using OpenRouter...');
-                responseText = await generateWithOpenRouter(prompt);
+                responseText = await generateWithOpenRouter(prompt, config.maxTokens);
             } catch (routerErr) {
                 console.warn('[API /generate] OpenRouter failed:', routerErr instanceof Error ? routerErr.message : routerErr);
 
-                // Only fall back to Gemini if a real API key is configured
                 const geminiKey = process.env.GEMINI_API_KEY;
                 if (geminiKey && geminiKey !== 'your_gemini_api_key_here') {
                     console.log('[API /generate] Falling back to Gemini...');
@@ -112,7 +186,7 @@ MUST return raw JSON only. No explanation, no markdown.`;
             cleanJson = cleanJson.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?\s*```$/, '');
         }
 
-        // 5. Parse & validate the Gemini response
+        // 5. Parse & validate the AI response
         let scenario;
         try {
             scenario = JSON.parse(cleanJson);
@@ -137,14 +211,13 @@ MUST return raw JSON only. No explanation, no markdown.`;
             );
         }
 
-        console.log('[API /generate] ✅ Response validated successfully');
+        console.log('[API /generate] Response validated successfully');
         console.log('[API /generate] Returning scenario:', validated.data.title, `(${validated.data.lines.length} lines)`);
 
         // 6. Return validated scenario
         return NextResponse.json(validated.data);
 
     } catch (error) {
-        // ── RAW ERROR — both AI providers failed ──
         console.error('[API /generate] All AI providers failed:', error);
         const message = error instanceof Error ? error.message : 'Unknown API Error';
         return NextResponse.json(

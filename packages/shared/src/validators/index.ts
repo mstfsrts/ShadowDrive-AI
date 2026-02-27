@@ -7,7 +7,7 @@ import { z } from 'zod';
 
 export const GenerateRequestSchema = z.object({
   topic: z.string().min(1).max(200),
-  difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
+  difficulty: z.enum(['A0-A1', 'A2', 'B1', 'B2', 'C1-C2']),
 });
 
 export const DialogueLineSchema = z.object({

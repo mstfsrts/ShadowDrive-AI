@@ -12,14 +12,14 @@ interface StatusBarProps {
 }
 
 const PHASE_CONFIG: Record<string, { label: string; color: string; icon: string }> = {
-    idle: { label: 'Ready', color: 'text-gray-400', icon: '⏸' },
-    loading: { label: 'Loading...', color: 'text-yellow-400', icon: '⏳' },
-    target: { label: 'Listen — Dutch', color: 'text-emerald-400', icon: '🇳🇱' },
-    pause: { label: 'Your turn — Speak!', color: 'text-amber-400', icon: '🎤' },
-    native: { label: 'Answer — English', color: 'text-blue-400', icon: '🇬🇧' },
-    repeat: { label: 'Listen again — Dutch', color: 'text-emerald-300', icon: '🔁' },
-    gap: { label: 'Next phrase...', color: 'text-gray-500', icon: '⏭' },
-    complete: { label: 'Session Complete!', color: 'text-emerald-400', icon: '✅' },
+    idle: { label: 'Hazır', color: 'text-gray-400', icon: '⏸' },
+    loading: { label: 'Yükleniyor...', color: 'text-yellow-400', icon: '⏳' },
+    target: { label: 'Dinle — Hollandaca', color: 'text-emerald-400', icon: '🇳🇱' },
+    pause: { label: 'Senin sıran — Söyle!', color: 'text-amber-400', icon: '🎤' },
+    native: { label: 'Cevap — Türkçe', color: 'text-blue-400', icon: '🇹🇷' },
+    repeat: { label: 'Tekrar dinle — Hollandaca', color: 'text-emerald-300', icon: '🔁' },
+    gap: { label: 'Sonraki cümle...', color: 'text-gray-500', icon: '⏭' },
+    complete: { label: 'Ders Tamamlandı!', color: 'text-emerald-400', icon: '✅' },
 };
 
 export default function StatusBar({ phase, lineIndex, totalLines }: StatusBarProps) {

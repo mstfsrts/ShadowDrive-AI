@@ -1,21 +1,23 @@
 'use client';
 
 // ─── ShadowDrive AI — Scenario Input Form ───
-// Topic + Difficulty selector with massive, driving-safe UI
+// Topic + CEFR level selector with massive, driving-safe UI
 // Localized for Turkish speakers learning Dutch
 
 import { useState } from 'react';
-import { Difficulty } from '@/types/dialogue';
+import type { CEFRLevel } from '@/types/dialogue';
 
 interface ScenarioFormProps {
-    onSubmit: (topic: string, difficulty: Difficulty) => void;
+    onSubmit: (topic: string, difficulty: CEFRLevel) => void;
     isLoading: boolean;
 }
 
-const DIFFICULTIES: { value: Difficulty; label: string; emoji: string }[] = [
-    { value: 'beginner', label: 'Başlangıç', emoji: '🌱' },
-    { value: 'intermediate', label: 'Orta', emoji: '🔥' },
-    { value: 'advanced', label: 'İleri', emoji: '⚡' },
+const CEFR_LEVELS: { value: CEFRLevel; label: string; desc: string; emoji: string }[] = [
+    { value: 'A0-A1', label: 'Başlangıç', desc: 'Temel kelimeler, kısa cümleler', emoji: '🌱' },
+    { value: 'A2', label: 'Temel', desc: 'Günlük basit konuşmalar', emoji: '🌿' },
+    { value: 'B1', label: 'Orta', desc: 'Ofis sohbetleri, randevular', emoji: '🔥' },
+    { value: 'B2', label: 'İleri Orta', desc: 'Detaylı tartışmalar, fikirler', emoji: '⚡' },
+    { value: 'C1-C2', label: 'İleri', desc: 'Deyimler, karmaşık yapılar', emoji: '🎯' },
 ];
 
 const QUICK_TOPICS = [
@@ -31,12 +33,12 @@ const QUICK_TOPICS = [
 
 export default function ScenarioForm({ onSubmit, isLoading }: ScenarioFormProps) {
     const [topic, setTopic] = useState('');
-    const [difficulty, setDifficulty] = useState<Difficulty>('beginner');
+    const [level, setLevel] = useState<CEFRLevel>('A0-A1');
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (topic.trim()) {
-            onSubmit(topic.trim(), difficulty);
+            onSubmit(topic.trim(), level);
         }
     };
 
@@ -52,7 +54,7 @@ export default function ScenarioForm({ onSubmit, isLoading }: ScenarioFormProps)
                     type="text"
                     value={topic}
                     onChange={(e) => setTopic(e.target.value)}
-                    placeholder="örn. Koffie bestellen in Amsterdam"
+                    placeholder="örn. Yeni iş arkadaşlarımla tanışma"
                     enterKeyHint="go"
                     className="w-full bg-shadow-800 border border-gray-700 rounded-2xl px-5 py-4 text-white text-lg
                      placeholder-gray-500 focus:outline-none focus:border-neon-green focus:ring-2
@@ -78,27 +80,45 @@ export default function ScenarioForm({ onSubmit, isLoading }: ScenarioFormProps)
                 ))}
             </div>
 
-            {/* Difficulty Selector — large touch targets */}
+            {/* CEFR Level Selector — 5 levels with descriptions */}
             <div className="flex flex-col gap-2">
                 <label className="text-gray-400 text-sm font-medium uppercase tracking-wider">
-                    Seviye
+                    Dil Seviyesi
                 </label>
-                <div className="grid grid-cols-3 gap-3">
-                    {DIFFICULTIES.map((d) => (
+                <div className="flex flex-col gap-2">
+                    {CEFR_LEVELS.map((l) => (
                         <button
-                            key={d.value}
+                            key={l.value}
                             type="button"
-                            onClick={() => setDifficulty(d.value)}
-                            className={`flex flex-col items-center justify-center py-4 rounded-2xl border-2 
-                         transition-all duration-300 active:scale-95 min-h-[72px]
-                         ${difficulty === d.value
-                                    ? 'border-neon-green bg-neon-green/10 text-neon-green shadow-lg shadow-neon-green/20'
-                                    : 'border-gray-700 bg-shadow-800 text-gray-400 hover:border-gray-500'
+                            onClick={() => setLevel(l.value)}
+                            className={`flex items-center gap-3 px-4 py-3 rounded-2xl border-2
+                             transition-all duration-300 active:scale-[0.98] min-h-[56px] text-left
+                             ${level === l.value
+                                    ? 'border-neon-green bg-neon-green/10 shadow-lg shadow-neon-green/20'
+                                    : 'border-gray-700 bg-shadow-800 hover:border-gray-500'
                                 }`}
                             disabled={isLoading}
                         >
-                            <span className="text-2xl mb-1">{d.emoji}</span>
-                            <span className="text-xs font-medium">{d.label}</span>
+                            <span className="text-xl flex-shrink-0">{l.emoji}</span>
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                    <span className={`text-sm font-bold ${level === l.value ? 'text-neon-green' : 'text-white'}`}>
+                                        {l.label}
+                                    </span>
+                                    <span className={`text-xs px-1.5 py-0.5 rounded-md font-mono ${level === l.value
+                                            ? 'bg-neon-green/20 text-neon-green'
+                                            : 'bg-gray-700 text-gray-400'
+                                        }`}>
+                                        {l.value}
+                                    </span>
+                                </div>
+                                <p className={`text-xs mt-0.5 ${level === l.value ? 'text-emerald-300' : 'text-gray-500'}`}>
+                                    {l.desc}
+                                </p>
+                            </div>
+                            {level === l.value && (
+                                <span className="text-neon-green text-lg flex-shrink-0">✓</span>
+                            )}
                         </button>
                     ))}
                 </div>
