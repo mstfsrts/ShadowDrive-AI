@@ -1,9 +1,10 @@
-// ─── ShadowDrive AI — Gemini API Route ───
+// ─── ShadowDrive AI — AI Generate Route ───
 // POST /api/generate
-// Accepts { topic, difficulty } and returns a Dutch-Turkish dialogue from Gemini.
-// Model: gemini-1.5-flash (FREE TIER)
+// Accepts { topic, difficulty } and returns a Dutch-Turkish dialogue.
+// Priority: OpenRouter (Qwen3) → Gemini API (fallback)
 
 import { NextRequest, NextResponse } from 'next/server';
+import { generateWithOpenRouter, isOpenRouterConfigured } from '@/lib/openrouter';
 import { generateWithFallback } from '@/lib/gemini';
 import { z } from 'zod';
 
@@ -77,13 +78,32 @@ Return ONLY a raw JSON object (no markdown, no code fences) matching this exact 
 
 MUST return raw JSON only. No explanation, no markdown.`;
 
-        console.log('[API /generate] Sending prompt to Gemini (free-tier model)...');
+        // 3. Call AI — OpenRouter first, Gemini as fallback
+        let responseText: string;
 
-        // 3. Call Gemini with model fallback
-        const responseText = await generateWithFallback(prompt);
+        if (isOpenRouterConfigured()) {
+            try {
+                console.log('[API /generate] Using OpenRouter...');
+                responseText = await generateWithOpenRouter(prompt);
+            } catch (routerErr) {
+                console.warn('[API /generate] OpenRouter failed:', routerErr instanceof Error ? routerErr.message : routerErr);
 
-        console.log('[API /generate] Gemini raw response length:', responseText.length);
-        console.log('[API /generate] Gemini raw response (first 500 chars):', responseText.substring(0, 500));
+                // Only fall back to Gemini if a real API key is configured
+                const geminiKey = process.env.GEMINI_API_KEY;
+                if (geminiKey && geminiKey !== 'your_gemini_api_key_here') {
+                    console.log('[API /generate] Falling back to Gemini...');
+                    responseText = await generateWithFallback(prompt);
+                } else {
+                    throw routerErr;
+                }
+            }
+        } else {
+            console.log('[API /generate] OpenRouter not configured, using Gemini...');
+            responseText = await generateWithFallback(prompt);
+        }
+
+        console.log('[API /generate] Raw response length:', responseText.length);
+        console.log('[API /generate] Raw response (first 500 chars):', responseText.substring(0, 500));
 
         // 4. Clean potential markdown fences from response
         let cleanJson = responseText.trim();
@@ -103,7 +123,7 @@ MUST return raw JSON only. No explanation, no markdown.`;
             console.error('[API /generate] JSON parse failed:', parseError);
             console.error('[API /generate] Attempted to parse:', cleanJson.substring(0, 300));
             return NextResponse.json(
-                { error: 'Gemini returned invalid JSON', raw: responseText.substring(0, 500) },
+                { error: 'AI returned invalid JSON', raw: responseText.substring(0, 500) },
                 { status: 502 }
             );
         }
@@ -112,7 +132,7 @@ MUST return raw JSON only. No explanation, no markdown.`;
         if (!validated.success) {
             console.error('[API /generate] Schema validation failed:', validated.error.flatten());
             return NextResponse.json(
-                { error: 'Gemini response does not match schema', details: validated.error.flatten(), raw: scenario },
+                { error: 'AI response does not match schema', details: validated.error.flatten(), raw: scenario },
                 { status: 422 }
             );
         }
@@ -124,8 +144,8 @@ MUST return raw JSON only. No explanation, no markdown.`;
         return NextResponse.json(validated.data);
 
     } catch (error) {
-        // ── RAW ERROR — no fallback, fail loudly ──
-        console.error("RAW GEMINI ERROR:", error);
+        // ── RAW ERROR — both AI providers failed ──
+        console.error('[API /generate] All AI providers failed:', error);
         const message = error instanceof Error ? error.message : 'Unknown API Error';
         return NextResponse.json(
             { error: message },
