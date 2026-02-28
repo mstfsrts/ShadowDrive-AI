@@ -46,7 +46,7 @@ export default function ScenarioForm({ onSubmit, isLoading }: ScenarioFormProps)
         <form onSubmit={handleSubmit} className="flex flex-col gap-6 w-full max-w-md mx-auto select-none">
             {/* Topic Input */}
             <div className="flex flex-col gap-2">
-                <label htmlFor="topic-input" className="text-gray-400 text-sm font-medium uppercase tracking-wider">
+                <label htmlFor="topic-input" className="text-foreground-secondary text-sm font-medium uppercase tracking-wider">
                     Senaryo Konusu
                 </label>
                 <input
@@ -56,8 +56,8 @@ export default function ScenarioForm({ onSubmit, isLoading }: ScenarioFormProps)
                     onChange={(e) => setTopic(e.target.value)}
                     placeholder="örn. Yeni iş arkadaşlarımla tanışma"
                     enterKeyHint="go"
-                    className="w-full bg-shadow-800 border border-gray-700 rounded-2xl px-5 py-4 text-white text-lg
-                     placeholder-gray-500 focus:outline-none focus:border-neon-green focus:ring-2
+                    className="w-full bg-card border border-border rounded-2xl px-5 py-4 text-foreground text-lg
+                     placeholder-foreground-muted focus:outline-none focus:border-neon-green focus:ring-2
                      focus:ring-neon-green/30 transition-all duration-300"
                     disabled={isLoading}
                     autoComplete="off"
@@ -71,7 +71,7 @@ export default function ScenarioForm({ onSubmit, isLoading }: ScenarioFormProps)
                         key={qt}
                         type="button"
                         onClick={() => setTopic(qt)}
-                        className="px-4 py-2.5 rounded-xl bg-shadow-800 border border-gray-700 text-gray-300
+                        className="px-4 py-2.5 rounded-xl bg-card border border-border text-foreground-secondary
                        text-sm hover:border-neon-green hover:text-neon-green transition-all duration-200
                        active:scale-95 min-h-[44px]"
                     >
@@ -82,7 +82,7 @@ export default function ScenarioForm({ onSubmit, isLoading }: ScenarioFormProps)
 
             {/* CEFR Level Selector — 5 levels with descriptions */}
             <div className="flex flex-col gap-2">
-                <label className="text-gray-400 text-sm font-medium uppercase tracking-wider">
+                <label className="text-foreground-secondary text-sm font-medium uppercase tracking-wider">
                     Dil Seviyesi
                 </label>
                 <div className="flex flex-col gap-2">
@@ -95,24 +95,24 @@ export default function ScenarioForm({ onSubmit, isLoading }: ScenarioFormProps)
                              transition-all duration-300 active:scale-[0.98] min-h-[56px] text-left
                              ${level === l.value
                                     ? 'border-neon-green bg-neon-green/10 shadow-lg shadow-neon-green/20'
-                                    : 'border-gray-700 bg-shadow-800 hover:border-gray-500'
+                                    : 'border-border bg-card hover:border-border-hover'
                                 }`}
                             disabled={isLoading}
                         >
                             <span className="text-xl flex-shrink-0">{l.emoji}</span>
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
-                                    <span className={`text-sm font-bold ${level === l.value ? 'text-neon-green' : 'text-white'}`}>
+                                    <span className={`text-sm font-bold ${level === l.value ? 'text-neon-green' : 'text-foreground'}`}>
                                         {l.label}
                                     </span>
                                     <span className={`text-xs px-1.5 py-0.5 rounded-md font-mono ${level === l.value
                                             ? 'bg-neon-green/20 text-neon-green'
-                                            : 'bg-gray-700 text-gray-400'
+                                            : 'bg-card-hover text-foreground-secondary'
                                         }`}>
                                         {l.value}
                                     </span>
                                 </div>
-                                <p className={`text-xs mt-0.5 ${level === l.value ? 'text-emerald-300' : 'text-gray-500'}`}>
+                                <p className={`text-xs mt-0.5 ${level === l.value ? 'text-emerald-600 dark:text-emerald-300' : 'text-foreground-muted'}`}>
                                     {l.desc}
                                 </p>
                             </div>
@@ -132,8 +132,8 @@ export default function ScenarioForm({ onSubmit, isLoading }: ScenarioFormProps)
                 className={`relative w-full min-h-[80px] rounded-3xl text-2xl font-bold uppercase tracking-widest
                    transition-all duration-300 active:scale-95
                    ${topic.trim() && !isLoading
-                        ? 'bg-emerald-500 text-shadow-950 hover:bg-emerald-400 animate-glow shadow-2xl shadow-emerald-500/30'
-                        : 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                        ? 'bg-emerald-500 text-white dark:text-shadow-950 hover:bg-emerald-400 animate-glow shadow-2xl shadow-emerald-500/30'
+                        : 'bg-card-hover text-foreground-muted cursor-not-allowed'
                     }`}
             >
                 {isLoading ? (

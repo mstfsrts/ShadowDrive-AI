@@ -100,24 +100,24 @@ export default function AudioPlayer({ scenario, onComplete, onBack }: AudioPlaye
             {/* Current Phrase Display */}
             <div className="flex-1 flex flex-col items-center justify-center w-full max-w-lg px-4">
                 {/* Scenario Title */}
-                <h2 className="text-gray-500 text-sm uppercase tracking-widest mb-8">
+                <h2 className="text-foreground-muted text-sm uppercase tracking-widest mb-8">
                     {scenario.title}
                 </h2>
 
                 {/* Main Text — very large for readability */}
                 <div className="text-center min-h-[120px] flex items-center justify-center">
                     {phase === 'idle' && !hasStarted && (
-                        <p className="text-gray-400 text-xl">
+                        <p className="text-foreground-secondary text-xl">
                             Dersi başlatmak için aşağıdaki düğmeye dokunun
                         </p>
                     )}
                     {phase === 'complete' && (
                         <div className="flex flex-col items-center gap-4">
                             <span className="text-6xl">🎉</span>
-                            <p className="text-emerald-400 text-2xl font-bold">
+                            <p className="text-emerald-600 dark:text-emerald-400 text-2xl font-bold">
                                 Harika!
                             </p>
-                            <p className="text-gray-400 text-lg">
+                            <p className="text-foreground-secondary text-lg">
                                 Ders tamamlandı — {scenario.lines.length} cümle çalışıldı
                             </p>
                         </div>
@@ -126,17 +126,17 @@ export default function AudioPlayer({ scenario, onComplete, onBack }: AudioPlaye
                         <div className="flex flex-col items-center gap-4 w-full">
                             <p
                                 className={`text-3xl sm:text-4xl font-bold leading-relaxed transition-all duration-500 text-center
-                                ${phase === 'target' || phase === 'repeat' ? 'text-emerald-400' : ''}
-                                ${phase === 'native' ? 'text-blue-400' : ''}
-                                ${phase === 'pause' ? 'text-amber-400 animate-pulse-slow' : ''}
-                                ${phase === 'gap' ? 'text-gray-600' : ''}
+                                ${phase === 'target' || phase === 'repeat' ? 'text-emerald-600 dark:text-emerald-400' : ''}
+                                ${phase === 'native' ? 'text-blue-600 dark:text-blue-400' : ''}
+                                ${phase === 'pause' ? 'text-amber-600 dark:text-amber-400 animate-pulse-slow' : ''}
+                                ${phase === 'gap' ? 'text-foreground-faint' : ''}
                             `}
                             >
                                 {currentStatus.text || '...'}
                             </p>
                             {currentStatus.nativeText && (
                                 <p className={`text-lg sm:text-xl font-medium text-center transition-all duration-500
-                                    ${phase === 'native' ? 'text-blue-300' : 'text-gray-400/80'}
+                                    ${phase === 'native' ? 'text-blue-600 dark:text-blue-300' : 'text-foreground-secondary/80'}
                                 `}>
                                     {currentStatus.nativeText}
                                 </p>
@@ -147,7 +147,7 @@ export default function AudioPlayer({ scenario, onComplete, onBack }: AudioPlaye
 
                 {/* Phase subtitle when speaking */}
                 {phase === 'pause' && (
-                    <p className="mt-6 text-amber-400/70 text-lg animate-pulse">
+                    <p className="mt-6 text-amber-600/70 dark:text-amber-400/70 text-lg animate-pulse">
                         🎤 Hollandaca söyleyin!
                     </p>
                 )}
@@ -175,8 +175,8 @@ export default function AudioPlayer({ scenario, onComplete, onBack }: AudioPlaye
                 <button
                     id="back-button"
                     onClick={handleBack}
-                    className="w-full min-h-[56px] rounded-2xl text-lg font-medium text-gray-400
-                     bg-shadow-800 border border-gray-700 hover:border-gray-500 hover:text-white
+                    className="w-full min-h-[56px] rounded-2xl text-lg font-medium text-foreground-secondary
+                     bg-card border border-border hover:border-border-hover hover:text-foreground
                      transition-all duration-300 active:scale-95"
                 >
                     {phase === 'complete' ? '🔄  Yeni Ders' : '←  Geri'}

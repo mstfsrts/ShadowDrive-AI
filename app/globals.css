@@ -3,42 +3,86 @@
 @tailwind utilities;
 
 /* ─── ShadowDrive AI — Global Styles ─── */
-/* iOS PWA-optimized, driving-safe, ultra-dark theme */
+/* iOS PWA-optimized, driving-safe, dual-theme */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+/* ─── Theme CSS Custom Properties ─── */
+/* Light mode — Slate-based professional palette */
+:root {
+  --background: #f8fafc;
+  --background-secondary: #f1f5f9;
+  --card: #ffffff;
+  --card-hover: #f1f5f9;
+  --foreground: #0f172a;
+  --foreground-secondary: #475569;
+  --foreground-muted: #94a3b8;
+  --foreground-faint: #cbd5e1;
+  --border: #e2e8f0;
+  --border-hover: #94a3b8;
+  --input: #ffffff;
+  --ring: #10b981;
+  --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-card-hover: 0 4px 16px rgba(15, 23, 42, 0.1), 0 2px 4px rgba(15, 23, 42, 0.06);
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(226, 232, 240, 0.6);
+  --scrollbar-bg: #f8fafc;
+  --scrollbar-thumb: #cbd5e1;
+  --scrollbar-hover: #94a3b8;
+}
+
+/* Dark mode — Deep navy palette */
+.dark {
+  --background: #030712;
+  --background-secondary: #0a0f1a;
+  --card: #111827;
+  --card-hover: #1e293b;
+  --foreground: #f1f5f9;
+  --foreground-secondary: #94a3b8;
+  --foreground-muted: #64748b;
+  --foreground-faint: #475569;
+  --border: #1e293b;
+  --border-hover: #475569;
+  --input: #111827;
+  --ring: #10b981;
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-card-hover: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --glass-bg: rgba(17, 24, 39, 0.6);
+  --glass-border: rgba(30, 41, 59, 0.4);
+  --scrollbar-bg: #030712;
+  --scrollbar-thumb: #1e293b;
+  --scrollbar-hover: #334155;
+}
 
 /* ─── Base & iOS Compatibility ─── */
 
 html {
   scroll-behavior: smooth;
   -webkit-tap-highlight-color: transparent;
-  /* iOS: prevent rubber-band overscroll on body */
   overscroll-behavior: none;
 }
 
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background-color: #030712;
-  color: #ffffff;
+  background-color: var(--background);
+  color: var(--foreground);
   min-height: 100dvh;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* iOS safe areas: pad content away from notch and home indicator */
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* ─── iOS Standalone (PWA) Mode ─── */
 @media (display-mode: standalone) {
   body {
-    /* Extra padding when running as installed PWA */
     padding-top: calc(env(safe-area-inset-top) + 8px);
   }
 
-  /* Hide any browser-like chrome */
   .browser-only {
     display: none !important;
   }
@@ -47,12 +91,11 @@ body {
 /* ─── Focus & Selection ─── */
 
 *:focus-visible {
-  outline: 2px solid #10b981;
+  outline: 2px solid var(--ring);
   outline-offset: 2px;
   border-radius: 8px;
 }
 
-/* Disable text selection on all interactive elements for driving safety */
 button,
 [role="button"],
 .select-none {
@@ -61,33 +104,31 @@ button,
   -webkit-touch-callout: none;
 }
 
-/* Prevent iOS context menu on long press for buttons */
 button {
   touch-action: manipulation;
 }
 
-/* ─── Custom Scrollbar (Dark Theme) ─── */
+/* ─── Custom Scrollbar (Theme-aware) ─── */
 
 ::-webkit-scrollbar {
   width: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #030712;
+  background: var(--scrollbar-bg);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #374151;
+  background: var(--scrollbar-thumb);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #4b5563;
+  background: var(--scrollbar-hover);
 }
 
 /* ─── Animations ─── */
 
-/* Pulse animation for "your turn" state */
 @keyframes pulse-ring {
   0% {
     transform: scale(1);
@@ -109,7 +150,6 @@ button {
   animation: pulse-ring 2s ease-in-out infinite;
 }
 
-/* Fade-in animation for tab content */
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -126,9 +166,56 @@ button {
   animation: fade-in 0.3s ease-out;
 }
 
+/* ─── AI Generating Loader Animation ─── */
+
+@keyframes orbit {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes orbit-reverse {
+  0% { transform: rotate(360deg); }
+  100% { transform: rotate(0deg); }
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.15); opacity: 1; }
+}
+
+@keyframes wave-bar {
+  0%, 100% { transform: scaleY(0.4); }
+  50% { transform: scaleY(1); }
+}
+
+@keyframes status-text {
+  0%, 100% { opacity: 0; transform: translateY(6px); }
+  15%, 85% { opacity: 1; transform: translateY(0); }
+}
+
+.generating-orb {
+  animation: breathe 3s ease-in-out infinite;
+}
+
+.generating-ring-1 {
+  animation: orbit 4s linear infinite;
+}
+
+.generating-ring-2 {
+  animation: orbit-reverse 6s linear infinite;
+}
+
+.generating-ring-3 {
+  animation: orbit 8s linear infinite;
+}
+
+.wave-bar {
+  animation: wave-bar 1.2s ease-in-out infinite;
+  transform-origin: bottom;
+}
+
 /* ─── Design Tokens ─── */
 
-/* Gradient text utility */
 .text-gradient {
   background: linear-gradient(135deg, #10b981 0%, #34d399 50%, #6ee7b7 100%);
   -webkit-background-clip: text;
@@ -136,13 +223,11 @@ button {
   background-clip: text;
 }
 
-/* Glassmorphism card */
 .glass-card {
-  background: rgba(17, 24, 39, 0.6);
+  background: var(--glass-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  /* iOS Safari */
-  border: 1px solid rgba(75, 85, 99, 0.3);
+  border: 1px solid var(--glass-border);
 }
 
 /* ─── Course & Lesson Cards ─── */
@@ -150,28 +235,32 @@ button {
 .course-card {
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
+  box-shadow: var(--shadow-card);
 }
 
 .course-card:hover {
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-card-hover);
   transform: translateY(-1px);
 }
 
-/* On touch devices, use active instead of hover */
 @media (hover: none) {
   .course-card:active {
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-card-hover);
     transform: translateY(-1px);
   }
 
   .course-card:hover {
-    box-shadow: none;
+    box-shadow: var(--shadow-card);
     transform: none;
   }
 }
 
+.lesson-card {
+  box-shadow: var(--shadow-card);
+}
+
 .lesson-card:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-card-hover);
 }
 
 /* ─── Tab Switcher ─── */
@@ -182,7 +271,6 @@ button {
 }
 
 /* ─── Playback Lock ─── */
-/* When audio is playing, prevent all scroll and touch interference */
 .playback-active {
   overflow: hidden;
   touch-action: none;

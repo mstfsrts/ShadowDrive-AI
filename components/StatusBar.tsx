@@ -12,14 +12,14 @@ interface StatusBarProps {
 }
 
 const PHASE_CONFIG: Record<string, { label: string; color: string; icon: string }> = {
-    idle: { label: 'Hazır', color: 'text-gray-400', icon: '⏸' },
-    loading: { label: 'Yükleniyor...', color: 'text-yellow-400', icon: '⏳' },
-    target: { label: 'Dinle — Hollandaca', color: 'text-emerald-400', icon: '🇳🇱' },
-    pause: { label: 'Senin sıran — Söyle!', color: 'text-amber-400', icon: '🎤' },
-    native: { label: 'Cevap — Türkçe', color: 'text-blue-400', icon: '🇹🇷' },
-    repeat: { label: 'Tekrar dinle — Hollandaca', color: 'text-emerald-300', icon: '🔁' },
-    gap: { label: 'Sonraki cümle...', color: 'text-gray-500', icon: '⏭' },
-    complete: { label: 'Ders Tamamlandı!', color: 'text-emerald-400', icon: '✅' },
+    idle: { label: 'Hazır', color: 'text-foreground-secondary', icon: '⏸' },
+    loading: { label: 'Yükleniyor...', color: 'text-amber-400', icon: '⏳' },
+    target: { label: 'Dinle — Hollandaca', color: 'text-emerald-600 dark:text-emerald-400', icon: '🇳🇱' },
+    pause: { label: 'Senin sıran — Söyle!', color: 'text-amber-600 dark:text-amber-400', icon: '🎤' },
+    native: { label: 'Cevap — Türkçe', color: 'text-blue-600 dark:text-blue-400', icon: '🇹🇷' },
+    repeat: { label: 'Tekrar dinle — Hollandaca', color: 'text-emerald-600 dark:text-emerald-300', icon: '🔁' },
+    gap: { label: 'Sonraki cümle...', color: 'text-foreground-muted', icon: '⏭' },
+    complete: { label: 'Ders Tamamlandı!', color: 'text-emerald-600 dark:text-emerald-400', icon: '✅' },
 };
 
 export default function StatusBar({ phase, lineIndex, totalLines }: StatusBarProps) {
@@ -38,9 +38,9 @@ export default function StatusBar({ phase, lineIndex, totalLines }: StatusBarPro
             {/* Progress counter */}
             {totalLines > 0 && (
                 <div className="flex items-center gap-2">
-                    <span className="text-2xl font-bold text-white">{lineIndex + 1}</span>
-                    <span className="text-gray-500 text-lg">/</span>
-                    <span className="text-lg text-gray-400">{totalLines}</span>
+                    <span className="text-2xl font-bold text-foreground">{lineIndex + 1}</span>
+                    <span className="text-foreground-muted text-lg">/</span>
+                    <span className="text-lg text-foreground-secondary">{totalLines}</span>
                 </div>
             )}
         </div>

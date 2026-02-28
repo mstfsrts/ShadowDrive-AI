@@ -15,9 +15,9 @@ interface ToastData {
 }
 
 const TOAST_COLORS: Record<ToastType, string> = {
-    info: 'bg-blue-500/20 border-blue-500/40 text-blue-300',
-    success: 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300',
-    warning: 'bg-amber-500/20 border-amber-500/40 text-amber-300',
+    info: 'bg-blue-500/15 dark:bg-blue-500/20 border-blue-500/30 dark:border-blue-500/40 text-blue-700 dark:text-blue-300',
+    success: 'bg-emerald-500/15 dark:bg-emerald-500/20 border-emerald-500/30 dark:border-emerald-500/40 text-emerald-700 dark:text-emerald-300',
+    warning: 'bg-amber-500/15 dark:bg-amber-500/20 border-amber-500/30 dark:border-amber-500/40 text-amber-700 dark:text-amber-300',
 };
 
 const TOAST_ICONS: Record<ToastType, string> = {

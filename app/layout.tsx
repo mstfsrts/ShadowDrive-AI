@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { ThemeProvider } from '@/lib/theme';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -23,8 +24,22 @@ export const viewport: Viewport = {
     initialScale: 1,
     maximumScale: 1,
     userScalable: false,
-    viewportFit: 'cover', // iOS: extend into safe areas for edge-to-edge
+    viewportFit: 'cover',
 };
+
+// Inline script to prevent flash of wrong theme (runs before React hydration)
+const themeInitScript = `
+(function(){
+  try {
+    var t = localStorage.getItem('shadowdrive-theme') || 'dark';
+    var d = t === 'system'
+      ? (window.matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light')
+      : t;
+    if (d === 'dark') document.documentElement.classList.add('dark');
+    else document.documentElement.classList.remove('dark');
+  } catch(e){}
+})();
+`;
 
 export default function RootLayout({
     children,
@@ -32,8 +47,10 @@ export default function RootLayout({
     children: React.ReactNode;
 }) {
     return (
-        <html lang="tr">
+        <html lang="tr" className="dark" suppressHydrationWarning>
             <head>
+                {/* Prevent flash of wrong theme */}
+                <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
                 {/* PWA: Apple touch icon */}
                 <link rel="apple-touch-icon" href="/icons/icon-192.png" />
                 {/* Register service worker */}
@@ -49,8 +66,10 @@ export default function RootLayout({
                     }}
                 />
             </head>
-            <body className="bg-shadow-950 text-white antialiased">
-                {children}
+            <body className="bg-background text-foreground antialiased">
+                <ThemeProvider>
+                    {children}
+                </ThemeProvider>
             </body>
         </html>
     );

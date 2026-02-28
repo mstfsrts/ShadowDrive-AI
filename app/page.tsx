@@ -15,6 +15,7 @@ import { useState, useCallback, useRef } from 'react';
 import ScenarioForm from '@/components/ScenarioForm';
 import CustomTextForm from '@/components/CustomTextForm';
 import AudioPlayer from '@/components/AudioPlayer';
+import ThemeToggle from '@/components/ThemeToggle';
 import { useToast, ToastContainer } from '@/components/Toast';
 import { Scenario, type CEFRLevel } from '@/types/dialogue';
 import GeneratingLoader from '@/components/GeneratingLoader';
@@ -176,7 +177,7 @@ export default function HomePage() {
                 <button
                     id="back-to-dashboard"
                     onClick={handleBackToDashboard}
-                    className="self-start flex items-center gap-2 text-gray-400 hover:text-white
+                    className="self-start flex items-center gap-2 text-foreground-secondary hover:text-foreground
                      transition-colors duration-200 mb-6 text-sm"
                 >
                     <span>←</span> Geri
@@ -186,14 +187,14 @@ export default function HomePage() {
                 <div className="flex items-center gap-4 mb-8">
                     <span className="text-5xl">{selectedCourse.emoji}</span>
                     <div>
-                        <h1 className="text-2xl font-bold text-white">{selectedCourse.title}</h1>
-                        <p className="text-gray-400 text-sm mt-1">{selectedCourse.description}</p>
+                        <h1 className="text-2xl font-bold text-foreground">{selectedCourse.title}</h1>
+                        <p className="text-foreground-secondary text-sm mt-1">{selectedCourse.description}</p>
                     </div>
                 </div>
 
                 {/* Lessons list */}
                 <div className="flex flex-col gap-3">
-                    <h2 className="text-gray-500 text-xs font-medium uppercase tracking-wider mb-1">
+                    <h2 className="text-foreground-muted text-xs font-medium uppercase tracking-wider mb-1">
                         Dersler ({selectedCourse.lessons.length})
                     </h2>
                     {selectedCourse.lessons.map((lesson, idx) => (
@@ -202,7 +203,7 @@ export default function HomePage() {
                             id={`lesson-${lesson.id}`}
                             onClick={() => handleLessonClick(lesson)}
                             className="lesson-card group flex items-center gap-4 p-5 rounded-2xl
-                             bg-shadow-800 border border-gray-700/50 hover:border-gray-500
+                             bg-card border border-border/50 hover:border-border-hover
                              transition-all duration-300 active:scale-[0.98] text-left"
                         >
                             <div className={`flex items-center justify-center w-12 h-12 rounded-xl
@@ -211,14 +212,14 @@ export default function HomePage() {
                                 {idx + 1}
                             </div>
                             <div className="flex-1">
-                                <p className="text-white font-medium text-lg">{lesson.title}</p>
-                                <p className="text-gray-500 text-sm mt-0.5">
+                                <p className="text-foreground font-medium text-lg">{lesson.title}</p>
+                                <p className="text-foreground-muted text-sm mt-0.5">
                                     {lesson.scenario.lines.length} cümle · {selectedCourse.color === 'emerald' ? 'Başlangıç' :
                                         selectedCourse.color === 'blue' ? 'Orta' :
                                             selectedCourse.color === 'rose' ? 'İleri' : 'Günlük'}
                                 </p>
                             </div>
-                            <span className="text-gray-600 group-hover:text-emerald-400 transition-colors duration-300 text-2xl">
+                            <span className="text-foreground-faint group-hover:text-emerald-400 transition-colors duration-300 text-2xl">
                                 ▶
                             </span>
                         </button>
@@ -234,28 +235,31 @@ export default function HomePage() {
             <ToastContainer toasts={toasts} />
 
             {/* Hero Section */}
-            <div className="flex flex-col items-center mb-8">
+            <div className="relative flex flex-col items-center mb-8">
+                <div className="absolute top-0 right-0">
+                    <ThemeToggle />
+                </div>
                 <div className="mb-3 text-5xl">🚗</div>
                 <h1 className="text-3xl sm:text-4xl font-black tracking-tight mb-2">
                     <span className="text-gradient">Shadow</span>
-                    <span className="text-white">Drive</span>
-                    <span className="text-gray-500 font-light ml-2 text-xl align-middle">AI</span>
+                    <span className="text-foreground">Drive</span>
+                    <span className="text-foreground-muted font-light ml-2 text-xl align-middle">AI</span>
                 </h1>
-                <p className="text-gray-400 text-center text-base max-w-xs leading-relaxed">
+                <p className="text-foreground-secondary text-center text-base max-w-xs leading-relaxed">
                     Araba kullanırken Hollandaca öğren
                 </p>
                 <div className="mt-4 w-16 h-1 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-300 opacity-60" />
             </div>
 
             {/* Tab Switcher */}
-            <div className="tab-switcher flex rounded-2xl bg-shadow-800 border border-gray-700/50 p-1.5 mb-8">
+            <div className="tab-switcher flex rounded-2xl bg-card border border-border/50 p-1.5 mb-8">
                 <button
                     id="tab-courses"
                     onClick={() => setActiveTab('courses')}
                     className={`flex-1 py-3.5 rounded-xl text-xs sm:text-sm font-semibold uppercase tracking-wider
                      transition-all duration-300 ${activeTab === 'courses'
-                            ? 'bg-emerald-500 text-shadow-950 shadow-lg shadow-emerald-500/30'
-                            : 'text-gray-400 hover:text-white'
+                            ? 'bg-emerald-500 text-white dark:text-shadow-950 shadow-lg shadow-emerald-500/30'
+                            : 'text-foreground-secondary hover:text-foreground'
                         }`}
                 >
                     📚 Kurslar
@@ -265,8 +269,8 @@ export default function HomePage() {
                     onClick={() => setActiveTab('ai')}
                     className={`flex-1 py-3.5 rounded-xl text-xs sm:text-sm font-semibold uppercase tracking-wider
                      transition-all duration-300 ${activeTab === 'ai'
-                            ? 'bg-emerald-500 text-shadow-950 shadow-lg shadow-emerald-500/30'
-                            : 'text-gray-400 hover:text-white'
+                            ? 'bg-emerald-500 text-white dark:text-shadow-950 shadow-lg shadow-emerald-500/30'
+                            : 'text-foreground-secondary hover:text-foreground'
                         }`}
                 >
                     🤖 AI
@@ -276,8 +280,8 @@ export default function HomePage() {
                     onClick={() => setActiveTab('custom')}
                     className={`flex-1 py-3.5 rounded-xl text-xs sm:text-sm font-semibold uppercase tracking-wider
                      transition-all duration-300 ${activeTab === 'custom'
-                            ? 'bg-emerald-500 text-shadow-950 shadow-lg shadow-emerald-500/30'
-                            : 'text-gray-400 hover:text-white'
+                            ? 'bg-emerald-500 text-white dark:text-shadow-950 shadow-lg shadow-emerald-500/30'
+                            : 'text-foreground-secondary hover:text-foreground'
                         }`}
                 >
                     ✍️ Metnim
@@ -291,7 +295,7 @@ export default function HomePage() {
                 <div className="flex flex-col gap-4 animate-fade-in">
                     <div className="flex items-center gap-2 mb-2">
                         <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                        <span className="text-xs text-gray-500 uppercase tracking-widest font-medium">
+                        <span className="text-xs text-foreground-muted uppercase tracking-widest font-medium">
                             Çevrimdışı · Sıfır Gecikme
                         </span>
                     </div>
@@ -303,20 +307,20 @@ export default function HomePage() {
                                 id={`course-${course.id}`}
                                 onClick={() => handleCourseClick(course.id)}
                                 className="course-card group relative flex items-center gap-4 p-5 rounded-2xl
-                                 bg-shadow-800 border border-gray-700/50 hover:border-gray-500
+                                 bg-card border border-border/50 hover:border-border-hover
                                  transition-all duration-300 active:scale-[0.98] text-left overflow-hidden"
                             >
                                 {/* Accent glow */}
-                                <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 
-                                 transition-opacity duration-500 bg-gradient-to-r 
+                                <div className={`absolute inset-0 opacity-0 group-hover:opacity-100
+                                 transition-opacity duration-500 bg-gradient-to-r
                                  from-${course.color}-500/5 to-transparent pointer-events-none`} />
 
                                 <span className="text-4xl relative z-10 group-hover:scale-110 transition-transform duration-300">
                                     {course.emoji}
                                 </span>
                                 <div className="flex-1 relative z-10">
-                                    <h3 className="text-white font-bold text-base leading-tight">{course.title}</h3>
-                                    <p className="text-gray-500 text-sm mt-1">{course.description}</p>
+                                    <h3 className="text-foreground font-bold text-base leading-tight">{course.title}</h3>
+                                    <p className="text-foreground-muted text-sm mt-1">{course.description}</p>
                                     <div className="flex items-center gap-2 mt-2">
                                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                                          bg-${course.color}-500/10 text-${course.color}-400`}>
@@ -324,14 +328,14 @@ export default function HomePage() {
                                         </span>
                                     </div>
                                 </div>
-                                <span className="text-gray-600 group-hover:text-white transition-colors duration-300 text-xl relative z-10">
+                                <span className="text-foreground-faint group-hover:text-foreground transition-colors duration-300 text-xl relative z-10">
                                     →
                                 </span>
                             </button>
                         ))}
                     </div>
 
-                    <p className="mt-4 text-gray-600 text-xs text-center">
+                    <p className="mt-4 text-foreground-faint text-xs text-center">
                         Bu dersler internet bağlantısı gerektirmez.
                     </p>
                 </div>
@@ -344,7 +348,7 @@ export default function HomePage() {
                 <div className="flex flex-col gap-4 animate-fade-in">
                     <div className="flex items-center gap-2 mb-2">
                         <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                        <span className="text-xs text-gray-500 uppercase tracking-widest font-medium">
+                        <span className="text-xs text-foreground-muted uppercase tracking-widest font-medium">
                             Çevrimiçi · AI Senaryo
                         </span>
                     </div>
@@ -354,7 +358,7 @@ export default function HomePage() {
                     ) : (
                         <>
                             <ScenarioForm onSubmit={handleGenerate} isLoading={isGenerating} />
-                            <p className="mt-4 text-gray-600 text-xs text-center max-w-xs mx-auto">
+                            <p className="mt-4 text-foreground-faint text-xs text-center max-w-xs mx-auto">
                                 Konunuzu yazın ve AI sizin için Hollandaca-Türkçe bir ders oluştursun.
                             </p>
                         </>
@@ -369,14 +373,14 @@ export default function HomePage() {
                 <div className="flex flex-col gap-4 animate-fade-in">
                     <div className="flex items-center gap-2 mb-2">
                         <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
-                        <span className="text-xs text-gray-500 uppercase tracking-widest font-medium">
+                        <span className="text-xs text-foreground-muted uppercase tracking-widest font-medium">
                             Özel İçerik · Manuel Format
                         </span>
                     </div>
 
                     <CustomTextForm onSubmit={handleCustomSubmit} />
 
-                    <p className="mt-4 text-gray-600 text-xs text-center max-w-xs mx-auto">
+                    <p className="mt-4 text-foreground-faint text-xs text-center max-w-xs mx-auto">
                         Kendi cümlelerinizi yapıştırın ve anında çalışın.
                     </p>
                 </div>
