@@ -2,7 +2,8 @@
 // Pure logic module: Promise-based TTS using Web Speech API.
 // No UI dependencies. This is the heart of the app.
 
-import { Scenario, PlaybackStatus, PlaybackPhase } from '@/types/dialogue';
+import { Scenario, PlaybackStatus, PlaybackPhase, CEFRLevel } from '@/types/dialogue';
+import { getBestVoice, getRateForLevel, clearVoiceCache } from '@/lib/voiceSelector';
 
 // ─── iOS WebKit: Preload voices ───
 // iOS Safari has a known delay loading voices. Call this once on first user gesture.
@@ -17,6 +18,7 @@ export function preloadVoices(): void {
     // iOS fires 'voiceschanged' after initial load
     window.speechSynthesis.addEventListener('voiceschanged', () => {
         voicesLoaded = true;
+        clearVoiceCache(); // Re-evaluate voices after they finish loading
         console.log('[SpeechEngine] Voices loaded:', window.speechSynthesis.getVoices().length);
     }, { once: true });
 
@@ -25,9 +27,10 @@ export function preloadVoices(): void {
 
 /**
  * Speak text aloud using the Web Speech API.
+ * Uses the best available voice for the language and adjusts rate by CEFR level.
  * Returns a Promise that resolves with the approximate duration in ms.
  */
-export function speakAsync(text: string, lang: string): Promise<number> {
+export function speakAsync(text: string, lang: string, level?: CEFRLevel): Promise<number> {
     return new Promise((resolve, reject) => {
         if (typeof window === 'undefined' || !window.speechSynthesis) {
             reject(new Error('Speech synthesis not available'));
@@ -36,9 +39,17 @@ export function speakAsync(text: string, lang: string): Promise<number> {
 
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = lang;
-        utterance.rate = 0.9; // Slightly slower for language learners
         utterance.pitch = 1.0;
         utterance.volume = 1.0;
+
+        // Use best available voice for this language
+        const voice = getBestVoice(lang);
+        if (voice) {
+            utterance.voice = voice;
+        }
+
+        // Adjust rate based on CEFR level
+        utterance.rate = level ? getRateForLevel(level) : 0.9;
 
         const startTime = Date.now();
 
@@ -95,20 +106,40 @@ export function cancelSpeech(): void {
 }
 
 /**
+ * Check if a language has any usable TTS voice on this device.
+ */
+function hasVoiceForLang(lang: string): boolean {
+    return getBestVoice(lang) !== undefined;
+}
+
+/**
  * Play through an entire scenario using the core loop:
  *   Target Language → Calculated Silence → Native Language → Short Gap → Target Language (repeat)
  *
  * Yields PlaybackStatus on each phase transition so the UI can update.
  * Accepts an AbortSignal for clean cancellation (pause/stop).
+ *
+ * @param scenario - The scenario to play
+ * @param signal - AbortSignal for cancellation
+ * @param level - CEFR level for speech rate adjustment
+ * @param startFromIndex - Line index to resume from (0 = start)
  */
 export async function* playScenario(
     scenario: Scenario,
-    signal: AbortSignal
+    signal: AbortSignal,
+    level?: CEFRLevel,
+    startFromIndex: number = 0
 ): AsyncGenerator<PlaybackStatus> {
     const { lines, targetLang, nativeLang } = scenario;
 
     // iOS: preload voices on first playback
     preloadVoices();
+
+    // Check if native language has a usable voice
+    const nativeHasVoice = hasVoiceForLang(nativeLang);
+    if (!nativeHasVoice) {
+        console.log(`[SpeechEngine] No voice for ${nativeLang} — will show text with timed pause`);
+    }
 
     // iOS: resume speechSynthesis when returning from background
     const handleVisibility = () => {
@@ -121,12 +152,12 @@ export async function* playScenario(
     // Cleanup listener when generator completes
     const cleanup = () => document.removeEventListener('visibilitychange', handleVisibility);
 
-    for (let i = 0; i < lines.length; i++) {
+    for (let i = startFromIndex; i < lines.length; i++) {
         const line = lines[i];
 
         if (signal.aborted) return;
 
-        // Phase 1: Speak target language (e.g. Dutch)
+        // Phase 1: Speak target language (e.g. Dutch) — Edge TTS or Web Speech
         yield {
             lineIndex: i,
             totalLines: lines.length,
@@ -134,7 +165,7 @@ export async function* playScenario(
             text: line.targetText,
             nativeText: line.nativeText,
         };
-        const targetDuration = await speakAsync(line.targetText, targetLang);
+        const targetDuration = await speakAsync(line.targetText, targetLang, level);
 
         if (signal.aborted) return;
 
@@ -155,26 +186,21 @@ export async function* playScenario(
 
         if (signal.aborted) return;
 
-        // Phase 3: Speak native language (e.g. Turkish)
-        // If native language is Turkish, skip TTS and just wait because the system voice is robotic.
+        // Phase 3: Native language (e.g. Turkish) — NEVER spoken, text displayed only
         yield {
             lineIndex: i,
             totalLines: lines.length,
             phase: 'native' as PlaybackPhase,
-            text: line.targetText, // Show target text still
-            nativeText: line.nativeText, // But highlight native phase in UI maybe
+            text: line.targetText,
+            nativeText: line.nativeText,
         };
 
-        if (nativeLang.toLowerCase().startsWith('tr')) {
-            // Wait instead of using the robotic Turkish TTS
-            const estimatedReadingMs = Math.max(1500, line.nativeText.length * 60);
-            try {
-                await waitMs(estimatedReadingMs, signal);
-            } catch {
-                return;
-            }
-        } else {
-            await speakAsync(line.nativeText, nativeLang);
+        // Always show text with a reading-time pause — native language is never spoken
+        const estimatedReadingMs = Math.max(1500, line.nativeText.length * 60);
+        try {
+            await waitMs(estimatedReadingMs, signal);
+        } catch {
+            return;
         }
 
         if (signal.aborted) return;
@@ -202,7 +228,7 @@ export async function* playScenario(
             text: line.targetText,
             nativeText: line.nativeText,
         };
-        await speakAsync(line.targetText, targetLang);
+        await speakAsync(line.targetText, targetLang, level);
 
         if (signal.aborted) return;
 

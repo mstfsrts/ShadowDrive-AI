@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { ThemeProvider } from '@/lib/theme';
+import { Providers } from './providers';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -15,6 +16,9 @@ export const metadata: Metadata = {
     icons: {
         icon: '/icons/icon-192.png',
         apple: '/icons/icon-192.png',
+    },
+    other: {
+        'mobile-web-app-capable': 'yes',
     },
 };
 
@@ -67,9 +71,11 @@ export default function RootLayout({
                 />
             </head>
             <body className="bg-background text-foreground antialiased">
-                <ThemeProvider>
-                    {children}
-                </ThemeProvider>
+                <Providers>
+                    <ThemeProvider>
+                        {children}
+                    </ThemeProvider>
+                </Providers>
             </body>
         </html>
     );

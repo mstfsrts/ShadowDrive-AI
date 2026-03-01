@@ -166,6 +166,15 @@ button {
   animation: fade-in 0.3s ease-out;
 }
 
+@keyframes wave-out {
+  0% { transform: scale(0.85); opacity: 0.5; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+.wave-ring   { animation: wave-out 2.4s ease-out infinite; }
+.wave-ring-2 { animation: wave-out 2.4s ease-out infinite 0.8s; }
+.wave-ring-3 { animation: wave-out 2.4s ease-out infinite 1.6s; }
+
 /* ─── AI Generating Loader Animation ─── */
 
 @keyframes orbit {
