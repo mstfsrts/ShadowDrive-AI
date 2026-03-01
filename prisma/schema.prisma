@@ -24,11 +24,12 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  accounts  Account[]
-  sessions  Session[]
-  progress  Progress[]
-  scenarios GeneratedScenario[]
-  favorites Favorite[]
+  accounts      Account[]
+  sessions      Session[]
+  progress      Progress[]
+  scenarios     GeneratedScenario[]
+  favorites     Favorite[]
+  customLessons CustomLesson[]
 }
 
 model Account {
@@ -70,13 +71,15 @@ model VerificationToken {
 // ─── App-specific models ────────────────────────────────────────────────────
 
 model Progress {
-  id            String    @id @default(cuid())
-  userId        String
-  courseId      String
-  lessonId      String
-  lastLineIndex Int       @default(0)
-  completed     Boolean   @default(false)
-  completedAt   DateTime?
+  id              String    @id @default(cuid())
+  userId          String
+  courseId        String
+  lessonId        String
+  lastLineIndex   Int       @default(0)
+  completed       Boolean   @default(false)
+  completedAt     DateTime?
+  completionCount Int       @default(0)
+  targetCount     Int       @default(4)
 
   updatedAt DateTime @updatedAt
 
@@ -87,10 +90,11 @@ model Progress {
 }
 
 model GeneratedScenario {
-  id        String   @id @default(cuid())
+  id        String  @id @default(cuid())
   userId    String?
   topicHash String
   topic     String
+  title     String?
   level     String
   content   Json
 
@@ -99,6 +103,7 @@ model GeneratedScenario {
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([topicHash])
+  @@index([userId])
 }
 
 model Favorite {
@@ -112,5 +117,45 @@ model Favorite {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, courseId, lessonId])
+  @@index([userId])
+}
+
+// ─── Course content (migrated from JSON) ────────────────────────────────────
+
+model Course {
+  id          String   @id
+  title       String
+  description String
+  emoji       String
+  color       String
+  order       Int      @default(0)
+  lessons     Lesson[]
+}
+
+model Lesson {
+  id       String @id
+  courseId String
+  title    String
+  order    Int    @default(0)
+  content  Json
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([courseId])
+}
+
+// ─── User-created content ────────────────────────────────────────────────────
+
+model CustomLesson {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  content   Json
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
 }

@@ -2,16 +2,11 @@
 
 // ─── ShadowDrive AI — Dashboard Page ───
 // ARCHITECTURE:
-//   Section A: Structured Courses — Offline, zero latency (Delftse Methode, GoedBezig)
+//   Section A: Structured Courses — DB-backed (Delftse Methode, GoedBezig)
 //   Section B: Custom AI Scenarios — Online, Gemini-powered
-//
-// RULES:
-// 1. ZERO useEffect API calls — fetch ONLY fires on explicit user click
-// 2. LocalStorage caching — never ask Gemini for the same scenario twice
-// 3. Seamless offline fallback — app NEVER shows a dead end
-// 4. useRef guard prevents double-click / double-fetch
+//   Section C: Custom Text Input — Manual entry
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import ScenarioForm from '@/components/ScenarioForm';
 import CustomTextForm from '@/components/CustomTextForm';
 import AudioPlayer from '@/components/AudioPlayer';
@@ -22,42 +17,88 @@ import { Scenario, type CEFRLevel } from '@/types/dialogue';
 import GeneratingLoader from '@/components/GeneratingLoader';
 import { getCachedScenario, cacheScenario } from '@/lib/scenarioCache';
 import { getOfflineScenario } from '@/lib/offlineScenarios';
-import { getAllCourses, getCourseById, type Course, type CourseLesson } from '@/lib/offline-courses';
+
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+export interface ApiLesson {
+    id: string;
+    title: string;
+    order: number;
+    content: Scenario;
+}
+
+export interface ApiCourse {
+    id: string;
+    title: string;
+    description: string;
+    emoji: string;
+    color: string;
+    order: number;
+    lessons: ApiLesson[];
+}
 
 type ActiveTab = 'courses' | 'ai' | 'custom';
 type ViewState = 'dashboard' | 'course-detail' | 'playback';
+
+// ─── Skeleton Loader ─────────────────────────────────────────────────────────
+
+function CourseCardSkeleton() {
+    return (
+        <div className="flex items-center gap-4 p-5 rounded-2xl bg-card border border-border/50 animate-pulse">
+            <div className="w-12 h-12 rounded-xl bg-foreground/10 flex-shrink-0" />
+            <div className="flex-1 space-y-2">
+                <div className="h-4 bg-foreground/10 rounded w-3/4" />
+                <div className="h-3 bg-foreground/10 rounded w-1/2" />
+            </div>
+        </div>
+    );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
     const [activeTab, setActiveTab] = useState<ActiveTab>('courses');
     const [viewState, setViewState] = useState<ViewState>('dashboard');
     const [scenario, setScenario] = useState<Scenario | null>(null);
-    const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+    const [selectedCourse, setSelectedCourse] = useState<ApiCourse | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
+    const [courses, setCourses] = useState<ApiCourse[]>([]);
+    const [coursesLoading, setCoursesLoading] = useState(true);
     const { toasts, showToast } = useToast();
 
     // ─── DOUBLE-CLICK GUARD ───
     const isFetchingRef = useRef(false);
 
-    const allCourses = getAllCourses();
+    // ─── LOAD COURSES FROM DB ───
+    useEffect(() => {
+        fetch('/api/courses')
+            .then((r) => {
+                if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                return r.json();
+            })
+            .then((data: unknown) => setCourses(Array.isArray(data) ? data : []))
+            .catch(() => showToast('Kurslar yüklenemedi', 'warning'))
+            .finally(() => setCoursesLoading(false));
+    }, [showToast]);
 
-    // ─── COURSE HANDLERS (Section A — Offline) ───
+    // ─── COURSE HANDLERS (Section A) ───
 
     const handleCourseClick = useCallback((courseId: string) => {
-        const course = getCourseById(courseId);
+        const course = courses.find((c) => c.id === courseId);
         if (course) {
             setSelectedCourse(course);
             setViewState('course-detail');
         }
-    }, []);
+    }, [courses]);
 
-    const handleLessonClick = useCallback((lesson: CourseLesson) => {
-        console.log(`[DashboardPage] Loading offline lesson: "${lesson.title}"`);
-        showToast('Ders yüklendi — Anında!', 'success');
-        setScenario(lesson.scenario);
+    const handleLessonClick = useCallback((lesson: ApiLesson) => {
+        console.log(`[DashboardPage] Loading lesson: "${lesson.title}"`);
+        showToast('Ders yüklendi!', 'success');
+        setScenario(lesson.content);
         setViewState('playback');
     }, [showToast]);
 
-    // ─── AI GENERATE HANDLER (Section B — Online) ───
+    // ─── AI GENERATE HANDLER (Section B) ───
     const handleGenerate = useCallback(async (topic: string, difficulty: CEFRLevel) => {
         if (isFetchingRef.current) {
             console.warn('[DashboardPage] Blocked duplicate fetch — already in progress');
@@ -68,7 +109,6 @@ export default function DashboardPage() {
         isFetchingRef.current = true;
         setIsGenerating(true);
 
-        // Check LocalStorage cache
         const cached = getCachedScenario(topic, difficulty);
         if (cached) {
             console.log('[DashboardPage] ✅ CACHE HIT — skipping API call entirely');
@@ -80,7 +120,7 @@ export default function DashboardPage() {
             return;
         }
 
-        console.log('[DashboardPage] Cache MISS — calling Gemini API...');
+        console.log('[DashboardPage] Cache MISS — calling AI API...');
 
         try {
             const response = await fetch('/api/generate', {
@@ -103,7 +143,6 @@ export default function DashboardPage() {
                 );
 
                 const offline = getOfflineScenario(topic);
-                console.log(`[DashboardPage] Loaded offline scenario: "${offline.title}"`);
                 setScenario(offline);
                 setViewState('playback');
                 return;
@@ -174,7 +213,6 @@ export default function DashboardPage() {
             <main className="min-h-dvh flex flex-col px-4 py-8 max-w-lg mx-auto">
                 <ToastContainer toasts={toasts} />
 
-                {/* Back button */}
                 <button
                     id="back-to-dashboard"
                     onClick={handleBackToDashboard}
@@ -184,7 +222,6 @@ export default function DashboardPage() {
                     <span>←</span> Geri
                 </button>
 
-                {/* Course header */}
                 <div className="flex items-center gap-4 mb-8">
                     <span className="text-5xl">{selectedCourse.emoji}</span>
                     <div>
@@ -193,7 +230,6 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                {/* Lessons list */}
                 <div className="flex flex-col gap-3">
                     <h2 className="text-foreground-muted text-xs font-medium uppercase tracking-wider mb-1">
                         Dersler ({selectedCourse.lessons.length})
@@ -215,7 +251,7 @@ export default function DashboardPage() {
                             <div className="flex-1">
                                 <p className="text-foreground font-medium text-lg">{lesson.title}</p>
                                 <p className="text-foreground-muted text-sm mt-0.5">
-                                    {lesson.scenario.lines.length} cümle · {selectedCourse.color === 'emerald' ? 'Başlangıç' :
+                                    {lesson.content.lines.length} cümle · {selectedCourse.color === 'emerald' ? 'Başlangıç' :
                                         selectedCourse.color === 'blue' ? 'Orta' :
                                             selectedCourse.color === 'rose' ? 'İleri' : 'Günlük'}
                                 </p>
@@ -230,7 +266,7 @@ export default function DashboardPage() {
         );
     }
 
-    // ─── DASHBOARD MODE (Dual Tabs) ───
+    // ─── DASHBOARD MODE ───
     return (
         <main className="min-h-dvh flex flex-col px-4 py-8 max-w-lg mx-auto">
             <ToastContainer toasts={toasts} />
@@ -257,97 +293,84 @@ export default function DashboardPage() {
 
             {/* Tab Switcher */}
             <div className="tab-switcher flex rounded-2xl bg-card border border-border/50 p-1.5 mb-8">
-                <button
-                    id="tab-courses"
-                    onClick={() => setActiveTab('courses')}
-                    className={`flex-1 py-3.5 rounded-xl text-xs sm:text-sm font-semibold uppercase tracking-wider
-                     transition-all duration-300 ${activeTab === 'courses'
-                            ? 'bg-emerald-500 text-white dark:text-shadow-950 shadow-lg shadow-emerald-500/30'
-                            : 'text-foreground-secondary hover:text-foreground'
-                        }`}
-                >
-                    📚 Kurslar
-                </button>
-                <button
-                    id="tab-ai"
-                    onClick={() => setActiveTab('ai')}
-                    className={`flex-1 py-3.5 rounded-xl text-xs sm:text-sm font-semibold uppercase tracking-wider
-                     transition-all duration-300 ${activeTab === 'ai'
-                            ? 'bg-emerald-500 text-white dark:text-shadow-950 shadow-lg shadow-emerald-500/30'
-                            : 'text-foreground-secondary hover:text-foreground'
-                        }`}
-                >
-                    🤖 AI
-                </button>
-                <button
-                    id="tab-custom"
-                    onClick={() => setActiveTab('custom')}
-                    className={`flex-1 py-3.5 rounded-xl text-xs sm:text-sm font-semibold uppercase tracking-wider
-                     transition-all duration-300 ${activeTab === 'custom'
-                            ? 'bg-emerald-500 text-white dark:text-shadow-950 shadow-lg shadow-emerald-500/30'
-                            : 'text-foreground-secondary hover:text-foreground'
-                        }`}
-                >
-                    ✍️ Metnim
-                </button>
+                {(['courses', 'ai', 'custom'] as ActiveTab[]).map((tab) => (
+                    <button
+                        key={tab}
+                        id={`tab-${tab}`}
+                        onClick={() => setActiveTab(tab)}
+                        className={`flex-1 py-3.5 rounded-xl text-xs sm:text-sm font-semibold uppercase tracking-wider
+                         transition-all duration-300 ${activeTab === tab
+                                ? 'bg-emerald-500 text-white dark:text-shadow-950 shadow-lg shadow-emerald-500/30'
+                                : 'text-foreground-secondary hover:text-foreground'
+                            }`}
+                    >
+                        {tab === 'courses' ? '📚 Kurslar' : tab === 'ai' ? '🤖 AI' : '✍️ Metnim'}
+                    </button>
+                ))}
             </div>
 
-            {/* ═══════════════════════════════════════════════ */}
-            {/* Section A: Structured Courses (Offline)        */}
-            {/* ═══════════════════════════════════════════════ */}
+            {/* ── Courses Tab ── */}
             {activeTab === 'courses' && (
                 <div className="flex flex-col gap-4 animate-fade-in">
                     <div className="flex items-center gap-2 mb-2">
                         <div className="w-2 h-2 rounded-full bg-slate-500 dark:bg-slate-400 animate-pulse" />
                         <span className="text-xs text-foreground-muted uppercase tracking-widest font-medium">
-                            Çevrimdışı · Sıfır Gecikme
+                            Yapılandırılmış Müfredat
                         </span>
                     </div>
 
                     <div className="grid grid-cols-1 gap-4">
-                        {allCourses.map((course) => (
-                            <button
-                                key={course.id}
-                                id={`course-${course.id}`}
-                                onClick={() => handleCourseClick(course.id)}
-                                className="course-card group relative flex items-center gap-4 p-5 rounded-2xl
-                                 bg-card border border-border/50 hover:border-border-hover
-                                 transition-all duration-300 active:scale-[0.98] text-left overflow-hidden"
-                            >
-                                {/* Accent glow */}
-                                <div className={`absolute inset-0 opacity-0 group-hover:opacity-100
-                                 transition-opacity duration-500 bg-gradient-to-r
-                                 from-${course.color}-500/5 to-transparent pointer-events-none`} />
-
-                                <span className="text-4xl relative z-10 group-hover:scale-110 transition-transform duration-300">
-                                    {course.emoji}
-                                </span>
-                                <div className="flex-1 relative z-10">
-                                    <h3 className="text-foreground font-bold text-base leading-tight">{course.title}</h3>
-                                    <p className="text-foreground-muted text-sm mt-1">{course.description}</p>
-                                    <div className="flex items-center gap-2 mt-2">
-                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                         bg-${course.color}-500/10 text-${course.color}-400`}>
-                                            {course.lessons.length} ders
-                                        </span>
+                        {coursesLoading ? (
+                            <>
+                                <CourseCardSkeleton />
+                                <CourseCardSkeleton />
+                                <CourseCardSkeleton />
+                            </>
+                        ) : courses.length === 0 ? (
+                            <p className="text-foreground-muted text-sm text-center py-8">
+                                Kurslar yüklenemedi.
+                            </p>
+                        ) : (
+                            courses.map((course) => (
+                                <button
+                                    key={course.id}
+                                    id={`course-${course.id}`}
+                                    onClick={() => handleCourseClick(course.id)}
+                                    className="course-card group relative flex items-center gap-4 p-5 rounded-2xl
+                                     bg-card border border-border/50 hover:border-border-hover
+                                     transition-all duration-300 active:scale-[0.98] text-left overflow-hidden"
+                                >
+                                    <div className={`absolute inset-0 opacity-0 group-hover:opacity-100
+                                     transition-opacity duration-500 bg-gradient-to-r
+                                     from-${course.color}-500/5 to-transparent pointer-events-none`} />
+                                    <span className="text-4xl relative z-10 group-hover:scale-110 transition-transform duration-300">
+                                        {course.emoji}
+                                    </span>
+                                    <div className="flex-1 relative z-10">
+                                        <h3 className="text-foreground font-bold text-base leading-tight">{course.title}</h3>
+                                        <p className="text-foreground-muted text-sm mt-1">{course.description}</p>
+                                        <div className="flex items-center gap-2 mt-2">
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                             bg-${course.color}-500/10 text-${course.color}-400`}>
+                                                {course.lessons.length} ders
+                                            </span>
+                                        </div>
                                     </div>
-                                </div>
-                                <span className="text-foreground-faint group-hover:text-foreground transition-colors duration-300 text-xl relative z-10">
-                                    →
-                                </span>
-                            </button>
-                        ))}
+                                    <span className="text-foreground-faint group-hover:text-foreground transition-colors duration-300 text-xl relative z-10">
+                                        →
+                                    </span>
+                                </button>
+                            ))
+                        )}
                     </div>
 
                     <p className="mt-4 text-foreground-faint text-xs text-center">
-                        Bu dersler internet bağlantısı gerektirmez.
+                        Delftse Methode · GoedBezig müfredatı
                     </p>
                 </div>
             )}
 
-            {/* ═══════════════════════════════════════════════ */}
-            {/* Section B: Custom AI Scenarios (Online)         */}
-            {/* ═══════════════════════════════════════════════ */}
+            {/* ── AI Tab ── */}
             {activeTab === 'ai' && (
                 <div className="flex flex-col gap-4 animate-fade-in">
                     <div className="flex items-center gap-2 mb-2">
@@ -370,9 +393,7 @@ export default function DashboardPage() {
                 </div>
             )}
 
-            {/* ═══════════════════════════════════════════════ */}
-            {/* Section C: Custom Text Input                     */}
-            {/* ═══════════════════════════════════════════════ */}
+            {/* ── Custom Text Tab ── */}
             {activeTab === 'custom' && (
                 <div className="flex flex-col gap-4 animate-fade-in">
                     <div className="flex items-center gap-2 mb-2">
