@@ -48,6 +48,9 @@ mysql_data/
 
 # ─── Prisma ───
 backend/prisma/migrations/
+prisma/dev.db
+prisma/dev.db-journal
+*.db
 
 # ─── Gemini Agent Brain (local only) ───
 .gemini/
