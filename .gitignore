@@ -6,6 +6,7 @@ node_modules/
 # ─── Next.js Build ───
 .next/
 out/
+tsconfig.tsbuildinfo
 
 # ─── Testing ───
 coverage/
