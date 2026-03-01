@@ -145,7 +145,7 @@ export default function LandingPage() {
                                text-foreground font-semibold text-base
                                active:scale-[0.98] transition-all duration-300"
                 >
-                    ✉&ensp;E-posta ile Giriş / Kayıt
+                    E-posta ile Giriş / Kayıt
                 </button>
 
                 {/* Guest — Ghost */}
