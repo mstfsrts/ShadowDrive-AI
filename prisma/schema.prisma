@@ -120,7 +120,7 @@ model Favorite {
   @@index([userId])
 }
 
-// ─── Course content (migrated from JSON) ────────────────────────────────────
+// ─── Course content (DB-only, seeded from prisma/seed.ts) ─────────────────
 
 model Course {
   id          String   @id
@@ -129,6 +129,8 @@ model Course {
   emoji       String
   color       String
   order       Int      @default(0)
+  category    String
+  subcategory String?
   lessons     Lesson[]
 }
 

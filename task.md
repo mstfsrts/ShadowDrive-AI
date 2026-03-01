@@ -19,7 +19,6 @@
 
 ## Phase 3: Frontend / UI ✅
 - [x] Dual-engine dashboard: Courses | AI | Custom Text
-- [x] Offline courses, AI generation, custom text input
 - [x] UI localized to Turkish for end users
 
 ## Phase 4: PWA & Mobile ✅
@@ -35,27 +34,26 @@
 - [x] Speech engine tests (7/7)
 - [x] Scenario cache tests (5/5)
 - [x] Offline scenario tests (4/4)
-- [x] E2E: Mobile viewport (390×844)
-- [x] E2E: Full flow — topic → generate → play → complete
 
 ## Phase 7: iOS Adaptation ✅
 - [x] Safe area insets (notch + home indicator)
 - [x] `viewport-fit: cover`, standalone mode CSS
 - [x] Touch optimization (88px buttons, 44px chips)
-- [x] iOS WebKit speech fixes (voice preload, double-cancel, visibility resume)
-- [x] Body scroll lock during playback
-- [ ] Performance: bundle optimization, lazy loading
-- [ ] Haptic feedback via `navigator.vibrate()`
+- [x] iOS WebKit speech fixes
 
-## Phase 8: Self-Hosted Backend (Planned)
-- [ ] Docker + PostgreSQL setup
-- [ ] Prisma ORM schema & migrations
-- [ ] NextAuth.js v5 (Google OAuth + credentials)
-- [ ] API routes: progress, favorites
-- [ ] User profile page
-- [ ] Progress tracking on lesson cards
+## Phase 8: Auth + DB ✅
+- [x] Prisma ORM schema & migrations (PostgreSQL)
+- [x] NextAuth.js v5 (Google OAuth + credentials)
+- [x] Kursları DB'ye taşı (Course + Lesson modelleri)
+- [x] Responsive mobil tasarım (flex layout, 44px touch targets)
+- [x] Kurs yapısı yeniden düzenleme (kategori/alt-kategori hiyerarşisi)
+- [x] `data/` klasörü silindi — tüm veri DB-only (`prisma/seed.ts` inline)
 
-## Phase 9: Polish & Optimization
+## Phase 9: Progress Takibi (Bekliyor)
+- [ ] `Progress` modeline `completionCount` + `targetCount` ekle
+- [ ] `POST /api/progress` + `GET /api/progress` API route'ları
+- [ ] Dashboard: progress yükle, badge göster, resume desteği
+
+## Phase 10: Polish & Optimization
 - [ ] Bundle size optimization
 - [ ] Lazy loading for non-critical components
-- [ ] Haptic feedback

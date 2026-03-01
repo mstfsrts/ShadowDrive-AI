@@ -14,33 +14,41 @@ Hands-free, mobile-first PWA for **Dutch ↔ Turkish** language learning, now wi
 
 ---
 
-## Current Architecture (What Exists)
+## Current Architecture
 
 ```
-1st_Project/
-├── .agent/skills/
-│   ├── frontend-design/SKILL.md        [NEW — Skill 1]
-│   ├── systematic-debugging/SKILL.md   [NEW — Skill 2]
-│   └── test-driven-development/SKILL.md [NEW — Skill 3]
+ShadowDrive-AI/
 ├── app/
 │   ├── layout.tsx
-│   ├── page.tsx              # Dual-engine: Courses + AI + Custom tabs
+│   ├── page.tsx              # Landing page (auth)
+│   ├── dashboard/page.tsx    # Main dashboard (Kurslar | AI | Metnim)
 │   ├── globals.css
-│   └── api/generate/route.ts # Gemini API (Dutch-Turkish, model fallback)
+│   └── api/
+│       ├── generate/route.ts # Gemini API (Dutch-Turkish)
+│       ├── courses/route.ts  # GET all courses from DB
+│       └── courses/[id]/     # GET single course
 ├── components/
 │   ├── AudioPlayer.tsx       # Playback with nativeText display
 │   ├── ScenarioForm.tsx      # Turkish-localized form
 │   ├── CustomTextForm.tsx    # Manual text input
-│   ├── StatusBar.tsx
+│   ├── AuthButton.tsx        # Login/avatar
+│   ├── ThemeToggle.tsx       # Dark/light toggle
+│   ├── LandingPage.tsx       # Onboarding
 │   └── Toast.tsx             # Auto-dismissing notifications
 ├── lib/
 │   ├── speechEngine.ts       # 6-phase loop, Turkish TTS skip
 │   ├── gemini.ts             # Model fallback, 15s timeout
 │   ├── scenarioCache.ts      # LocalStorage caching
-│   ├── offlineScenarios.ts   # 5 Turkish offline scenarios
-│   └── offline-courses/      # Structured course data
+│   └── offlineScenarios.ts   # 5 Turkish offline scenarios
+├── prisma/
+│   ├── schema.prisma         # PostgreSQL models (Course, Lesson, User, etc.)
+│   ├── seed.ts               # Inline course data (DB-only, no JSON files)
+│   └── migrations/
 ├── types/dialogue.ts
 └── public/ (manifest, sw.js, icons)
+
+Data: All course data lives in prisma/seed.ts (inline).
+      `data/` directory has been removed.
 ```
 
 ---

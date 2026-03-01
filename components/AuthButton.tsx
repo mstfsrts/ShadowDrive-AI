@@ -16,7 +16,7 @@ export default function AuthButton() {
 
     // Don't render until session is resolved (avoids flash)
     if (status === 'loading') {
-        return <div className="w-8 h-8 rounded-full bg-card-hover animate-pulse" />;
+        return <div className="w-11 h-11 rounded-full bg-card-hover animate-pulse" />;
     }
 
     if (session?.user) {
@@ -36,12 +36,12 @@ export default function AuthButton() {
                         <img
                             src={user.image}
                             alt={user.name ?? 'Profil'}
-                            className="w-8 h-8 rounded-full border border-border"
+                            className="w-11 h-11 rounded-full border border-border"
                         />
                     ) : (
-                        <div className="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/40
+                        <div className="w-11 h-11 rounded-full bg-emerald-500/20 border border-emerald-500/40
                                         flex items-center justify-center text-emerald-600 dark:text-emerald-400
-                                        text-xs font-bold">
+                                        text-sm font-bold">
                             {initials}
                         </div>
                     )}
@@ -53,8 +53,8 @@ export default function AuthButton() {
                             className="fixed inset-0 z-10"
                             onClick={() => setShowDropdown(false)}
                         />
-                        <div className="absolute right-0 top-10 z-20 bg-card border border-border
-                                        rounded-2xl shadow-2xl p-3 min-w-[160px] animate-fade-in">
+                        <div className="absolute left-0 top-12 z-20 bg-card border border-border
+                                        rounded-2xl shadow-2xl p-3 min-w-[180px] animate-fade-in">
                             <p className="text-foreground text-sm font-medium px-2 py-1 truncate max-w-[140px]">
                                 {user.name || user.email}
                             </p>
@@ -77,10 +77,10 @@ export default function AuthButton() {
         <>
             <button
                 onClick={() => setShowModal(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl
+                className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl
                            bg-card-hover border border-border hover:border-border-hover
                            text-foreground-secondary hover:text-foreground
-                           text-sm font-medium transition-all duration-200 active:scale-95"
+                           text-sm font-medium transition-all duration-200 active:scale-95 min-h-[44px]"
             >
                 <span className="text-base">👤</span>
                 <span>Giriş</span>
