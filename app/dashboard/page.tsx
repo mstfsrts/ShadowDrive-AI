@@ -22,7 +22,7 @@ import ResumePromptModal from '@/components/ResumePromptModal';
 import ConfirmModal from '@/components/ConfirmModal';
 import { getCachedScenario, cacheScenario } from '@/lib/scenarioCache';
 import { getOfflineScenario } from '@/lib/offlineScenarios';
-import { getResumableId, getStoredLastLineIndex, getStoredProgress, setStoredLastLineIndex, incrementStoredCompletionCount } from '@/lib/resumablePlayback';
+import { getResumableId, getStoredLastLineIndex, getStoredProgress, setStoredLastLineIndex, incrementStoredCompletionCount, type ProgressDataLike } from '@/lib/resumablePlayback';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -404,7 +404,7 @@ export default function DashboardPage() {
             session,
             courseId: course?.id,
             lessonId: lesson?.id,
-            setProgressMap,
+            setProgressMap: setProgressMap as (fn: (prev: Record<string, ProgressDataLike>) => Record<string, ProgressDataLike>) => void,
         });
         setScenario(sc);
         setStartFromIndex(0);
@@ -645,7 +645,7 @@ export default function DashboardPage() {
                 session,
                 courseId: sessionRef.courseId,
                 lessonId: sessionRef.lessonId,
-                setProgressMap,
+                setProgressMap: setProgressMap as (fn: (prev: Record<string, ProgressDataLike>) => Record<string, ProgressDataLike>) => void,
             });
             playbackSessionRef.current = null;
         }
