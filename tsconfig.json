@@ -1,5 +1,6 @@
 {
     "compilerOptions": {
+        "baseUrl": ".",
         "lib": [
             "dom",
             "dom.iterable",
@@ -24,6 +25,9 @@
         "paths": {
             "@/*": [
                 "./*"
+            ],
+            "@shadowdrive/shared": [
+                "packages/shared/src/index.ts"
             ]
         }
     },
@@ -36,7 +40,6 @@
     "exclude": [
         "node_modules",
         "backend",
-        "mobile",
-        "packages"
+        "mobile"
     ]
 }
