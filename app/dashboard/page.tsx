@@ -12,6 +12,7 @@ import ScenarioForm from '@/components/ScenarioForm';
 import CustomTextForm from '@/components/CustomTextForm';
 import AudioPlayer from '@/components/AudioPlayer';
 import LessonPreview from '@/components/LessonPreview';
+import SavedLessonCard from '@/components/SavedLessonCard';
 import ThemeToggle from '@/components/ThemeToggle';
 import AuthButton from '@/components/AuthButton';
 import { useToast, ToastContainer } from '@/components/Toast';
@@ -48,6 +49,29 @@ interface ProgressData {
     targetCount: number;
     completed: boolean;
     lastLineIndex: number;
+}
+
+interface SavedAiLesson {
+    id: string;
+    title: string | null;
+    topic: string;
+    level: string;
+    content: Scenario;
+    createdAt: string;
+}
+
+interface SavedCustomLesson {
+    id: string;
+    title: string;
+    content: Scenario;
+    createdAt: string;
+}
+
+interface GeneratedLessonState {
+    scenario: Scenario;
+    topic: string;
+    level: CEFRLevel;
+    savedId?: string;
 }
 
 type ActiveTab = 'courses' | 'ai' | 'custom';
@@ -96,6 +120,13 @@ export default function DashboardPage() {
     const [progressMap, setProgressMap] = useState<Record<string, ProgressData>>({});
     const [resumePrompt, setResumePrompt] = useState<{ lesson: ApiLesson; lastLineIndex: number } | null>(null);
     const [startFromIndex, setStartFromIndex] = useState(0);
+    const [lastGeneratedLesson, setLastGeneratedLesson] = useState<GeneratedLessonState | null>(null);
+    const [lastCustomScenario, setLastCustomScenario] = useState<{ scenario: Scenario; savedId?: string } | null>(null);
+    const [savedAiLessons, setSavedAiLessons] = useState<SavedAiLesson[]>([]);
+    const [savedCustomLessons, setSavedCustomLessons] = useState<SavedCustomLesson[]>([]);
+    const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
+    const [editingTitle, setEditingTitle] = useState('');
+    const [isSaving, setIsSaving] = useState(false);
     const { toasts, showToast } = useToast();
 
     // ─── DOUBLE-CLICK GUARD ───
@@ -127,6 +158,19 @@ export default function DashboardPage() {
                 setProgressMap(map);
             })
             .catch(() => { /* silent — progress is non-critical */ });
+    }, [session]);
+
+    // ─── LOAD SAVED LESSONS FROM DB ───
+    useEffect(() => {
+        if (!session?.user?.id) return;
+        fetch('/api/ai-lessons')
+            .then((r) => r.ok ? r.json() : [])
+            .then((data: SavedAiLesson[]) => setSavedAiLessons(Array.isArray(data) ? data : []))
+            .catch(() => { /* silent */ });
+        fetch('/api/custom-lessons')
+            .then((r) => r.ok ? r.json() : [])
+            .then((data: SavedCustomLesson[]) => setSavedCustomLessons(Array.isArray(data) ? data : []))
+            .catch(() => { /* silent */ });
     }, [session]);
 
     // ─── COURSE HANDLERS (Section A) ───
@@ -190,8 +234,7 @@ export default function DashboardPage() {
         if (cached) {
             console.log('[DashboardPage] ✅ CACHE HIT — skipping API call entirely');
             showToast('Önbellekten yüklendi — Anında!', 'success');
-            setScenario(cached);
-            setViewState('playback');
+            setLastGeneratedLesson({ scenario: cached, topic, level: difficulty });
             setIsGenerating(false);
             isFetchingRef.current = false;
             return;
@@ -230,8 +273,7 @@ export default function DashboardPage() {
 
             cacheScenario(topic, difficulty, data);
             showToast('Yeni ders oluşturuldu!', 'success');
-            setScenario(data);
-            setViewState('playback');
+            setLastGeneratedLesson({ scenario: data, topic, level: difficulty });
 
         } catch (err) {
             console.error('[DashboardPage] ❌ Fetch error:', err);
@@ -282,14 +324,148 @@ export default function DashboardPage() {
     const handleBackFromPreview = useCallback(() => {
         setScenario(null);
         setSelectedLesson(null);
-        setViewState('course-detail');
+        if (selectedCourse) {
+            setViewState('course-detail');
+        } else {
+            setViewState('dashboard');
+        }
+    }, [selectedCourse]);
+
+    // ─── SAVED LESSON HANDLERS (Section B + C) ───
+
+    const handlePlayScenario = useCallback((sc: Scenario) => {
+        setSelectedLesson(null);
+        setSelectedCourse(null);
+        setStartFromIndex(0);
+        setScenario(sc);
+        setViewState('playback');
+    }, []);
+
+    const handlePreviewScenario = useCallback((sc: Scenario) => {
+        setSelectedLesson(null);
+        setSelectedCourse(null);
+        setScenario(sc);
+        setViewState('preview');
+    }, []);
+
+    const handleSaveAiLesson = useCallback(async () => {
+        if (!session?.user?.id || !lastGeneratedLesson) return;
+        setIsSaving(true);
+        try {
+            const res = await fetch('/api/ai-lessons', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    topic: lastGeneratedLesson.topic,
+                    title: lastGeneratedLesson.scenario.title,
+                    level: lastGeneratedLesson.level,
+                    content: lastGeneratedLesson.scenario,
+                }),
+            });
+            if (res.ok) {
+                const saved: SavedAiLesson = await res.json();
+                setSavedAiLessons((prev) => [saved, ...prev]);
+                setLastGeneratedLesson((prev) => prev ? { ...prev, savedId: saved.id } : null);
+                showToast('Senaryo kaydedildi!', 'success');
+            }
+        } catch { /* silent */ } finally {
+            setIsSaving(false);
+        }
+    }, [session, lastGeneratedLesson, showToast]);
+
+    const handleSaveCustomLesson = useCallback(async () => {
+        if (!session?.user?.id || !lastCustomScenario) return;
+        setIsSaving(true);
+        try {
+            const res = await fetch('/api/custom-lessons', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title: lastCustomScenario.scenario.title || 'Kendi Metnim',
+                    content: lastCustomScenario.scenario,
+                }),
+            });
+            if (res.ok) {
+                const saved: SavedCustomLesson = await res.json();
+                setSavedCustomLessons((prev) => [saved, ...prev]);
+                setLastCustomScenario((prev) => prev ? { ...prev, savedId: saved.id } : null);
+                showToast('Ders kaydedildi!', 'success');
+            }
+        } catch { /* silent */ } finally {
+            setIsSaving(false);
+        }
+    }, [session, lastCustomScenario, showToast]);
+
+    const handleDeleteAiLesson = useCallback(async (id: string) => {
+        try {
+            const res = await fetch(`/api/ai-lessons/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                setSavedAiLessons((prev) => prev.filter((l) => l.id !== id));
+                showToast('Silindi', 'success');
+            }
+        } catch { /* silent */ }
+    }, [showToast]);
+
+    const handleDeleteCustomLesson = useCallback(async (id: string) => {
+        try {
+            const res = await fetch(`/api/custom-lessons/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                setSavedCustomLessons((prev) => prev.filter((l) => l.id !== id));
+                showToast('Silindi', 'success');
+            }
+        } catch { /* silent */ }
+    }, [showToast]);
+
+    const handleEditStart = useCallback((id: string, currentTitle: string) => {
+        setEditingLessonId(id);
+        setEditingTitle(currentTitle);
+    }, []);
+
+    const handleEditCancel = useCallback(() => {
+        setEditingLessonId(null);
+        setEditingTitle('');
+    }, []);
+
+    const handleRenameAiLesson = useCallback(async (id: string, title: string) => {
+        if (!title.trim()) { setEditingLessonId(null); setEditingTitle(''); return; }
+        try {
+            const res = await fetch(`/api/ai-lessons/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: title.trim() }),
+            });
+            if (res.ok) {
+                setSavedAiLessons((prev) =>
+                    prev.map((l) => l.id === id ? { ...l, title: title.trim() } : l)
+                );
+            }
+        } catch { /* silent */ }
+        setEditingLessonId(null);
+        setEditingTitle('');
+    }, []);
+
+    const handleRenameCustomLesson = useCallback(async (id: string, title: string) => {
+        if (!title.trim()) { setEditingLessonId(null); setEditingTitle(''); return; }
+        try {
+            const res = await fetch(`/api/custom-lessons/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: title.trim() }),
+            });
+            if (res.ok) {
+                setSavedCustomLessons((prev) =>
+                    prev.map((l) => l.id === id ? { ...l, title: title.trim() } : l)
+                );
+            }
+        } catch { /* silent */ }
+        setEditingLessonId(null);
+        setEditingTitle('');
     }, []);
 
     // ─── CUSTOM TEXT HANDLER (Section C) ───
     const handleCustomSubmit = useCallback((customScenario: Scenario) => {
         showToast('Kendi metniniz yüklendi!', 'success');
-        setScenario(customScenario);
-        setViewState('playback');
+        setLastCustomScenario({ scenario: customScenario });
     }, [showToast]);
 
     const handleComplete = useCallback(async () => {
@@ -825,10 +1001,92 @@ export default function DashboardPage() {
                     ) : (
                         <>
                             <ScenarioForm onSubmit={handleGenerate} isLoading={isGenerating} />
-                            <p className="mt-4 text-foreground-faint text-xs text-center max-w-xs mx-auto">
+                            <p className="mt-2 text-foreground-faint text-xs text-center max-w-xs mx-auto">
                                 Konunuzu yazın ve AI sizin için Hollandaca-Türkçe bir ders oluştursun.
                             </p>
                         </>
+                    )}
+
+                    {/* ── Generated lesson card ── */}
+                    {lastGeneratedLesson && (
+                        <div className="p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/5">
+                            <div className="flex items-start justify-between mb-3">
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-foreground font-semibold truncate">
+                                        {lastGeneratedLesson.scenario.title}
+                                    </p>
+                                    <p className="text-foreground-muted text-sm mt-0.5">
+                                        {lastGeneratedLesson.level} · {lastGeneratedLesson.scenario.lines.length} cümle
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => setLastGeneratedLesson(null)}
+                                    className="text-foreground-muted hover:text-foreground ml-2 flex-shrink-0 w-8 h-8
+                                     flex items-center justify-center rounded-lg hover:bg-background transition-colors"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => handlePreviewScenario(lastGeneratedLesson.scenario)}
+                                    title="Önizle"
+                                    className="flex items-center justify-center w-12 min-h-[44px] rounded-xl
+                                     bg-background border border-border hover:border-border-hover
+                                     text-foreground-muted hover:text-foreground transition-colors duration-200 active:scale-95"
+                                >
+                                    👁
+                                </button>
+                                <button
+                                    onClick={() => handlePlayScenario(lastGeneratedLesson.scenario)}
+                                    className="flex-1 min-h-[44px] rounded-xl bg-emerald-500 text-white font-semibold
+                                     hover:bg-emerald-400 transition-colors duration-200 active:scale-95"
+                                >
+                                    ▶ Dinle
+                                </button>
+                                {session?.user?.id && (
+                                    <button
+                                        onClick={handleSaveAiLesson}
+                                        disabled={isSaving || !!lastGeneratedLesson.savedId}
+                                        className={`flex items-center justify-center px-3 min-h-[44px] rounded-xl
+                                         font-semibold text-sm transition-colors duration-200 active:scale-95
+                                         disabled:opacity-60 disabled:cursor-not-allowed
+                                         ${lastGeneratedLesson.savedId
+                                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                                            : 'bg-background border border-border hover:border-border-hover text-foreground-muted hover:text-foreground'
+                                        }`}
+                                    >
+                                        {lastGeneratedLesson.savedId ? '✓' : isSaving ? '…' : '💾'}
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ── Saved AI lessons list ── */}
+                    {session?.user?.id && savedAiLessons.length > 0 && (
+                        <div className="flex flex-col gap-3 mt-2">
+                            <h3 className="text-xs text-foreground-muted uppercase tracking-widest font-medium">
+                                Kaydedilmiş Senaryolar
+                            </h3>
+                            {savedAiLessons.map((lesson) => (
+                                <SavedLessonCard
+                                    key={lesson.id}
+                                    id={lesson.id}
+                                    title={lesson.title ?? lesson.topic}
+                                    subtitle={`${lesson.level} · ${(lesson.content as Scenario).lines?.length ?? 0} cümle`}
+                                    isEditing={editingLessonId === lesson.id}
+                                    editValue={editingTitle}
+                                    onPlay={() => handlePlayScenario(lesson.content)}
+                                    onPreview={() => handlePreviewScenario(lesson.content)}
+                                    onEditStart={() => handleEditStart(lesson.id, lesson.title ?? lesson.topic)}
+                                    onEditChange={(v) => setEditingTitle(v)}
+                                    onEditCommit={() => handleRenameAiLesson(lesson.id, editingTitle)}
+                                    onEditCancel={handleEditCancel}
+                                    onDelete={() => handleDeleteAiLesson(lesson.id)}
+                                />
+                            ))}
+                        </div>
                     )}
                 </div>
             )}
@@ -845,9 +1103,91 @@ export default function DashboardPage() {
 
                     <CustomTextForm onSubmit={handleCustomSubmit} />
 
-                    <p className="mt-4 text-foreground-faint text-xs text-center max-w-xs mx-auto">
+                    <p className="mt-2 text-foreground-faint text-xs text-center max-w-xs mx-auto">
                         Kendi cümlelerinizi yapıştırın ve anında çalışın.
                     </p>
+
+                    {/* ── Custom lesson card ── */}
+                    {lastCustomScenario && (
+                        <div className="p-4 rounded-2xl border border-purple-500/30 bg-purple-500/5">
+                            <div className="flex items-start justify-between mb-3">
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-foreground font-semibold truncate">
+                                        {lastCustomScenario.scenario.title}
+                                    </p>
+                                    <p className="text-foreground-muted text-sm mt-0.5">
+                                        {lastCustomScenario.scenario.lines.length} cümle
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => setLastCustomScenario(null)}
+                                    className="text-foreground-muted hover:text-foreground ml-2 flex-shrink-0 w-8 h-8
+                                     flex items-center justify-center rounded-lg hover:bg-background transition-colors"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => handlePreviewScenario(lastCustomScenario.scenario)}
+                                    title="Önizle"
+                                    className="flex items-center justify-center w-12 min-h-[44px] rounded-xl
+                                     bg-background border border-border hover:border-border-hover
+                                     text-foreground-muted hover:text-foreground transition-colors duration-200 active:scale-95"
+                                >
+                                    👁
+                                </button>
+                                <button
+                                    onClick={() => handlePlayScenario(lastCustomScenario.scenario)}
+                                    className="flex-1 min-h-[44px] rounded-xl bg-purple-500 text-white font-semibold
+                                     hover:bg-purple-400 transition-colors duration-200 active:scale-95"
+                                >
+                                    ▶ Dinle
+                                </button>
+                                {session?.user?.id && (
+                                    <button
+                                        onClick={handleSaveCustomLesson}
+                                        disabled={isSaving || !!lastCustomScenario.savedId}
+                                        className={`flex items-center justify-center px-3 min-h-[44px] rounded-xl
+                                         font-semibold text-sm transition-colors duration-200 active:scale-95
+                                         disabled:opacity-60 disabled:cursor-not-allowed
+                                         ${lastCustomScenario.savedId
+                                            ? 'bg-purple-500/10 text-purple-400 border border-purple-500/30'
+                                            : 'bg-background border border-border hover:border-border-hover text-foreground-muted hover:text-foreground'
+                                        }`}
+                                    >
+                                        {lastCustomScenario.savedId ? '✓' : isSaving ? '…' : '💾'}
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ── Saved custom lessons list ── */}
+                    {session?.user?.id && savedCustomLessons.length > 0 && (
+                        <div className="flex flex-col gap-3 mt-2">
+                            <h3 className="text-xs text-foreground-muted uppercase tracking-widest font-medium">
+                                Kaydedilmiş Metinlerim
+                            </h3>
+                            {savedCustomLessons.map((lesson) => (
+                                <SavedLessonCard
+                                    key={lesson.id}
+                                    id={lesson.id}
+                                    title={lesson.title}
+                                    subtitle={`${(lesson.content as Scenario).lines?.length ?? 0} cümle`}
+                                    isEditing={editingLessonId === lesson.id}
+                                    editValue={editingTitle}
+                                    onPlay={() => handlePlayScenario(lesson.content)}
+                                    onPreview={() => handlePreviewScenario(lesson.content)}
+                                    onEditStart={() => handleEditStart(lesson.id, lesson.title)}
+                                    onEditChange={(v) => setEditingTitle(v)}
+                                    onEditCommit={() => handleRenameCustomLesson(lesson.id, editingTitle)}
+                                    onEditCancel={handleEditCancel}
+                                    onDelete={() => handleDeleteCustomLesson(lesson.id)}
+                                />
+                            ))}
+                        </div>
+                    )}
                 </div>
             )}
         </main>

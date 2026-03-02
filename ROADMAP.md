@@ -84,17 +84,19 @@ Hedef: Araba kullanmadan diyalog metnini okuyarak gözden geçirme + tek tek cü
 ---
 
 ### Phase 7: Kaydedilmiş Dersler — CRUD
-**Durum:** ⏳ Bekliyor
+**Durum:** ✅ Tamamlandı
 
 Hedef: AI ve Metnim'deki içeriklerin hesaba kaydedilmesi, listelenmesi, düzenlenmesi, silinmesi.
 
-**Yapılacaklar:**
-- [ ] `CustomLesson` Prisma modeli ekle
-- [ ] `GeneratedScenario`: authenticated kullanıcı için `userId` ile kaydet
-- [ ] `GET/DELETE/PATCH /api/ai-lessons` + `GET/POST/PATCH/DELETE /api/custom-lessons`
-- [ ] AI sekmesi: "Kaydedilmiş Senaryolar" listesi
-- [ ] Metnim sekmesi: "Kaydedilmiş Metinlerim" listesi
-- [ ] Her kayıt: Dinle / Önizle / Düzenle / Sil aksiyonları
+**Yapılanlar:**
+- [x] `POST/GET /api/ai-lessons` + `DELETE/PATCH /api/ai-lessons/[id]`
+- [x] `POST/GET /api/custom-lessons` + `DELETE/PATCH /api/custom-lessons/[id]`
+- [x] AI sekmesi: oluşturulan senaryo kartı (👁 Önizle / ▶ Dinle / 💾 Kaydet)
+- [x] AI sekmesi: "Kaydedilmiş Senaryolar" listesi — `SavedLessonCard`
+- [x] Metnim sekmesi: özel ders kartı (👁 Önizle / ▶ Dinle / 💾 Kaydet)
+- [x] Metnim sekmesi: "Kaydedilmiş Metinlerim" listesi — `SavedLessonCard`
+- [x] Her kayıt: 👁 Önizle / ▶ Dinle / ✏ Yeniden Adlandır (inline) / 🗑 Sil
+- [x] `handleBackFromPreview`: kurs olmayan senaryolarda dashboard'a döner
 
 ---
 
