@@ -11,11 +11,12 @@ import StatusBar from './StatusBar';
 
 interface AudioPlayerProps {
     scenario: Scenario;
+    startFromIndex?: number;
     onComplete: () => void;
-    onBack: () => void;
+    onBack: (lastLineIndex: number) => void;
 }
 
-export default function AudioPlayer({ scenario, onComplete, onBack }: AudioPlayerProps) {
+export default function AudioPlayer({ scenario, startFromIndex = 0, onComplete, onBack }: AudioPlayerProps) {
     const [isPlaying, setIsPlaying] = useState(false);
     const [hasStarted, setHasStarted] = useState(false);
     const [currentStatus, setCurrentStatus] = useState<PlaybackStatus | null>(null);
@@ -23,6 +24,8 @@ export default function AudioPlayer({ scenario, onComplete, onBack }: AudioPlaye
 
     const abortControllerRef = useRef<AbortController | null>(null);
     const isPlayingRef = useRef(false);
+    // Track current line index in a ref so handleBack can read it reliably
+    const currentLineIndexRef = useRef(startFromIndex);
 
     // Cleanup on unmount
     useEffect(() => {
@@ -45,8 +48,9 @@ export default function AudioPlayer({ scenario, onComplete, onBack }: AudioPlaye
         document.body.classList.add('playback-active');
 
         try {
-            for await (const status of playScenario(scenario, controller.signal)) {
+            for await (const status of playScenario(scenario, controller.signal, undefined, startFromIndex)) {
                 if (controller.signal.aborted) break;
+                currentLineIndexRef.current = status.lineIndex;
                 setCurrentStatus(status);
                 setPhase(status.phase);
             }
@@ -81,11 +85,12 @@ export default function AudioPlayer({ scenario, onComplete, onBack }: AudioPlaye
     }, [isPlaying, startPlayback, stopPlayback]);
 
     const handleBack = useCallback(() => {
+        const lastLineIndex = currentLineIndexRef.current;
         stopPlayback();
         setPhase('idle');
         setCurrentStatus(null);
         setHasStarted(false);
-        onBack();
+        onBack(lastLineIndex);
     }, [stopPlayback, onBack]);
 
     return (

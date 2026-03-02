@@ -93,6 +93,8 @@ export default function DashboardPage() {
     const [courses, setCourses] = useState<ApiCourse[]>([]);
     const [coursesLoading, setCoursesLoading] = useState(true);
     const [progressMap, setProgressMap] = useState<Record<string, ProgressData>>({});
+    const [resumePrompt, setResumePrompt] = useState<{ lesson: ApiLesson; lastLineIndex: number } | null>(null);
+    const [startFromIndex, setStartFromIndex] = useState(0);
     const { toasts, showToast } = useToast();
 
     // ─── DOUBLE-CLICK GUARD ───
@@ -156,11 +158,21 @@ export default function DashboardPage() {
 
     const handleLessonClick = useCallback((lesson: ApiLesson) => {
         console.log(`[DashboardPage] Loading lesson: "${lesson.title}"`);
+        const prog = progressMap[lesson.id];
+        const hasPartialProgress = prog && !prog.completed && prog.lastLineIndex > 0;
+
+        if (hasPartialProgress) {
+            // Show resume prompt — don't navigate yet
+            setResumePrompt({ lesson, lastLineIndex: prog.lastLineIndex });
+            return;
+        }
+
         showToast('Ders yüklendi!', 'success');
         setSelectedLesson(lesson);
+        setStartFromIndex(0);
         setScenario(lesson.content);
         setViewState('playback');
-    }, [showToast]);
+    }, [progressMap, showToast]);
 
     // ─── AI GENERATE HANDLER (Section B) ───
     const handleGenerate = useCallback(async (topic: string, difficulty: CEFRLevel) => {
@@ -233,6 +245,27 @@ export default function DashboardPage() {
         }
     }, [showToast]);
 
+    // ─── RESUME HANDLERS ───
+    const handleResume = useCallback(() => {
+        if (!resumePrompt) return;
+        setSelectedLesson(resumePrompt.lesson);
+        setStartFromIndex(resumePrompt.lastLineIndex);
+        setScenario(resumePrompt.lesson.content);
+        setResumePrompt(null);
+        showToast('Kaldığın yerden devam ediliyor', 'success');
+        setViewState('playback');
+    }, [resumePrompt, showToast]);
+
+    const handleRestartLesson = useCallback(() => {
+        if (!resumePrompt) return;
+        setSelectedLesson(resumePrompt.lesson);
+        setStartFromIndex(0);
+        setScenario(resumePrompt.lesson.content);
+        setResumePrompt(null);
+        showToast('Ders baştan başlıyor', 'success');
+        setViewState('playback');
+    }, [resumePrompt, showToast]);
+
     // ─── CUSTOM TEXT HANDLER (Section C) ───
     const handleCustomSubmit = useCallback((customScenario: Scenario) => {
         showToast('Kendi metniniz yüklendi!', 'success');
@@ -274,16 +307,38 @@ export default function DashboardPage() {
         }
     }, [session, selectedCourse, selectedLesson, showToast]);
 
-    const handleBack = useCallback(() => {
-        console.log('[DashboardPage] ← Back');
+    const handleBack = useCallback(async (lastLineIndex: number) => {
+        console.log(`[DashboardPage] ← Back (lastLineIndex: ${lastLineIndex})`);
+
+        // Save partial progress if user is logged in, was in a structured lesson, and made progress
+        if (session?.user?.id && selectedCourse && selectedLesson && lastLineIndex > 0) {
+            try {
+                const res = await fetch('/api/progress', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        courseId: selectedCourse.id,
+                        lessonId: selectedLesson.id,
+                        lastLineIndex,
+                        completed: false,
+                    }),
+                });
+                if (res.ok) {
+                    const progress: ProgressData = await res.json();
+                    setProgressMap((prev) => ({ ...prev, [selectedLesson.id]: progress }));
+                }
+            } catch { /* silent */ }
+        }
+
         setScenario(null);
         setSelectedLesson(null);
+        setStartFromIndex(0);
         if (selectedCourse) {
             setViewState('course-detail');
         } else {
             setViewState('dashboard');
         }
-    }, [selectedCourse]);
+    }, [session, selectedCourse, selectedLesson]);
 
     const handleBackFromCourseDetail = useCallback(() => {
         setScenario(null);
@@ -333,7 +388,7 @@ export default function DashboardPage() {
         return (
             <>
                 <ToastContainer toasts={toasts} />
-                <AudioPlayer scenario={scenario} onComplete={handleComplete} onBack={handleBack} />
+                <AudioPlayer scenario={scenario} startFromIndex={startFromIndex} onComplete={handleComplete} onBack={handleBack} />
             </>
         );
     }
@@ -486,6 +541,46 @@ export default function DashboardPage() {
             <main className="min-h-dvh flex flex-col px-4 py-8 max-w-lg mx-auto">
                 <ToastContainer toasts={toasts} />
 
+                {/* ─── Resume Prompt Modal ─── */}
+                {resumePrompt && (
+                    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-4 sm:pb-0">
+                        {/* Backdrop */}
+                        <div
+                            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                            onClick={() => setResumePrompt(null)}
+                        />
+                        {/* Sheet */}
+                        <div className="relative w-full max-w-md bg-card border border-border rounded-3xl p-6 shadow-2xl">
+                            <p className="text-foreground-muted text-xs uppercase tracking-widest mb-1">
+                                Yarıda bırakılmış ders
+                            </p>
+                            <h3 className="text-foreground font-bold text-xl mb-1">
+                                {resumePrompt.lesson.title}
+                            </h3>
+                            <p className="text-amber-400 text-sm mb-6">
+                                ⏸ {resumePrompt.lastLineIndex + 1}. cümlede bırakmıştın
+                            </p>
+                            <div className="flex flex-col gap-3">
+                                <button
+                                    onClick={handleResume}
+                                    className="w-full min-h-[56px] rounded-2xl bg-emerald-500 text-white font-bold text-lg
+                                     hover:bg-emerald-400 transition-colors duration-200 active:scale-95"
+                                >
+                                    ▶ Kaldığın yerden devam et
+                                </button>
+                                <button
+                                    onClick={handleRestartLesson}
+                                    className="w-full min-h-[56px] rounded-2xl bg-card border border-border text-foreground-secondary
+                                     font-medium text-base hover:border-border-hover hover:text-foreground
+                                     transition-colors duration-200 active:scale-95"
+                                >
+                                    ↺ Baştan başla
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 <div className="flex items-center justify-between mb-6">
                     <button
                         id="back-to-dashboard"
@@ -514,6 +609,7 @@ export default function DashboardPage() {
                         const prog = progressMap[lesson.id];
                         const isMastered = prog && prog.completionCount >= prog.targetCount;
                         const isStarted = prog && prog.completionCount >= 1;
+                        const isPartial = prog && !prog.completed && prog.lastLineIndex > 0;
 
                         return (
                             <button
@@ -548,6 +644,12 @@ export default function DashboardPage() {
                                             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
                                              bg-blue-500/10 text-blue-400">
                                                 {prog.completionCount}/{prog.targetCount}
+                                            </span>
+                                        )}
+                                        {isPartial && (
+                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
+                                             bg-amber-500/10 text-amber-400">
+                                                ⏸ Yarıda
                                             </span>
                                         )}
                                     </div>
