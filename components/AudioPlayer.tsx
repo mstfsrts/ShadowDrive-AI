@@ -180,9 +180,9 @@ export default function AudioPlayer({ scenario, startFromIndex = 0, onComplete, 
                 <button
                     id="back-button"
                     onClick={handleBack}
-                    className="w-full min-h-[56px] rounded-2xl text-lg font-medium text-foreground-secondary
+                    className="w-full min-h-[88px] rounded-2xl text-lg font-medium text-foreground-secondary
                      bg-card border border-border hover:border-border-hover hover:text-foreground
-                     transition-all duration-300 active:scale-95"
+                     transition-all duration-300 active:scale-95 select-none"
                 >
                     {phase === 'complete' ? '🔄  Yeni Ders' : '←  Geri'}
                 </button>

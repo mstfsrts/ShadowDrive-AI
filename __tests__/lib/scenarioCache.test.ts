@@ -61,4 +61,21 @@ describe('scenarioCache', () => {
         expect(getCachedScenario('b', 'intermediate')).toBeNull();
         expect(localStorage.getItem('other_key')).toBe('value');
     });
+
+    it('cache hit: second getCachedScenario for same topic+difficulty returns data (client can skip API call)', () => {
+        // First "request" — no cache yet
+        expect(getCachedScenario('Koffie bestellen', 'A0-A1')).toBeNull();
+
+        // Simulate first request having completed and cached the result
+        cacheScenario('Koffie bestellen', 'A0-A1', mockScenario);
+
+        // Second "request" with same topic+difficulty — cache hit, client must not call fetch
+        const hit1 = getCachedScenario('Koffie bestellen', 'A0-A1');
+        const hit2 = getCachedScenario('Koffie bestellen', 'A0-A1');
+
+        expect(hit1).not.toBeNull();
+        expect(hit2).not.toBeNull();
+        expect(hit1!.title).toBe(mockScenario.title);
+        expect(hit2!.lines).toEqual(mockScenario.lines);
+    });
 });

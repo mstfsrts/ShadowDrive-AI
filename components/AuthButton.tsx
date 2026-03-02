@@ -26,24 +26,27 @@ export default function AuthButton() {
             : user.email?.[0]?.toUpperCase() ?? '?';
 
         return (
-            <div className="relative">
+            <div className="relative flex-shrink-0">
                 <button
+                    type="button"
                     onClick={() => setShowDropdown(!showDropdown)}
-                    className="flex items-center gap-2 transition-all duration-200 active:scale-95"
+                    className="flex items-center justify-center w-11 h-11 rounded-full transition-all duration-200 active:scale-95 overflow-hidden border-0 p-0"
+                    title={user.name ?? user.email ?? 'Profil'}
+                    aria-label={user.name ?? user.email ?? 'Profil menüsü'}
                 >
                     {user.image ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
                             src={user.image}
-                            alt={user.name ?? 'Profil'}
-                            className="w-11 h-11 rounded-full border border-border"
+                            alt=""
+                            className="w-full h-full object-cover rounded-full border border-border"
                         />
                     ) : (
-                        <div className="w-11 h-11 rounded-full bg-emerald-500/20 border border-emerald-500/40
+                        <span className="w-full h-full rounded-full bg-emerald-500/20 border border-emerald-500/40
                                         flex items-center justify-center text-emerald-600 dark:text-emerald-400
-                                        text-sm font-bold">
+                                        text-sm font-bold overflow-hidden truncate">
                             {initials}
-                        </div>
+                        </span>
                     )}
                 </button>
 

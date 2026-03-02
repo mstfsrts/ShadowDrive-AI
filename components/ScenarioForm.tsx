@@ -73,7 +73,7 @@ export default function ScenarioForm({ onSubmit, isLoading }: ScenarioFormProps)
                         onClick={() => setTopic(qt)}
                         className="px-4 py-2.5 rounded-xl bg-card border border-border text-foreground-secondary
                        text-sm hover:border-neon-green hover:text-neon-green transition-all duration-200
-                       active:scale-95 min-h-[44px]"
+                       active:scale-95 min-h-[48px]"
                     >
                         {qt}
                     </button>

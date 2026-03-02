@@ -1,7 +1,7 @@
-# ShadowDrive AI — Feature Roadmap (Phase 4–7)
+# ShadowDrive AI — Feature Roadmap (Phase 4–8)
 
 > Bu dosya aktif geliştirme yol haritasıdır. Her session'da buradan ilerlenecek.
-> Son güncelleme: 2026-03-01
+> Son güncelleme: 2026-03-02
 
 ---
 
@@ -97,6 +97,21 @@ Hedef: AI ve Metnim'deki içeriklerin hesaba kaydedilmesi, listelenmesi, düzenl
 - [x] Metnim sekmesi: "Kaydedilmiş Metinlerim" listesi — `SavedLessonCard`
 - [x] Her kayıt: 👁 Önizle / ▶ Dinle / ✏ Yeniden Adlandır (inline) / 🗑 Sil
 - [x] `handleBackFromPreview`: kurs olmayan senaryolarda dashboard'a döner
+
+---
+
+### Phase 8: iOS Adaptation & QA
+**Durum:** ✅ Tamamlandı
+
+Hedef: iOS Safari PWA uyumu, safe area, dokunma hedefleri, WebKit TTS düzeltmeleri ve test altyapısı (implementation_plan v2 Phase 7).
+
+**Yapılanlar:**
+- [x] **Safe areas & viewport:** `layout.tsx` viewport-fit=cover, appleWebApp; `globals.css` env(safe-area-inset-*), @media (display-mode: standalone), .playback-active
+- [x] **Touch & interaction:** AudioPlayer ana buton 88px, geri butonu 88px, select-none; ScenarioForm hızlı konu chip’leri 48px, enterKeyHint="go"
+- [x] **iOS WebKit speech:** speechEngine preloadVoices(), cancelSpeech() double-cancel (iOS 17), visibilitychange → speechSynthesis.resume()
+- [x] **Test altyapısı:** Vitest; `__tests__/api/generate.test.ts` (POST /api/generate); `__tests__/lib/scenarioCache.test.ts` (cache hit); `__tests__/components/ScenarioForm.test.tsx`; `__tests__/lib/speechEngine.test.ts` (waitMs, cancelSpeech, playScenario ilk yield)
+
+**Manuel doğrulama (isteğe bağlı):** iOS PWA “Add to Home Screen”, standalone görünüm, sürüşte kullanılabilirlik, Türkçe TTS atlama.
 
 ---
 

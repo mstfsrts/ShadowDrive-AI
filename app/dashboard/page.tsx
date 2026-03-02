@@ -18,8 +18,11 @@ import AuthButton from '@/components/AuthButton';
 import { useToast, ToastContainer } from '@/components/Toast';
 import { Scenario, type CEFRLevel } from '@/types/dialogue';
 import GeneratingLoader from '@/components/GeneratingLoader';
+import ResumePromptModal from '@/components/ResumePromptModal';
+import ConfirmModal from '@/components/ConfirmModal';
 import { getCachedScenario, cacheScenario } from '@/lib/scenarioCache';
 import { getOfflineScenario } from '@/lib/offlineScenarios';
+import { getResumableId, getStoredLastLineIndex, getStoredProgress, setStoredLastLineIndex, incrementStoredCompletionCount } from '@/lib/resumablePlayback';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -77,6 +80,25 @@ interface GeneratedLessonState {
 type ActiveTab = 'courses' | 'ai' | 'custom';
 type ViewState = 'dashboard' | 'category' | 'subcategory' | 'course-detail' | 'preview' | 'playback';
 
+/** Unified resume state for Kurslar, AI, and Metnim (yapı taşı) */
+interface ResumeState {
+    resumableId: string;
+    title: string;
+    lastLineIndex: number;
+    scenario: Scenario;
+    isCourse: boolean;
+    lesson?: ApiLesson;
+    course?: ApiCourse;
+}
+
+/** Current playback session: used by handleBack to save progress */
+interface PlaybackSession {
+    resumableId: string;
+    isCourse: boolean;
+    courseId?: string;
+    lessonId?: string;
+}
+
 // ─── Category Metadata ──────────────────────────────────────────────────────
 
 const CATEGORY_META: Record<string, { emoji: string; description: string }> = {
@@ -118,8 +140,9 @@ export default function DashboardPage() {
     const [courses, setCourses] = useState<ApiCourse[]>([]);
     const [coursesLoading, setCoursesLoading] = useState(true);
     const [progressMap, setProgressMap] = useState<Record<string, ProgressData>>({});
-    const [resumePrompt, setResumePrompt] = useState<{ lesson: ApiLesson; lastLineIndex: number } | null>(null);
+    const [resumeState, setResumeState] = useState<ResumeState | null>(null);
     const [startFromIndex, setStartFromIndex] = useState(0);
+    const playbackSessionRef = useRef<PlaybackSession | null>(null);
     const [lastGeneratedLesson, setLastGeneratedLesson] = useState<GeneratedLessonState | null>(null);
     const [lastCustomScenario, setLastCustomScenario] = useState<{ scenario: Scenario; savedId?: string } | null>(null);
     const [savedAiLessons, setSavedAiLessons] = useState<SavedAiLesson[]>([]);
@@ -127,6 +150,8 @@ export default function DashboardPage() {
     const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
     const [editingTitle, setEditingTitle] = useState('');
     const [isSaving, setIsSaving] = useState(false);
+    /** Silme onayı: { type: 'ai'|'custom', id, title } */
+    const [deleteConfirm, setDeleteConfirm] = useState<{ type: 'ai' | 'custom'; id: string; title: string } | null>(null);
     const { toasts, showToast } = useToast();
 
     // ─── DOUBLE-CLICK GUARD ───
@@ -203,12 +228,20 @@ export default function DashboardPage() {
 
     const handleLessonClick = useCallback((lesson: ApiLesson) => {
         console.log(`[DashboardPage] Loading lesson: "${lesson.title}"`);
-        const prog = progressMap[lesson.id];
-        const hasPartialProgress = prog && !prog.completed && prog.lastLineIndex > 0;
+        if (!selectedCourse) return;
+        const resumableId = getResumableId('course', { courseId: selectedCourse.id, lessonId: lesson.id });
+        const lastLineIndex = getStoredLastLineIndex(resumableId, progressMap, true);
 
-        if (hasPartialProgress) {
-            // Show resume prompt — don't navigate yet
-            setResumePrompt({ lesson, lastLineIndex: prog.lastLineIndex });
+        if (lastLineIndex > 0) {
+            setResumeState({
+                resumableId,
+                title: lesson.title,
+                lastLineIndex,
+                scenario: lesson.content,
+                isCourse: true,
+                lesson,
+                course: selectedCourse,
+            });
             return;
         }
 
@@ -216,8 +249,59 @@ export default function DashboardPage() {
         setSelectedLesson(lesson);
         setStartFromIndex(0);
         setScenario(lesson.content);
+        playbackSessionRef.current = { resumableId, isCourse: true, courseId: selectedCourse.id, lessonId: lesson.id };
         setViewState('playback');
-    }, [progressMap, showToast]);
+    }, [progressMap, selectedCourse, showToast]);
+
+    /** Yeni oluşturulan AI dersini hemen kaydet (otomatik kayıt). handleGenerate'den önce tanımlanmalı. */
+    const saveNewAiLessonImmediate = useCallback(async (payload: { scenario: Scenario; topic: string; level: CEFRLevel }) => {
+        if (!session?.user?.id) return;
+        setIsSaving(true);
+        try {
+            const res = await fetch('/api/ai-lessons', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    topic: payload.topic,
+                    title: payload.scenario.title,
+                    level: payload.level,
+                    content: payload.scenario,
+                }),
+            });
+            if (res.ok) {
+                const saved: SavedAiLesson = await res.json();
+                setSavedAiLessons((prev) => [saved, ...prev]);
+                setLastGeneratedLesson((prev) => prev ? { ...prev, savedId: saved.id } : null);
+                showToast('Senaryo kaydedildi!', 'success');
+            }
+        } catch { /* silent */ } finally {
+            setIsSaving(false);
+        }
+    }, [session, showToast]);
+
+    /** Yeni oluşturulan Metnim içeriğini hemen kaydet (otomatik kayıt). */
+    const saveNewCustomLessonImmediate = useCallback(async (scenario: Scenario) => {
+        if (!session?.user?.id) return;
+        setIsSaving(true);
+        try {
+            const res = await fetch('/api/custom-lessons', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title: scenario.title || 'Kendi Metnim',
+                    content: scenario,
+                }),
+            });
+            if (res.ok) {
+                const saved: SavedCustomLesson = await res.json();
+                setSavedCustomLessons((prev) => [saved, ...prev]);
+                setLastCustomScenario((prev) => prev ? { ...prev, savedId: saved.id } : null);
+                showToast('Ders kaydedildi!', 'success');
+            }
+        } catch { /* silent */ } finally {
+            setIsSaving(false);
+        }
+    }, [session, showToast]);
 
     // ─── AI GENERATE HANDLER (Section B) ───
     const handleGenerate = useCallback(async (topic: string, difficulty: CEFRLevel) => {
@@ -235,6 +319,7 @@ export default function DashboardPage() {
             console.log('[DashboardPage] ✅ CACHE HIT — skipping API call entirely');
             showToast('Önbellekten yüklendi — Anında!', 'success');
             setLastGeneratedLesson({ scenario: cached, topic, level: difficulty });
+            if (session?.user?.id) void saveNewAiLessonImmediate({ scenario: cached, topic, level: difficulty });
             setIsGenerating(false);
             isFetchingRef.current = false;
             return;
@@ -263,6 +348,8 @@ export default function DashboardPage() {
                 );
 
                 const offline = getOfflineScenario(topic);
+                const rid = getResumableId('ai', { topic, level: difficulty });
+                playbackSessionRef.current = { resumableId: rid, isCourse: false };
                 setScenario(offline);
                 setViewState('playback');
                 return;
@@ -274,11 +361,14 @@ export default function DashboardPage() {
             cacheScenario(topic, difficulty, data);
             showToast('Yeni ders oluşturuldu!', 'success');
             setLastGeneratedLesson({ scenario: data, topic, level: difficulty });
+            if (session?.user?.id) void saveNewAiLessonImmediate({ scenario: data, topic, level: difficulty });
 
         } catch (err) {
             console.error('[DashboardPage] ❌ Fetch error:', err);
             showToast('Bağlantı sorunu — çevrimdışı ders yükleniyor', 'warning');
             const offline = getOfflineScenario(topic);
+            const rid = getResumableId('ai', { topic, level: difficulty });
+            playbackSessionRef.current = { resumableId: rid, isCourse: false };
             setScenario(offline);
             setViewState('playback');
         } finally {
@@ -286,28 +376,50 @@ export default function DashboardPage() {
             isFetchingRef.current = false;
             console.log('[DashboardPage] ── GENERATE END ──');
         }
-    }, [showToast]);
+    }, [session, showToast, saveNewAiLessonImmediate]);
 
-    // ─── RESUME HANDLERS ───
+    // ─── RESUME HANDLERS (unified for course / AI / Metnim) ───
     const handleResume = useCallback(() => {
-        if (!resumePrompt) return;
-        setSelectedLesson(resumePrompt.lesson);
-        setStartFromIndex(resumePrompt.lastLineIndex);
-        setScenario(resumePrompt.lesson.content);
-        setResumePrompt(null);
+        if (!resumeState) return;
+        const { scenario: sc, lastLineIndex: idx, isCourse, lesson, course, resumableId } = resumeState;
+        setScenario(sc);
+        setStartFromIndex(idx);
+        if (lesson) setSelectedLesson(lesson);
+        if (course) setSelectedCourse(course);
+        playbackSessionRef.current = {
+            resumableId,
+            isCourse,
+            courseId: course?.id,
+            lessonId: lesson?.id,
+        };
+        setResumeState(null);
         showToast('Kaldığın yerden devam ediliyor', 'success');
         setViewState('playback');
-    }, [resumePrompt, showToast]);
+    }, [resumeState, showToast]);
 
-    const handleRestartLesson = useCallback(() => {
-        if (!resumePrompt) return;
-        setSelectedLesson(resumePrompt.lesson);
+    const handleRestartLesson = useCallback(async () => {
+        if (!resumeState) return;
+        const { scenario: sc, resumableId, isCourse, lesson, course } = resumeState;
+        await setStoredLastLineIndex(resumableId, 0, isCourse, {
+            session,
+            courseId: course?.id,
+            lessonId: lesson?.id,
+            setProgressMap,
+        });
+        setScenario(sc);
         setStartFromIndex(0);
-        setScenario(resumePrompt.lesson.content);
-        setResumePrompt(null);
+        if (lesson) setSelectedLesson(lesson);
+        if (course) setSelectedCourse(course);
+        playbackSessionRef.current = {
+            resumableId,
+            isCourse,
+            courseId: course?.id,
+            lessonId: lesson?.id,
+        };
+        setResumeState(null);
         showToast('Ders baştan başlıyor', 'success');
         setViewState('playback');
-    }, [resumePrompt, showToast]);
+    }, [resumeState, session, showToast]);
 
     // ─── PREVIEW HANDLERS ───
     const handlePreviewClick = useCallback((lesson: ApiLesson) => {
@@ -317,9 +429,19 @@ export default function DashboardPage() {
     }, []);
 
     const handleStartFromPreview = useCallback(() => {
+        if (selectedCourse && selectedLesson) {
+            playbackSessionRef.current = {
+                resumableId: getResumableId('course', { courseId: selectedCourse.id, lessonId: selectedLesson.id }),
+                isCourse: true,
+                courseId: selectedCourse.id,
+                lessonId: selectedLesson.id,
+            };
+        } else {
+            playbackSessionRef.current = null;
+        }
         setStartFromIndex(0);
         setViewState('playback');
-    }, []);
+    }, [selectedCourse, selectedLesson]);
 
     const handleBackFromPreview = useCallback(() => {
         setScenario(null);
@@ -333,13 +455,60 @@ export default function DashboardPage() {
 
     // ─── SAVED LESSON HANDLERS (Section B + C) ───
 
-    const handlePlayScenario = useCallback((sc: Scenario) => {
+    const handlePlayScenario = useCallback((sc: Scenario, playbackContext?: { resumableId: string }) => {
         setSelectedLesson(null);
         setSelectedCourse(null);
         setStartFromIndex(0);
         setScenario(sc);
+        playbackSessionRef.current = playbackContext
+            ? { resumableId: playbackContext.resumableId, isCourse: false }
+            : null;
         setViewState('playback');
     }, []);
+
+    /** AI tab: play with resume check (unsaved or saved by id) */
+    const handlePlayAiScenario = useCallback(
+        (sc: Scenario, options: { topic: string; level: string; savedId?: string }) => {
+            const resumableId = getResumableId('ai', {
+                topic: options.topic,
+                level: options.level,
+                savedId: options.savedId,
+            });
+            const lastLineIndex = getStoredLastLineIndex(resumableId, null, false);
+            if (lastLineIndex > 0) {
+                setResumeState({
+                    resumableId,
+                    title: sc.title,
+                    lastLineIndex,
+                    scenario: sc,
+                    isCourse: false,
+                });
+                return;
+            }
+            handlePlayScenario(sc, { resumableId });
+        },
+        [handlePlayScenario]
+    );
+
+    /** Metnim tab: play with resume check (unsaved or saved by id) */
+    const handlePlayCustomScenario = useCallback(
+        (sc: Scenario, options: { savedId?: string } = {}) => {
+            const resumableId = getResumableId('custom', { scenario: sc, savedId: options.savedId });
+            const lastLineIndex = getStoredLastLineIndex(resumableId, null, false);
+            if (lastLineIndex > 0) {
+                setResumeState({
+                    resumableId,
+                    title: sc.title,
+                    lastLineIndex,
+                    scenario: sc,
+                    isCourse: false,
+                });
+                return;
+            }
+            handlePlayScenario(sc, { resumableId });
+        },
+        [handlePlayScenario]
+    );
 
     const handlePreviewScenario = useCallback((sc: Scenario) => {
         setSelectedLesson(null);
@@ -347,54 +516,6 @@ export default function DashboardPage() {
         setScenario(sc);
         setViewState('preview');
     }, []);
-
-    const handleSaveAiLesson = useCallback(async () => {
-        if (!session?.user?.id || !lastGeneratedLesson) return;
-        setIsSaving(true);
-        try {
-            const res = await fetch('/api/ai-lessons', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    topic: lastGeneratedLesson.topic,
-                    title: lastGeneratedLesson.scenario.title,
-                    level: lastGeneratedLesson.level,
-                    content: lastGeneratedLesson.scenario,
-                }),
-            });
-            if (res.ok) {
-                const saved: SavedAiLesson = await res.json();
-                setSavedAiLessons((prev) => [saved, ...prev]);
-                setLastGeneratedLesson((prev) => prev ? { ...prev, savedId: saved.id } : null);
-                showToast('Senaryo kaydedildi!', 'success');
-            }
-        } catch { /* silent */ } finally {
-            setIsSaving(false);
-        }
-    }, [session, lastGeneratedLesson, showToast]);
-
-    const handleSaveCustomLesson = useCallback(async () => {
-        if (!session?.user?.id || !lastCustomScenario) return;
-        setIsSaving(true);
-        try {
-            const res = await fetch('/api/custom-lessons', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    title: lastCustomScenario.scenario.title || 'Kendi Metnim',
-                    content: lastCustomScenario.scenario,
-                }),
-            });
-            if (res.ok) {
-                const saved: SavedCustomLesson = await res.json();
-                setSavedCustomLessons((prev) => [saved, ...prev]);
-                setLastCustomScenario((prev) => prev ? { ...prev, savedId: saved.id } : null);
-                showToast('Ders kaydedildi!', 'success');
-            }
-        } catch { /* silent */ } finally {
-            setIsSaving(false);
-        }
-    }, [session, lastCustomScenario, showToast]);
 
     const handleDeleteAiLesson = useCallback(async (id: string) => {
         try {
@@ -466,47 +587,14 @@ export default function DashboardPage() {
     const handleCustomSubmit = useCallback((customScenario: Scenario) => {
         showToast('Kendi metniniz yüklendi!', 'success');
         setLastCustomScenario({ scenario: customScenario });
-    }, [showToast]);
+        if (session?.user?.id) void saveNewCustomLessonImmediate(customScenario);
+    }, [session, showToast, saveNewCustomLessonImmediate]);
 
     const handleComplete = useCallback(async () => {
         console.log('[DashboardPage] ✅ Session complete');
 
-        // Save progress if user is logged in and playing a structured course lesson
-        if (!session?.user?.id || !selectedCourse || !selectedLesson) return;
-
-        try {
-            const res = await fetch('/api/progress', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    courseId: selectedCourse.id,
-                    lessonId: selectedLesson.id,
-                    lastLineIndex: -1,
-                    completed: true,
-                }),
-            });
-
-            if (!res.ok) return;
-
-            const progress: ProgressData = await res.json();
-            setProgressMap((prev) => ({ ...prev, [selectedLesson.id]: progress }));
-
-            const remaining = progress.targetCount - progress.completionCount;
-            if (remaining > 0) {
-                showToast(`Tekrar: ${remaining} seans kaldı`, 'success');
-            } else {
-                showToast('Bu ders tam öğrenildi!', 'success');
-            }
-        } catch {
-            /* silent — progress saving is non-critical */
-        }
-    }, [session, selectedCourse, selectedLesson, showToast]);
-
-    const handleBack = useCallback(async (lastLineIndex: number) => {
-        console.log(`[DashboardPage] ← Back (lastLineIndex: ${lastLineIndex})`);
-
-        // Save partial progress if user is logged in, was in a structured lesson, and made progress
-        if (session?.user?.id && selectedCourse && selectedLesson && lastLineIndex > 0) {
+        // Kurs: giriş yapılmış ve yapılandırılmış ders ise API ile kaydet
+        if (session?.user?.id && selectedCourse && selectedLesson) {
             try {
                 const res = await fetch('/api/progress', {
                     method: 'POST',
@@ -514,15 +602,52 @@ export default function DashboardPage() {
                     body: JSON.stringify({
                         courseId: selectedCourse.id,
                         lessonId: selectedLesson.id,
-                        lastLineIndex,
-                        completed: false,
+                        lastLineIndex: -1,
+                        completed: true,
                     }),
                 });
-                if (res.ok) {
-                    const progress: ProgressData = await res.json();
-                    setProgressMap((prev) => ({ ...prev, [selectedLesson.id]: progress }));
+                if (!res.ok) return;
+                const progress: ProgressData = await res.json();
+                setProgressMap((prev) => ({ ...prev, [selectedLesson.id]: progress }));
+                const remaining = progress.targetCount - progress.completionCount;
+                if (remaining > 0) {
+                    showToast(`Tekrar: ${remaining} seans kaldı`, 'success');
+                } else {
+                    showToast('Bu ders tam öğrenildi!', 'success');
                 }
-            } catch { /* silent */ }
+            } catch {
+                /* silent — progress saving is non-critical */
+            }
+            return;
+        }
+
+        // AI / Metnim: localStorage ile tamamlanma sayısını artır
+        const sessionRef = playbackSessionRef.current;
+        if (sessionRef && !sessionRef.isCourse) {
+            const next = incrementStoredCompletionCount(sessionRef.resumableId);
+            if (next) {
+                const remaining = next.targetCount - next.completionCount;
+                if (remaining > 0) {
+                    showToast(`Tekrar: ${remaining} seans kaldı`, 'success');
+                } else {
+                    showToast('Bu ders tam öğrenildi!', 'success');
+                }
+            }
+        }
+    }, [session, selectedCourse, selectedLesson, showToast]);
+
+    const handleBack = useCallback(async (lastLineIndex: number) => {
+        console.log(`[DashboardPage] ← Back (lastLineIndex: ${lastLineIndex})`);
+
+        const sessionRef = playbackSessionRef.current;
+        if (sessionRef) {
+            await setStoredLastLineIndex(sessionRef.resumableId, lastLineIndex, sessionRef.isCourse, {
+                session,
+                courseId: sessionRef.courseId,
+                lessonId: sessionRef.lessonId,
+                setProgressMap,
+            });
+            playbackSessionRef.current = null;
         }
 
         setScenario(null);
@@ -533,7 +658,7 @@ export default function DashboardPage() {
         } else {
             setViewState('dashboard');
         }
-    }, [session, selectedCourse, selectedLesson]);
+    }, [session, selectedCourse]);
 
     const handleBackFromCourseDetail = useCallback(() => {
         setScenario(null);
@@ -747,44 +872,14 @@ export default function DashboardPage() {
             <main className="min-h-dvh flex flex-col px-4 py-8 max-w-lg mx-auto">
                 <ToastContainer toasts={toasts} />
 
-                {/* ─── Resume Prompt Modal ─── */}
-                {resumePrompt && (
-                    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-4 sm:pb-0">
-                        {/* Backdrop */}
-                        <div
-                            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-                            onClick={() => setResumePrompt(null)}
-                        />
-                        {/* Sheet */}
-                        <div className="relative w-full max-w-md bg-card border border-border rounded-3xl p-6 shadow-2xl">
-                            <p className="text-foreground-muted text-xs uppercase tracking-widest mb-1">
-                                Yarıda bırakılmış ders
-                            </p>
-                            <h3 className="text-foreground font-bold text-xl mb-1">
-                                {resumePrompt.lesson.title}
-                            </h3>
-                            <p className="text-amber-400 text-sm mb-6">
-                                ⏸ {resumePrompt.lastLineIndex + 1}. cümlede bırakmıştın
-                            </p>
-                            <div className="flex flex-col gap-3">
-                                <button
-                                    onClick={handleResume}
-                                    className="w-full min-h-[56px] rounded-2xl bg-emerald-500 text-white font-bold text-lg
-                                     hover:bg-emerald-400 transition-colors duration-200 active:scale-95"
-                                >
-                                    ▶ Kaldığın yerden devam et
-                                </button>
-                                <button
-                                    onClick={handleRestartLesson}
-                                    className="w-full min-h-[56px] rounded-2xl bg-card border border-border text-foreground-secondary
-                                     font-medium text-base hover:border-border-hover hover:text-foreground
-                                     transition-colors duration-200 active:scale-95"
-                                >
-                                    ↺ Baştan başla
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                {resumeState && (
+                    <ResumePromptModal
+                        title={resumeState.title}
+                        lastLineIndex={resumeState.lastLineIndex}
+                        onResume={handleResume}
+                        onRestart={() => void handleRestartLesson()}
+                        onDismiss={() => setResumeState(null)}
+                    />
                 )}
 
                 <div className="flex items-center justify-between mb-6">
@@ -890,9 +985,37 @@ export default function DashboardPage() {
         <main className="min-h-dvh flex flex-col px-4 py-8 max-w-lg mx-auto">
             <ToastContainer toasts={toasts} />
 
+            {resumeState && (
+                <ResumePromptModal
+                    title={resumeState.title}
+                    lastLineIndex={resumeState.lastLineIndex}
+                    onResume={handleResume}
+                    onRestart={() => void handleRestartLesson()}
+                    onDismiss={() => setResumeState(null)}
+                />
+            )}
+
+            <ConfirmModal
+                open={!!deleteConfirm}
+                title="Bu dersi silmek istediğinize emin misiniz?"
+                subtitle={deleteConfirm?.title}
+                confirmLabel="Sil"
+                cancelLabel="İptal"
+                variant="danger"
+                onConfirm={() => {
+                    if (!deleteConfirm) return;
+                    if (deleteConfirm.type === 'ai') handleDeleteAiLesson(deleteConfirm.id);
+                    else handleDeleteCustomLesson(deleteConfirm.id);
+                    setDeleteConfirm(null);
+                }}
+                onCancel={() => setDeleteConfirm(null)}
+            />
+
             {/* Header Bar */}
-            <div className="flex items-center justify-between mb-6">
-                <AuthButton />
+            <div className="flex items-center justify-between gap-2 mb-6">
+                <div className="flex-shrink-0 min-w-[44px]">
+                    <AuthButton />
+                </div>
                 <ThemeToggle />
             </div>
 
@@ -1008,16 +1131,43 @@ export default function DashboardPage() {
                     )}
 
                     {/* ── Generated lesson card ── */}
-                    {lastGeneratedLesson && (
+                    {lastGeneratedLesson && (() => {
+                        const aiResumableId = getResumableId('ai', {
+                            topic: lastGeneratedLesson.topic,
+                            level: lastGeneratedLesson.level,
+                            savedId: lastGeneratedLesson.savedId ?? undefined,
+                        });
+                        const prog = getStoredProgress(aiResumableId, null, false);
+                        const isMastered = prog.completionCount >= prog.targetCount;
+                        const isStarted = prog.completionCount >= 1;
+                        const isPartial = prog.lastLineIndex > 0;
+                        return (
                         <div className="p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/5">
                             <div className="flex items-start justify-between mb-3">
                                 <div className="flex-1 min-w-0">
                                     <p className="text-foreground font-semibold truncate">
                                         {lastGeneratedLesson.scenario.title}
                                     </p>
-                                    <p className="text-foreground-muted text-sm mt-0.5">
-                                        {lastGeneratedLesson.level} · {lastGeneratedLesson.scenario.lines.length} cümle
-                                    </p>
+                                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                                        <p className="text-foreground-muted text-sm">
+                                            {lastGeneratedLesson.level} · {lastGeneratedLesson.scenario.lines.length} cümle
+                                        </p>
+                                        {isMastered && (
+                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400">
+                                                Öğrenildi
+                                            </span>
+                                        )}
+                                        {!isMastered && isStarted && (
+                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-500/10 text-blue-400">
+                                                {prog.completionCount}/{prog.targetCount}
+                                            </span>
+                                        )}
+                                        {isPartial && (
+                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400">
+                                                ⏸ Yarıda
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                                 <button
                                     onClick={() => setLastGeneratedLesson(null)}
@@ -1038,30 +1188,22 @@ export default function DashboardPage() {
                                     👁
                                 </button>
                                 <button
-                                    onClick={() => handlePlayScenario(lastGeneratedLesson.scenario)}
+                                    onClick={() => handlePlayAiScenario(lastGeneratedLesson.scenario, { topic: lastGeneratedLesson.topic, level: lastGeneratedLesson.level, savedId: lastGeneratedLesson.savedId })}
                                     className="flex-1 min-h-[44px] rounded-xl bg-emerald-500 text-white font-semibold
                                      hover:bg-emerald-400 transition-colors duration-200 active:scale-95"
                                 >
                                     ▶ Dinle
                                 </button>
                                 {session?.user?.id && (
-                                    <button
-                                        onClick={handleSaveAiLesson}
-                                        disabled={isSaving || !!lastGeneratedLesson.savedId}
-                                        className={`flex items-center justify-center px-3 min-h-[44px] rounded-xl
-                                         font-semibold text-sm transition-colors duration-200 active:scale-95
-                                         disabled:opacity-60 disabled:cursor-not-allowed
-                                         ${lastGeneratedLesson.savedId
-                                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                                            : 'bg-background border border-border hover:border-border-hover text-foreground-muted hover:text-foreground'
-                                        }`}
-                                    >
-                                        {lastGeneratedLesson.savedId ? '✓' : isSaving ? '…' : '💾'}
-                                    </button>
+                                    <span className="flex items-center justify-center px-3 min-h-[44px] rounded-xl text-sm font-medium
+                                     bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                                        {lastGeneratedLesson.savedId ? '✓ Kaydedildi' : isSaving ? 'Kaydediliyor…' : '…'}
+                                    </span>
                                 )}
                             </div>
                         </div>
-                    )}
+                        );
+                    })()}
 
                     {/* ── Saved AI lessons list ── */}
                     {session?.user?.id && savedAiLessons.length > 0 && (
@@ -1069,23 +1211,32 @@ export default function DashboardPage() {
                             <h3 className="text-xs text-foreground-muted uppercase tracking-widest font-medium">
                                 Kaydedilmiş Senaryolar
                             </h3>
-                            {savedAiLessons.map((lesson) => (
+                            {savedAiLessons.map((lesson) => {
+                                const rid = getResumableId('ai', { savedId: lesson.id });
+                                const p = getStoredProgress(rid, null, false);
+                                return (
                                 <SavedLessonCard
                                     key={lesson.id}
                                     id={lesson.id}
                                     title={lesson.title ?? lesson.topic}
                                     subtitle={`${lesson.level} · ${(lesson.content as Scenario).lines?.length ?? 0} cümle`}
+                                    progress={{
+                                        completionCount: p.completionCount,
+                                        targetCount: p.targetCount,
+                                        isPartial: p.lastLineIndex > 0,
+                                    }}
                                     isEditing={editingLessonId === lesson.id}
                                     editValue={editingTitle}
-                                    onPlay={() => handlePlayScenario(lesson.content)}
+                                    onPlay={() => handlePlayAiScenario(lesson.content, { topic: lesson.topic, level: lesson.level, savedId: lesson.id })}
                                     onPreview={() => handlePreviewScenario(lesson.content)}
                                     onEditStart={() => handleEditStart(lesson.id, lesson.title ?? lesson.topic)}
                                     onEditChange={(v) => setEditingTitle(v)}
                                     onEditCommit={() => handleRenameAiLesson(lesson.id, editingTitle)}
                                     onEditCancel={handleEditCancel}
-                                    onDelete={() => handleDeleteAiLesson(lesson.id)}
+                                    onDelete={() => setDeleteConfirm({ type: 'ai', id: lesson.id, title: lesson.title ?? lesson.topic })}
                                 />
-                            ))}
+                                );
+                            })}
                         </div>
                     )}
                 </div>
@@ -1108,16 +1259,42 @@ export default function DashboardPage() {
                     </p>
 
                     {/* ── Custom lesson card ── */}
-                    {lastCustomScenario && (
+                    {lastCustomScenario && (() => {
+                        const customResumableId = getResumableId('custom', {
+                            scenario: lastCustomScenario.scenario,
+                            savedId: lastCustomScenario.savedId ?? undefined,
+                        });
+                        const prog = getStoredProgress(customResumableId, null, false);
+                        const isMastered = prog.completionCount >= prog.targetCount;
+                        const isStarted = prog.completionCount >= 1;
+                        const isPartial = prog.lastLineIndex > 0;
+                        return (
                         <div className="p-4 rounded-2xl border border-purple-500/30 bg-purple-500/5">
                             <div className="flex items-start justify-between mb-3">
                                 <div className="flex-1 min-w-0">
                                     <p className="text-foreground font-semibold truncate">
                                         {lastCustomScenario.scenario.title}
                                     </p>
-                                    <p className="text-foreground-muted text-sm mt-0.5">
-                                        {lastCustomScenario.scenario.lines.length} cümle
-                                    </p>
+                                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                                        <p className="text-foreground-muted text-sm">
+                                            {lastCustomScenario.scenario.lines.length} cümle
+                                        </p>
+                                        {isMastered && (
+                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400">
+                                                Öğrenildi
+                                            </span>
+                                        )}
+                                        {!isMastered && isStarted && (
+                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-500/10 text-blue-400">
+                                                {prog.completionCount}/{prog.targetCount}
+                                            </span>
+                                        )}
+                                        {isPartial && (
+                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400">
+                                                ⏸ Yarıda
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                                 <button
                                     onClick={() => setLastCustomScenario(null)}
@@ -1138,30 +1315,22 @@ export default function DashboardPage() {
                                     👁
                                 </button>
                                 <button
-                                    onClick={() => handlePlayScenario(lastCustomScenario.scenario)}
+                                    onClick={() => handlePlayCustomScenario(lastCustomScenario.scenario, { savedId: lastCustomScenario.savedId })}
                                     className="flex-1 min-h-[44px] rounded-xl bg-purple-500 text-white font-semibold
                                      hover:bg-purple-400 transition-colors duration-200 active:scale-95"
                                 >
                                     ▶ Dinle
                                 </button>
                                 {session?.user?.id && (
-                                    <button
-                                        onClick={handleSaveCustomLesson}
-                                        disabled={isSaving || !!lastCustomScenario.savedId}
-                                        className={`flex items-center justify-center px-3 min-h-[44px] rounded-xl
-                                         font-semibold text-sm transition-colors duration-200 active:scale-95
-                                         disabled:opacity-60 disabled:cursor-not-allowed
-                                         ${lastCustomScenario.savedId
-                                            ? 'bg-purple-500/10 text-purple-400 border border-purple-500/30'
-                                            : 'bg-background border border-border hover:border-border-hover text-foreground-muted hover:text-foreground'
-                                        }`}
-                                    >
-                                        {lastCustomScenario.savedId ? '✓' : isSaving ? '…' : '💾'}
-                                    </button>
+                                    <span className="flex items-center justify-center px-3 min-h-[44px] rounded-xl text-sm font-medium
+                                     bg-purple-500/10 text-purple-400 border border-purple-500/30">
+                                        {lastCustomScenario.savedId ? '✓ Kaydedildi' : isSaving ? 'Kaydediliyor…' : '…'}
+                                    </span>
                                 )}
                             </div>
                         </div>
-                    )}
+                        );
+                    })()}
 
                     {/* ── Saved custom lessons list ── */}
                     {session?.user?.id && savedCustomLessons.length > 0 && (
@@ -1169,23 +1338,32 @@ export default function DashboardPage() {
                             <h3 className="text-xs text-foreground-muted uppercase tracking-widest font-medium">
                                 Kaydedilmiş Metinlerim
                             </h3>
-                            {savedCustomLessons.map((lesson) => (
+                            {savedCustomLessons.map((lesson) => {
+                                const rid = getResumableId('custom', { savedId: lesson.id });
+                                const p = getStoredProgress(rid, null, false);
+                                return (
                                 <SavedLessonCard
                                     key={lesson.id}
                                     id={lesson.id}
                                     title={lesson.title}
                                     subtitle={`${(lesson.content as Scenario).lines?.length ?? 0} cümle`}
+                                    progress={{
+                                        completionCount: p.completionCount,
+                                        targetCount: p.targetCount,
+                                        isPartial: p.lastLineIndex > 0,
+                                    }}
                                     isEditing={editingLessonId === lesson.id}
                                     editValue={editingTitle}
-                                    onPlay={() => handlePlayScenario(lesson.content)}
+                                    onPlay={() => handlePlayCustomScenario(lesson.content, { savedId: lesson.id })}
                                     onPreview={() => handlePreviewScenario(lesson.content)}
                                     onEditStart={() => handleEditStart(lesson.id, lesson.title)}
                                     onEditChange={(v) => setEditingTitle(v)}
                                     onEditCommit={() => handleRenameCustomLesson(lesson.id, editingTitle)}
                                     onEditCancel={handleEditCancel}
-                                    onDelete={() => handleDeleteCustomLesson(lesson.id)}
+                                    onDelete={() => setDeleteConfirm({ type: 'custom', id: lesson.id, title: lesson.title })}
                                 />
-                            ))}
+                                );
+                            })}
                         </div>
                     )}
                 </div>

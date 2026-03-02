@@ -8,7 +8,7 @@ We are building a Mobile-First, Hands-Free PWA (Progressive Web App) for languag
 ## 2. TECH STACK & CONSTRAINTS
 - Frontend: Next.js 14+ (App Router), Tailwind CSS.
 - Mobile UI: Extreme High-Contrast Dark Mode. Massive touch targets for car mounts. No complex menus.
-- Backend/Auth: Supabase.
+- Backend/Auth: NextAuth v5 + Prisma (PostgreSQL).
 - AI Logic: Gemini API (Generate JSON scenario dialogues).
 - Voice: `window.speechSynthesis` (Web Speech API) ONLY. No paid audio APIs.
 
