@@ -11,6 +11,7 @@ import { useSession } from 'next-auth/react';
 import ScenarioForm from '@/components/ScenarioForm';
 import CustomTextForm from '@/components/CustomTextForm';
 import AudioPlayer from '@/components/AudioPlayer';
+import LessonPreview from '@/components/LessonPreview';
 import ThemeToggle from '@/components/ThemeToggle';
 import AuthButton from '@/components/AuthButton';
 import { useToast, ToastContainer } from '@/components/Toast';
@@ -50,7 +51,7 @@ interface ProgressData {
 }
 
 type ActiveTab = 'courses' | 'ai' | 'custom';
-type ViewState = 'dashboard' | 'category' | 'subcategory' | 'course-detail' | 'playback';
+type ViewState = 'dashboard' | 'category' | 'subcategory' | 'course-detail' | 'preview' | 'playback';
 
 // ─── Category Metadata ──────────────────────────────────────────────────────
 
@@ -266,6 +267,24 @@ export default function DashboardPage() {
         setViewState('playback');
     }, [resumePrompt, showToast]);
 
+    // ─── PREVIEW HANDLERS ───
+    const handlePreviewClick = useCallback((lesson: ApiLesson) => {
+        setSelectedLesson(lesson);
+        setScenario(lesson.content);
+        setViewState('preview');
+    }, []);
+
+    const handleStartFromPreview = useCallback(() => {
+        setStartFromIndex(0);
+        setViewState('playback');
+    }, []);
+
+    const handleBackFromPreview = useCallback(() => {
+        setScenario(null);
+        setSelectedLesson(null);
+        setViewState('course-detail');
+    }, []);
+
     // ─── CUSTOM TEXT HANDLER (Section C) ───
     const handleCustomSubmit = useCallback((customScenario: Scenario) => {
         showToast('Kendi metniniz yüklendi!', 'success');
@@ -382,6 +401,17 @@ export default function DashboardPage() {
         setSelectedSubcategory(null);
         setViewState('dashboard');
     }, []);
+
+    // ─── PREVIEW MODE ───
+    if (viewState === 'preview' && scenario) {
+        return (
+            <LessonPreview
+                scenario={scenario}
+                onStartPlayback={handleStartFromPreview}
+                onBack={handleBackFromPreview}
+            />
+        );
+    }
 
     // ─── PLAYBACK MODE ───
     if (viewState === 'playback' && scenario) {
@@ -612,52 +642,66 @@ export default function DashboardPage() {
                         const isPartial = prog && !prog.completed && prog.lastLineIndex > 0;
 
                         return (
-                            <button
-                                key={lesson.id}
-                                id={`lesson-${lesson.id}`}
-                                onClick={() => handleLessonClick(lesson)}
-                                className="lesson-card group flex items-center gap-4 p-5 rounded-2xl
-                                 bg-card border border-border/50 hover:border-border-hover
-                                 transition-all duration-300 active:scale-[0.98] text-left"
-                            >
-                                <div className={`flex items-center justify-center w-12 h-12 rounded-xl
-                                  text-lg font-bold group-hover:scale-110 transition-transform duration-300
-                                  ${isMastered
-                                        ? 'bg-emerald-500/20 text-emerald-400'
-                                        : `bg-${selectedCourse.color}-500/10 text-${selectedCourse.color}-400`
-                                    }`}>
-                                    {isMastered ? '★' : idx + 1}
-                                </div>
-                                <div className="flex-1">
-                                    <p className="text-foreground font-medium text-lg">{lesson.title}</p>
-                                    <div className="flex items-center gap-2 mt-0.5">
-                                        <p className="text-foreground-muted text-sm">
-                                            {lesson.content.lines.length} cümle
-                                        </p>
-                                        {isMastered && (
-                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
-                                             bg-emerald-500/10 text-emerald-400">
-                                                Öğrenildi
-                                            </span>
-                                        )}
-                                        {!isMastered && isStarted && prog && (
-                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
-                                             bg-blue-500/10 text-blue-400">
-                                                {prog.completionCount}/{prog.targetCount}
-                                            </span>
-                                        )}
-                                        {isPartial && (
-                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
-                                             bg-amber-500/10 text-amber-400">
-                                                ⏸ Yarıda
-                                            </span>
-                                        )}
+                            <div key={lesson.id} className="flex items-stretch gap-2">
+                                {/* ── Main tap area → play / resume ── */}
+                                <button
+                                    id={`lesson-${lesson.id}`}
+                                    onClick={() => handleLessonClick(lesson)}
+                                    className="lesson-card group flex-1 flex items-center gap-4 p-5 rounded-2xl
+                                     bg-card border border-border/50 hover:border-border-hover
+                                     transition-all duration-300 active:scale-[0.98] text-left"
+                                >
+                                    <div className={`flex items-center justify-center w-12 h-12 rounded-xl
+                                      text-lg font-bold group-hover:scale-110 transition-transform duration-300
+                                      ${isMastered
+                                            ? 'bg-emerald-500/20 text-emerald-400'
+                                            : `bg-${selectedCourse.color}-500/10 text-${selectedCourse.color}-400`
+                                        }`}>
+                                        {isMastered ? '★' : idx + 1}
                                     </div>
-                                </div>
-                                <span className="text-foreground-faint group-hover:text-emerald-400 transition-colors duration-300 text-2xl">
-                                    {isMastered ? '✓' : '▶'}
-                                </span>
-                            </button>
+                                    <div className="flex-1">
+                                        <p className="text-foreground font-medium text-lg">{lesson.title}</p>
+                                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                                            <p className="text-foreground-muted text-sm">
+                                                {lesson.content.lines.length} cümle
+                                            </p>
+                                            {isMastered && (
+                                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
+                                                 bg-emerald-500/10 text-emerald-400">
+                                                    Öğrenildi
+                                                </span>
+                                            )}
+                                            {!isMastered && isStarted && prog && (
+                                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
+                                                 bg-blue-500/10 text-blue-400">
+                                                    {prog.completionCount}/{prog.targetCount}
+                                                </span>
+                                            )}
+                                            {isPartial && (
+                                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
+                                                 bg-amber-500/10 text-amber-400">
+                                                    ⏸ Yarıda
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <span className="text-foreground-faint group-hover:text-emerald-400 transition-colors duration-300 text-2xl">
+                                        {isMastered ? '✓' : '▶'}
+                                    </span>
+                                </button>
+
+                                {/* ── Preview button → silent text view ── */}
+                                <button
+                                    onClick={() => handlePreviewClick(lesson)}
+                                    title="Metni önizle"
+                                    className="flex items-center justify-center w-12 rounded-2xl
+                                     bg-card border border-border/50 hover:border-border-hover
+                                     text-foreground-muted hover:text-foreground
+                                     transition-all duration-200 active:scale-95 text-lg"
+                                >
+                                    👁
+                                </button>
+                            </div>
                         );
                     })}
                 </div>
