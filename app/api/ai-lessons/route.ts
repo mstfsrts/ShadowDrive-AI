@@ -46,6 +46,10 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'topic, level, content required' }, { status: 400 });
         }
 
+        if (topic.length > 200 || (title && title.length > 200)) {
+            return NextResponse.json({ error: 'Başlık veya konu en fazla 200 karakter olabilir' }, { status: 400 });
+        }
+
         const lesson = await prisma.generatedScenario.create({
             data: {
                 userId: session.user.id,
