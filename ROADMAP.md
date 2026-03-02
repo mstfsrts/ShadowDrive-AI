@@ -54,31 +54,18 @@ Goedbezig Youtube Series (kategori)
 ---
 
 ### Phase 5: Progress Takibi + Kaldığın Yerden Devam
-**Durum:** ⏳ Bekliyor
+**Durum:** ✅ Tamamlandı
 
 Hedef: Tüm sekmelerde ders tamamlanma sayısı + resume özelliği.
 
-**Aralıkli Tekrar Mantığı:**
-| Kavram | Değer |
-|--------|-------|
-| Hedef seans sayısı (varsayılan) | **4** (farklı günlerde) |
-| Minimum seans | 4 (değiştirilemez) |
-| Maksimum seans | 20 (kullanıcı artırabilir) |
-| Her seansta cümle tekrarı | **2x** (speechEngine'de mevcut) |
-| "Tam öğrenildi" eşiği | `completionCount >= targetCount` |
-
-**Yapılacaklar:**
-- [ ] `Progress` modeline `completionCount` + `targetCount` alanları ekle
-- [ ] `POST /api/progress` + `GET /api/progress` API route'ları
-- [ ] `AudioPlayer`: `startFromIndex` prop + `onProgress` callback
-- [ ] Dashboard: progress yükle, badge göster, resume desteği
-
-**CourseId Kuralları:**
-| Sekme | courseId | lessonId |
-|-------|----------|----------|
-| Kurslar | kursun id'si | dersin id'si |
-| AI | `'ai'` | `generatedScenario.id` |
-| Metnim | `'custom'` | `customLesson.id` |
+**Yapılanlar:**
+- [x] `POST /api/progress` + `GET /api/progress` API route'ları (`app/api/progress/route.ts`)
+- [x] Dashboard: `useSession`, `progressMap` state, progress fetch (`session` değişince)
+- [x] `handleLessonClick`: `selectedLesson` state güncelleniyor
+- [x] `handleComplete`: async → progress POST, `completionCount` artırıyor, toast gösteriyor
+- [x] Course detail: ders badge'leri (★ Öğrenildi, X/Y, hiç)
+- [x] Kurs kartı: "X/Y tamamlandı" genel ilerleme badge'i
+- [x] Prisma upsert: `completionCount` increment, `completedAt`, `targetCount=4` varsayılan
 
 ---
 

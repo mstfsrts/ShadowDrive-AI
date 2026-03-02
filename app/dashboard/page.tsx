@@ -7,6 +7,7 @@
 //   Section C: Custom Text Input — Manual entry
 
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import ScenarioForm from '@/components/ScenarioForm';
 import CustomTextForm from '@/components/CustomTextForm';
 import AudioPlayer from '@/components/AudioPlayer';
@@ -37,6 +38,15 @@ export interface ApiCourse {
     category: string;
     subcategory: string | null;
     lessons: ApiLesson[];
+}
+
+interface ProgressData {
+    lessonId: string;
+    courseId: string;
+    completionCount: number;
+    targetCount: number;
+    completed: boolean;
+    lastLineIndex: number;
 }
 
 type ActiveTab = 'courses' | 'ai' | 'custom';
@@ -71,15 +81,18 @@ function CourseCardSkeleton() {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
+    const { data: session } = useSession();
     const [activeTab, setActiveTab] = useState<ActiveTab>('courses');
     const [viewState, setViewState] = useState<ViewState>('dashboard');
     const [scenario, setScenario] = useState<Scenario | null>(null);
     const [selectedCourse, setSelectedCourse] = useState<ApiCourse | null>(null);
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
+    const [selectedLesson, setSelectedLesson] = useState<ApiLesson | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
     const [courses, setCourses] = useState<ApiCourse[]>([]);
     const [coursesLoading, setCoursesLoading] = useState(true);
+    const [progressMap, setProgressMap] = useState<Record<string, ProgressData>>({});
     const { toasts, showToast } = useToast();
 
     // ─── DOUBLE-CLICK GUARD ───
@@ -96,6 +109,22 @@ export default function DashboardPage() {
             .catch(() => showToast('Kurslar yüklenemedi', 'warning'))
             .finally(() => setCoursesLoading(false));
     }, [showToast]);
+
+    // ─── LOAD PROGRESS FROM DB ───
+    useEffect(() => {
+        if (!session?.user?.id) return;
+        fetch('/api/progress')
+            .then((r) => {
+                if (!r.ok) return [];
+                return r.json();
+            })
+            .then((data: ProgressData[]) => {
+                const map: Record<string, ProgressData> = {};
+                data.forEach((p) => { map[p.lessonId] = p; });
+                setProgressMap(map);
+            })
+            .catch(() => { /* silent — progress is non-critical */ });
+    }, [session]);
 
     // ─── COURSE HANDLERS (Section A) ───
 
@@ -128,6 +157,7 @@ export default function DashboardPage() {
     const handleLessonClick = useCallback((lesson: ApiLesson) => {
         console.log(`[DashboardPage] Loading lesson: "${lesson.title}"`);
         showToast('Ders yüklendi!', 'success');
+        setSelectedLesson(lesson);
         setScenario(lesson.content);
         setViewState('playback');
     }, [showToast]);
@@ -210,13 +240,44 @@ export default function DashboardPage() {
         setViewState('playback');
     }, [showToast]);
 
-    const handleComplete = useCallback(() => {
+    const handleComplete = useCallback(async () => {
         console.log('[DashboardPage] ✅ Session complete');
-    }, []);
+
+        // Save progress if user is logged in and playing a structured course lesson
+        if (!session?.user?.id || !selectedCourse || !selectedLesson) return;
+
+        try {
+            const res = await fetch('/api/progress', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    courseId: selectedCourse.id,
+                    lessonId: selectedLesson.id,
+                    lastLineIndex: -1,
+                    completed: true,
+                }),
+            });
+
+            if (!res.ok) return;
+
+            const progress: ProgressData = await res.json();
+            setProgressMap((prev) => ({ ...prev, [selectedLesson.id]: progress }));
+
+            const remaining = progress.targetCount - progress.completionCount;
+            if (remaining > 0) {
+                showToast(`Tekrar: ${remaining} seans kaldı`, 'success');
+            } else {
+                showToast('Bu ders tam öğrenildi!', 'success');
+            }
+        } catch {
+            /* silent — progress saving is non-critical */
+        }
+    }, [session, selectedCourse, selectedLesson, showToast]);
 
     const handleBack = useCallback(() => {
         console.log('[DashboardPage] ← Back');
         setScenario(null);
+        setSelectedLesson(null);
         if (selectedCourse) {
             setViewState('course-detail');
         } else {
@@ -261,6 +322,7 @@ export default function DashboardPage() {
     const handleBackToDashboard = useCallback(() => {
         setScenario(null);
         setSelectedCourse(null);
+        setSelectedLesson(null);
         setSelectedCategory(null);
         setSelectedSubcategory(null);
         setViewState('dashboard');
@@ -371,35 +433,48 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="flex flex-col gap-4">
-                    {filteredCourses.map((course) => (
-                        <button
-                            key={course.id}
-                            onClick={() => handleCourseClick(course.id)}
-                            className="course-card group relative flex items-center gap-4 p-5 rounded-2xl
-                             bg-card border border-border/50 hover:border-border-hover
-                             transition-all duration-300 active:scale-[0.98] text-left overflow-hidden"
-                        >
-                            <div className={`absolute inset-0 opacity-0 group-hover:opacity-100
-                             transition-opacity duration-500 bg-gradient-to-r
-                             from-${course.color}-500/5 to-transparent pointer-events-none`} />
-                            <span className="text-4xl relative z-10 group-hover:scale-110 transition-transform duration-300">
-                                {course.emoji}
-                            </span>
-                            <div className="flex-1 relative z-10">
-                                <h3 className="text-foreground font-bold text-base leading-tight">{course.title}</h3>
-                                <p className="text-foreground-muted text-sm mt-1">{course.description}</p>
-                                <div className="flex items-center gap-2 mt-2">
-                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                     bg-${course.color}-500/10 text-${course.color}-400`}>
-                                        {course.lessons.length} ders
-                                    </span>
+                    {filteredCourses.map((course) => {
+                        const completedLessons = course.lessons.filter(
+                            (l) => progressMap[l.id]?.completionCount >= 1
+                        ).length;
+                        const totalLessons = course.lessons.length;
+
+                        return (
+                            <button
+                                key={course.id}
+                                onClick={() => handleCourseClick(course.id)}
+                                className="course-card group relative flex items-center gap-4 p-5 rounded-2xl
+                                 bg-card border border-border/50 hover:border-border-hover
+                                 transition-all duration-300 active:scale-[0.98] text-left overflow-hidden"
+                            >
+                                <div className={`absolute inset-0 opacity-0 group-hover:opacity-100
+                                 transition-opacity duration-500 bg-gradient-to-r
+                                 from-${course.color}-500/5 to-transparent pointer-events-none`} />
+                                <span className="text-4xl relative z-10 group-hover:scale-110 transition-transform duration-300">
+                                    {course.emoji}
+                                </span>
+                                <div className="flex-1 relative z-10">
+                                    <h3 className="text-foreground font-bold text-base leading-tight">{course.title}</h3>
+                                    <p className="text-foreground-muted text-sm mt-1">{course.description}</p>
+                                    <div className="flex items-center gap-2 mt-2">
+                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                         bg-${course.color}-500/10 text-${course.color}-400`}>
+                                            {totalLessons} ders
+                                        </span>
+                                        {completedLessons > 0 && (
+                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                             bg-emerald-500/10 text-emerald-400">
+                                                {completedLessons}/{totalLessons} tamamlandı
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                            <span className="text-foreground-faint group-hover:text-foreground transition-colors duration-300 text-xl relative z-10">
-                                →
-                            </span>
-                        </button>
-                    ))}
+                                <span className="text-foreground-faint group-hover:text-foreground transition-colors duration-300 text-xl relative z-10">
+                                    →
+                                </span>
+                            </button>
+                        );
+                    })}
                 </div>
             </main>
         );
@@ -435,31 +510,54 @@ export default function DashboardPage() {
                     <h2 className="text-foreground-muted text-xs font-medium uppercase tracking-wider mb-1">
                         Dersler ({selectedCourse.lessons.length})
                     </h2>
-                    {selectedCourse.lessons.map((lesson, idx) => (
-                        <button
-                            key={lesson.id}
-                            id={`lesson-${lesson.id}`}
-                            onClick={() => handleLessonClick(lesson)}
-                            className="lesson-card group flex items-center gap-4 p-5 rounded-2xl
-                             bg-card border border-border/50 hover:border-border-hover
-                             transition-all duration-300 active:scale-[0.98] text-left"
-                        >
-                            <div className={`flex items-center justify-center w-12 h-12 rounded-xl
-                              bg-${selectedCourse.color}-500/10 text-${selectedCourse.color}-400
-                              text-lg font-bold group-hover:scale-110 transition-transform duration-300`}>
-                                {idx + 1}
-                            </div>
-                            <div className="flex-1">
-                                <p className="text-foreground font-medium text-lg">{lesson.title}</p>
-                                <p className="text-foreground-muted text-sm mt-0.5">
-                                    {lesson.content.lines.length} cümle
-                                </p>
-                            </div>
-                            <span className="text-foreground-faint group-hover:text-emerald-400 transition-colors duration-300 text-2xl">
-                                ▶
-                            </span>
-                        </button>
-                    ))}
+                    {selectedCourse.lessons.map((lesson, idx) => {
+                        const prog = progressMap[lesson.id];
+                        const isMastered = prog && prog.completionCount >= prog.targetCount;
+                        const isStarted = prog && prog.completionCount >= 1;
+
+                        return (
+                            <button
+                                key={lesson.id}
+                                id={`lesson-${lesson.id}`}
+                                onClick={() => handleLessonClick(lesson)}
+                                className="lesson-card group flex items-center gap-4 p-5 rounded-2xl
+                                 bg-card border border-border/50 hover:border-border-hover
+                                 transition-all duration-300 active:scale-[0.98] text-left"
+                            >
+                                <div className={`flex items-center justify-center w-12 h-12 rounded-xl
+                                  text-lg font-bold group-hover:scale-110 transition-transform duration-300
+                                  ${isMastered
+                                        ? 'bg-emerald-500/20 text-emerald-400'
+                                        : `bg-${selectedCourse.color}-500/10 text-${selectedCourse.color}-400`
+                                    }`}>
+                                    {isMastered ? '★' : idx + 1}
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-foreground font-medium text-lg">{lesson.title}</p>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                        <p className="text-foreground-muted text-sm">
+                                            {lesson.content.lines.length} cümle
+                                        </p>
+                                        {isMastered && (
+                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
+                                             bg-emerald-500/10 text-emerald-400">
+                                                Öğrenildi
+                                            </span>
+                                        )}
+                                        {!isMastered && isStarted && prog && (
+                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
+                                             bg-blue-500/10 text-blue-400">
+                                                {prog.completionCount}/{prog.targetCount}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                                <span className="text-foreground-faint group-hover:text-emerald-400 transition-colors duration-300 text-2xl">
+                                    {isMastered ? '✓' : '▶'}
+                                </span>
+                            </button>
+                        );
+                    })}
                 </div>
             </main>
         );
