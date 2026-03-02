@@ -69,15 +69,17 @@ Hedef: Tüm sekmelerde ders tamamlanma sayısı + resume özelliği.
 
 ---
 
-### Phase 6: Metin Önizleme (Ses Yok)
-**Durum:** ⏳ Bekliyor
+### Phase 6: Metin Önizleme
+**Durum:** ✅ Tamamlandı
 
-Hedef: Araba kullanmadan diyalog metnini sessizce okuyarak gözden geçirme.
+Hedef: Araba kullanmadan diyalog metnini okuyarak gözden geçirme + tek tek cümle dinleme.
 
-**Yapılacaklar:**
-- [ ] `components/LessonPreview.tsx`: scrollable diyalog listesi (Hollandaca + Türkçe, ses yok)
-- [ ] Kurslar / AI / Metnim sekmelerinde "👁 Önizle" butonu
-- [ ] "▶ Dinlemeye Başla" butonu ile playback'e geçiş
+**Yapılanlar:**
+- [x] `components/LessonPreview.tsx`: scrollable Hollandaca + Türkçe diyalog listesi
+- [x] Her cümle kartında `▶/⏸` butonu — tek cümleyi `speakAsync` ile seslendirir
+- [x] Sticky header: geri + "▶ Başla" butonları
+- [x] Dashboard: `'preview'` ViewState + `handlePreviewClick/StartFromPreview/BackFromPreview`
+- [x] Course-detail: ders kartları → oynat (flex-1) + `👁` yan yana iki buton
 
 ---
 
