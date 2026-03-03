@@ -50,9 +50,9 @@ export default function LandingPage() {
                 </div>
 
                 <h1 className="text-4xl sm:text-5xl font-black tracking-tight leading-[1.1] mb-4">
-                    <span className="text-gradient">Sürüşte</span>
-                    <br />
-                    <span className="text-foreground">Hollandaca Öğren</span>
+                    <span className="text-gradient">Shadow</span>
+                    <span className="text-foreground">Drive</span>
+                    <span className="text-foreground-muted font-light text-3xl sm:text-4xl ml-2">AI</span>
                 </h1>
 
                 <p className="text-foreground-secondary text-base leading-relaxed max-w-[280px]">
