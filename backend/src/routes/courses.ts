@@ -14,7 +14,7 @@ coursesRouter.get("/courses", optionalAuth, async (_req: Request, res: Response)
         const courses = await prisma.course.findMany({
             include: {
                 lessons: {
-                    select: { id: true, title: true, order: true },
+                    select: { id: true, title: true, order: true, content: true },
                     orderBy: { order: "asc" },
                 },
             },

@@ -1,29 +1,24 @@
-'use client';
+"use client";
 
 // ─── ShadowDrive AI — Dashboard Orchestrating Hook ───
 // Owns all state (19 useState), 2 refs, 3 effects, all handlers.
 // Returns DashboardState bag-of-props to page.tsx.
 
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import { useToast } from '@/components/Toast';
-import { Scenario, type CEFRLevel } from '@/types/dialogue';
-import { getCachedScenario, cacheScenario } from '@/lib/scenarioCache';
-import { getOfflineScenario } from '@/lib/offlineScenarios';
-import {
-    getResumableId, getStoredLastLineIndex, setStoredLastLineIndex,
-    incrementStoredCompletionCount, type ProgressDataLike,
-} from '@/lib/resumablePlayback';
-import type {
-    ApiLesson, ApiCourse, ProgressData, SavedAiLesson, SavedCustomLesson,
-    GeneratedLessonState, ActiveTab, ViewState, ResumeState, PlaybackSession,
-} from './_types';
+import { useState, useCallback, useRef, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useToast } from "@/components/Toast";
+import { Scenario, type CEFRLevel } from "@/types/dialogue";
+import { getCachedScenario, cacheScenario } from "@/lib/scenarioCache";
+import { getOfflineScenario } from "@/lib/offlineScenarios";
+import { backendFetch } from "@/lib/backendFetch";
+import { getResumableId, getStoredLastLineIndex, setStoredLastLineIndex, incrementStoredCompletionCount, type ProgressDataLike } from "@/lib/resumablePlayback";
+import type { ApiLesson, ApiCourse, ProgressData, SavedAiLesson, SavedCustomLesson, GeneratedLessonState, ActiveTab, ViewState, ResumeState, PlaybackSession } from "./_types";
 
 // ─── Hook Return Type ───
 export interface DashboardState {
     // Session + Toasts
-    session: ReturnType<typeof useSession>['data'];
-    toasts: ReturnType<typeof useToast>['toasts'];
+    session: ReturnType<typeof useSession>["data"];
+    toasts: ReturnType<typeof useToast>["toasts"];
     // Navigation
     activeTab: ActiveTab;
     viewState: ViewState;
@@ -50,12 +45,12 @@ export interface DashboardState {
     // CRUD editing
     editingLessonId: string | null;
     editingTitle: string;
-    deleteConfirm: { type: 'ai' | 'custom'; id: string; title: string } | null;
+    deleteConfirm: { type: "ai" | "custom"; id: string; title: string } | null;
     // Setters exposed for tab inline mutations
     setActiveTab: (tab: ActiveTab) => void;
     setResumeState: (state: ResumeState | null) => void;
     setEditingTitle: (title: string) => void;
-    setDeleteConfirm: (confirm: { type: 'ai' | 'custom'; id: string; title: string } | null) => void;
+    setDeleteConfirm: (confirm: { type: "ai" | "custom"; id: string; title: string } | null) => void;
     setLastGeneratedLesson: (lesson: GeneratedLessonState | null) => void;
     setLastCustomScenario: (scenario: { scenario: Scenario; savedId?: string } | null) => void;
     // Handlers
@@ -94,8 +89,8 @@ export function useDashboard(): DashboardState {
     const { toasts, showToast } = useToast();
 
     // ─── NAVIGATION STATE ───
-    const [activeTab, setActiveTab] = useState<ActiveTab>('courses');
-    const [viewState, setViewState] = useState<ViewState>('dashboard');
+    const [activeTab, setActiveTab] = useState<ActiveTab>("courses");
+    const [viewState, setViewState] = useState<ViewState>("dashboard");
     const [selectedCourse, setSelectedCourse] = useState<ApiCourse | null>(null);
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
@@ -123,8 +118,8 @@ export function useDashboard(): DashboardState {
 
     // ─── CRUD EDITING STATE ───
     const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
-    const [editingTitle, setEditingTitle] = useState('');
-    const [deleteConfirm, setDeleteConfirm] = useState<{ type: 'ai' | 'custom'; id: string; title: string } | null>(null);
+    const [editingTitle, setEditingTitle] = useState("");
+    const [deleteConfirm, setDeleteConfirm] = useState<{ type: "ai" | "custom"; id: string; title: string } | null>(null);
 
     // ─── REFS ───
     const playbackSessionRef = useRef<PlaybackSession | null>(null);
@@ -132,220 +127,254 @@ export function useDashboard(): DashboardState {
 
     // ─── EFFECTS: LOAD COURSES FROM DB ───
     useEffect(() => {
-        fetch('/api/courses')
-            .then((r) => {
+        backendFetch("/api/courses")
+            .then(r => {
                 if (!r.ok) throw new Error(`HTTP ${r.status}`);
                 return r.json();
             })
             .then((data: unknown) => setCourses(Array.isArray(data) ? data : []))
-            .catch(() => showToast('Kurslar yüklenemedi', 'warning'))
+            .catch(() => showToast("Kurslar yüklenemedi", "warning"))
             .finally(() => setCoursesLoading(false));
     }, [showToast]);
 
     // ─── EFFECTS: LOAD PROGRESS FROM DB ───
     useEffect(() => {
         if (!session?.user?.id) return;
-        fetch('/api/progress')
-            .then((r) => {
+        backendFetch("/api/progress", {}, true)
+            .then(r => {
                 if (!r.ok) return [];
                 return r.json();
             })
             .then((data: ProgressData[]) => {
                 const map: Record<string, ProgressData> = {};
-                data.forEach((p) => { map[p.lessonId] = p; });
+                data.forEach(p => {
+                    map[p.lessonId] = p;
+                });
                 setProgressMap(map);
             })
-            .catch(() => { /* silent — progress is non-critical */ });
+            .catch(() => {
+                /* silent — progress is non-critical */
+            });
     }, [session]);
 
     // ─── EFFECTS: LOAD SAVED LESSONS FROM DB ───
     useEffect(() => {
         if (!session?.user?.id) return;
-        fetch('/api/ai-lessons')
-            .then((r) => r.ok ? r.json() : [])
+        backendFetch("/api/ai-lessons", {}, true)
+            .then(r => (r.ok ? r.json() : []))
             .then((data: SavedAiLesson[]) => setSavedAiLessons(Array.isArray(data) ? data : []))
-            .catch(() => { /* silent */ });
-        fetch('/api/custom-lessons')
-            .then((r) => r.ok ? r.json() : [])
+            .catch(() => {
+                /* silent */
+            });
+        backendFetch("/api/custom-lessons", {}, true)
+            .then(r => (r.ok ? r.json() : []))
             .then((data: SavedCustomLesson[]) => setSavedCustomLessons(Array.isArray(data) ? data : []))
-            .catch(() => { /* silent */ });
+            .catch(() => {
+                /* silent */
+            });
     }, [session]);
 
     // ─── HANDLER: Course Navigation ───
-    const handleCategoryClick = useCallback((category: string) => {
-        setSelectedCategory(category);
-        const categoryCourses = courses.filter((c) => c.category === category);
-        const hasSubcategories = categoryCourses.some((c) => c.subcategory !== null);
-        if (hasSubcategories) {
-            setViewState('category');
-        } else {
-            setViewState('subcategory');
-        }
-    }, [courses]);
+    const handleCategoryClick = useCallback(
+        (category: string) => {
+            setSelectedCategory(category);
+            const categoryCourses = courses.filter(c => c.category === category);
+            const hasSubcategories = categoryCourses.some(c => c.subcategory !== null);
+            if (hasSubcategories) {
+                setViewState("category");
+            } else {
+                setViewState("subcategory");
+            }
+        },
+        [courses],
+    );
 
     const handleSubcategoryClick = useCallback((subcategory: string) => {
         setSelectedSubcategory(subcategory);
-        setViewState('subcategory');
+        setViewState("subcategory");
     }, []);
 
-    const handleCourseClick = useCallback((courseId: string) => {
-        const course = courses.find((c) => c.id === courseId);
-        if (course) {
-            setSelectedCourse(course);
-            setViewState('course-detail');
-        }
-    }, [courses]);
-
-    const handleLessonClick = useCallback((lesson: ApiLesson) => {
-        console.log(`[DashboardPage] Loading lesson: "${lesson.title}"`);
-        if (!selectedCourse) return;
-        const resumableId = getResumableId('course', { courseId: selectedCourse.id, lessonId: lesson.id });
-        const lastLineIndex = getStoredLastLineIndex(resumableId, progressMap, true);
-
-        if (lastLineIndex > 0) {
-            setResumeState({
-                resumableId,
-                title: lesson.title,
-                lastLineIndex,
-                scenario: lesson.content,
-                isCourse: true,
-                lesson,
-                course: selectedCourse,
-            });
-            return;
-        }
-
-        showToast('Ders yüklendi!', 'success');
-        setSelectedLesson(lesson);
-        setStartFromIndex(0);
-        setScenario(lesson.content);
-        playbackSessionRef.current = { resumableId, isCourse: true, courseId: selectedCourse.id, lessonId: lesson.id };
-        setViewState('playback');
-    }, [progressMap, selectedCourse, showToast]);
-
-    // ─── HANDLER: Auto-save helpers ───
-    const saveNewAiLessonImmediate = useCallback(async (payload: { scenario: Scenario; topic: string; level: CEFRLevel }) => {
-        if (!session?.user?.id) return;
-        setIsSaving(true);
-        try {
-            const res = await fetch('/api/ai-lessons', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    topic: payload.topic,
-                    title: payload.scenario.title,
-                    level: payload.level,
-                    content: payload.scenario,
-                }),
-            });
-            if (res.ok) {
-                const saved: SavedAiLesson = await res.json();
-                setSavedAiLessons((prev) => [saved, ...prev]);
-                setLastGeneratedLesson((prev) => prev ? { ...prev, savedId: saved.id } : null);
-                showToast('Senaryo kaydedildi!', 'success');
+    const handleCourseClick = useCallback(
+        (courseId: string) => {
+            const course = courses.find(c => c.id === courseId);
+            if (course) {
+                setSelectedCourse(course);
+                setViewState("course-detail");
             }
-        } catch { /* silent */ } finally {
-            setIsSaving(false);
-        }
-    }, [session, showToast]);
+        },
+        [courses],
+    );
 
-    const saveNewCustomLessonImmediate = useCallback(async (scenario: Scenario) => {
-        if (!session?.user?.id) return;
-        setIsSaving(true);
-        try {
-            const res = await fetch('/api/custom-lessons', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    title: scenario.title || 'Kendi Metnim',
-                    content: scenario,
-                }),
-            });
-            if (res.ok) {
-                const saved: SavedCustomLesson = await res.json();
-                setSavedCustomLessons((prev) => [saved, ...prev]);
-                setLastCustomScenario((prev) => prev ? { ...prev, savedId: saved.id } : null);
-                showToast('Ders kaydedildi!', 'success');
-            }
-        } catch { /* silent */ } finally {
-            setIsSaving(false);
-        }
-    }, [session, showToast]);
+    const handleLessonClick = useCallback(
+        (lesson: ApiLesson) => {
+            console.log(`[DashboardPage] Loading lesson: "${lesson.title}"`);
+            if (!selectedCourse) return;
+            const resumableId = getResumableId("course", { courseId: selectedCourse.id, lessonId: lesson.id });
+            const lastLineIndex = getStoredLastLineIndex(resumableId, progressMap, true);
 
-    // ─── HANDLER: AI Generation ───
-    const handleGenerate = useCallback(async (topic: string, difficulty: CEFRLevel) => {
-        if (isFetchingRef.current) {
-            console.warn('[DashboardPage] Blocked duplicate fetch — already in progress');
-            return;
-        }
-
-        console.log(`[DashboardPage] ── GENERATE START ── topic="${topic}", difficulty="${difficulty}"`);
-        isFetchingRef.current = true;
-        setIsGenerating(true);
-
-        const cached = getCachedScenario(topic, difficulty);
-        if (cached) {
-            console.log('[DashboardPage] ✅ CACHE HIT — skipping API call entirely');
-            showToast('Önbellekten yüklendi — Anında!', 'success');
-            setLastGeneratedLesson({ scenario: cached, topic, level: difficulty });
-            if (session?.user?.id) void saveNewAiLessonImmediate({ scenario: cached, topic, level: difficulty });
-            setIsGenerating(false);
-            isFetchingRef.current = false;
-            return;
-        }
-
-        console.log('[DashboardPage] Cache MISS — calling AI API...');
-
-        try {
-            const response = await fetch('/api/generate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ topic, difficulty }),
-            });
-
-            console.log(`[DashboardPage] API response: ${response.status}`);
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                const errorMsg = errorData.error || `Server error (${response.status})`;
-                console.warn(`[DashboardPage] API error: ${errorMsg}`);
-
-                const isRateLimit = response.status === 429 || errorMsg.includes('429') || errorMsg.includes('rate limit') || errorMsg.includes('quota');
-                showToast(
-                    isRateLimit ? 'API meşgul — çevrimdışı ders yükleniyor' : 'API hatası — çevrimdışı ders yükleniyor',
-                    'warning'
-                );
-
-                const offline = getOfflineScenario(topic);
-                const rid = getResumableId('ai', { topic, level: difficulty });
-                playbackSessionRef.current = { resumableId: rid, isCourse: false };
-                setScenario(offline);
-                setViewState('playback');
+            if (lastLineIndex > 0) {
+                setResumeState({
+                    resumableId,
+                    title: lesson.title,
+                    lastLineIndex,
+                    scenario: lesson.content,
+                    isCourse: true,
+                    lesson,
+                    course: selectedCourse,
+                });
                 return;
             }
 
-            const data: Scenario = await response.json();
-            console.log(`[DashboardPage] ✅ Scenario received: "${data.title}" (${data.lines.length} lines)`);
+            showToast("Ders yüklendi!", "success");
+            setSelectedLesson(lesson);
+            setStartFromIndex(0);
+            setScenario(lesson.content);
+            playbackSessionRef.current = { resumableId, isCourse: true, courseId: selectedCourse.id, lessonId: lesson.id };
+            setViewState("playback");
+        },
+        [progressMap, selectedCourse, showToast],
+    );
 
-            cacheScenario(topic, difficulty, data);
-            showToast('Yeni ders oluşturuldu!', 'success');
-            setLastGeneratedLesson({ scenario: data, topic, level: difficulty });
-            if (session?.user?.id) void saveNewAiLessonImmediate({ scenario: data, topic, level: difficulty });
+    // ─── HANDLER: Auto-save helpers ───
+    const saveNewAiLessonImmediate = useCallback(
+        async (payload: { scenario: Scenario; topic: string; level: CEFRLevel }) => {
+            if (!session?.user?.id) return;
+            setIsSaving(true);
+            try {
+                const res = await backendFetch(
+                    "/api/ai-lessons",
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            topic: payload.topic,
+                            title: payload.scenario.title,
+                            level: payload.level,
+                            content: payload.scenario,
+                        }),
+                    },
+                    true,
+                );
+                if (res.ok) {
+                    const saved: SavedAiLesson = await res.json();
+                    setSavedAiLessons(prev => [saved, ...prev]);
+                    setLastGeneratedLesson(prev => (prev ? { ...prev, savedId: saved.id } : null));
+                    showToast("Senaryo kaydedildi!", "success");
+                }
+            } catch {
+                /* silent */
+            } finally {
+                setIsSaving(false);
+            }
+        },
+        [session, showToast],
+    );
 
-        } catch (err) {
-            console.error('[DashboardPage] ❌ Fetch error:', err);
-            showToast('Bağlantı sorunu — çevrimdışı ders yükleniyor', 'warning');
-            const offline = getOfflineScenario(topic);
-            const rid = getResumableId('ai', { topic, level: difficulty });
-            playbackSessionRef.current = { resumableId: rid, isCourse: false };
-            setScenario(offline);
-            setViewState('playback');
-        } finally {
-            setIsGenerating(false);
-            isFetchingRef.current = false;
-            console.log('[DashboardPage] ── GENERATE END ──');
-        }
-    }, [session, showToast, saveNewAiLessonImmediate]);
+    const saveNewCustomLessonImmediate = useCallback(
+        async (scenario: Scenario) => {
+            if (!session?.user?.id) return;
+            setIsSaving(true);
+            try {
+                const res = await backendFetch(
+                    "/api/custom-lessons",
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            title: scenario.title || "Kendi Metnim",
+                            content: scenario,
+                        }),
+                    },
+                    true,
+                );
+                if (res.ok) {
+                    const saved: SavedCustomLesson = await res.json();
+                    setSavedCustomLessons(prev => [saved, ...prev]);
+                    setLastCustomScenario(prev => (prev ? { ...prev, savedId: saved.id } : null));
+                    showToast("Ders kaydedildi!", "success");
+                }
+            } catch {
+                /* silent */
+            } finally {
+                setIsSaving(false);
+            }
+        },
+        [session, showToast],
+    );
+
+    // ─── HANDLER: AI Generation ───
+    const handleGenerate = useCallback(
+        async (topic: string, difficulty: CEFRLevel) => {
+            if (isFetchingRef.current) {
+                console.warn("[DashboardPage] Blocked duplicate fetch — already in progress");
+                return;
+            }
+
+            console.log(`[DashboardPage] ── GENERATE START ── topic="${topic}", difficulty="${difficulty}"`);
+            isFetchingRef.current = true;
+            setIsGenerating(true);
+
+            const cached = getCachedScenario(topic, difficulty);
+            if (cached) {
+                console.log("[DashboardPage] ✅ CACHE HIT — skipping API call entirely");
+                showToast("Önbellekten yüklendi — Anında!", "success");
+                setLastGeneratedLesson({ scenario: cached, topic, level: difficulty });
+                if (session?.user?.id) void saveNewAiLessonImmediate({ scenario: cached, topic, level: difficulty });
+                setIsGenerating(false);
+                isFetchingRef.current = false;
+                return;
+            }
+
+            console.log("[DashboardPage] Cache MISS — calling AI API...");
+
+            try {
+                const response = await backendFetch("/api/generate", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ topic, difficulty }),
+                });
+
+                console.log(`[DashboardPage] API response: ${response.status}`);
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    const errorMsg = errorData.error || `Server error (${response.status})`;
+                    console.warn(`[DashboardPage] API error: ${errorMsg}`);
+
+                    const isRateLimit = response.status === 429 || errorMsg.includes("429") || errorMsg.includes("rate limit") || errorMsg.includes("quota");
+                    showToast(isRateLimit ? "API meşgul — çevrimdışı ders yükleniyor" : "API hatası — çevrimdışı ders yükleniyor", "warning");
+
+                    const offline = getOfflineScenario(topic);
+                    const rid = getResumableId("ai", { topic, level: difficulty });
+                    playbackSessionRef.current = { resumableId: rid, isCourse: false };
+                    setScenario(offline);
+                    setViewState("playback");
+                    return;
+                }
+
+                const data: Scenario = await response.json();
+                console.log(`[DashboardPage] ✅ Scenario received: "${data.title}" (${data.lines.length} lines)`);
+
+                cacheScenario(topic, difficulty, data);
+                showToast("Yeni ders oluşturuldu!", "success");
+                setLastGeneratedLesson({ scenario: data, topic, level: difficulty });
+                if (session?.user?.id) void saveNewAiLessonImmediate({ scenario: data, topic, level: difficulty });
+            } catch (err) {
+                console.error("[DashboardPage] ❌ Fetch error:", err);
+                showToast("Bağlantı sorunu — çevrimdışı ders yükleniyor", "warning");
+                const offline = getOfflineScenario(topic);
+                const rid = getResumableId("ai", { topic, level: difficulty });
+                playbackSessionRef.current = { resumableId: rid, isCourse: false };
+                setScenario(offline);
+                setViewState("playback");
+            } finally {
+                setIsGenerating(false);
+                isFetchingRef.current = false;
+                console.log("[DashboardPage] ── GENERATE END ──");
+            }
+        },
+        [session, showToast, saveNewAiLessonImmediate],
+    );
 
     // ─── HANDLER: Resume ───
     const handleResume = useCallback(() => {
@@ -362,8 +391,8 @@ export function useDashboard(): DashboardState {
             lessonId: lesson?.id,
         };
         setResumeState(null);
-        showToast('Kaldığın yerden devam ediliyor', 'success');
-        setViewState('playback');
+        showToast("Kaldığın yerden devam ediliyor", "success");
+        setViewState("playback");
     }, [resumeState, showToast]);
 
     const handleRestartLesson = useCallback(async () => {
@@ -386,21 +415,21 @@ export function useDashboard(): DashboardState {
             lessonId: lesson?.id,
         };
         setResumeState(null);
-        showToast('Ders baştan başlıyor', 'success');
-        setViewState('playback');
+        showToast("Ders baştan başlıyor", "success");
+        setViewState("playback");
     }, [resumeState, session, showToast]);
 
     // ─── HANDLER: Preview ───
     const handlePreviewClick = useCallback((lesson: ApiLesson) => {
         setSelectedLesson(lesson);
         setScenario(lesson.content);
-        setViewState('preview');
+        setViewState("preview");
     }, []);
 
     const handleStartFromPreview = useCallback(() => {
         if (selectedCourse && selectedLesson) {
             playbackSessionRef.current = {
-                resumableId: getResumableId('course', { courseId: selectedCourse.id, lessonId: selectedLesson.id }),
+                resumableId: getResumableId("course", { courseId: selectedCourse.id, lessonId: selectedLesson.id }),
                 isCourse: true,
                 courseId: selectedCourse.id,
                 lessonId: selectedLesson.id,
@@ -409,16 +438,16 @@ export function useDashboard(): DashboardState {
             playbackSessionRef.current = null;
         }
         setStartFromIndex(0);
-        setViewState('playback');
+        setViewState("playback");
     }, [selectedCourse, selectedLesson]);
 
     const handleBackFromPreview = useCallback(() => {
         setScenario(null);
         setSelectedLesson(null);
         if (selectedCourse) {
-            setViewState('course-detail');
+            setViewState("course-detail");
         } else {
-            setViewState('dashboard');
+            setViewState("dashboard");
         }
     }, [selectedCourse]);
 
@@ -428,15 +457,13 @@ export function useDashboard(): DashboardState {
         setSelectedCourse(null);
         setStartFromIndex(0);
         setScenario(sc);
-        playbackSessionRef.current = playbackContext
-            ? { resumableId: playbackContext.resumableId, isCourse: false }
-            : null;
-        setViewState('playback');
+        playbackSessionRef.current = playbackContext ? { resumableId: playbackContext.resumableId, isCourse: false } : null;
+        setViewState("playback");
     }, []);
 
     const handlePlayAiScenario = useCallback(
         (sc: Scenario, options: { topic: string; level: string; savedId?: string }) => {
-            const resumableId = getResumableId('ai', {
+            const resumableId = getResumableId("ai", {
                 topic: options.topic,
                 level: options.level,
                 savedId: options.savedId,
@@ -454,12 +481,12 @@ export function useDashboard(): DashboardState {
             }
             handlePlayScenario(sc, { resumableId });
         },
-        [handlePlayScenario]
+        [handlePlayScenario],
     );
 
     const handlePlayCustomScenario = useCallback(
         (sc: Scenario, options: { savedId?: string } = {}) => {
-            const resumableId = getResumableId('custom', { scenario: sc, savedId: options.savedId });
+            const resumableId = getResumableId("custom", { scenario: sc, savedId: options.savedId });
             const lastLineIndex = getStoredLastLineIndex(resumableId, null, false);
             if (lastLineIndex > 0) {
                 setResumeState({
@@ -473,44 +500,50 @@ export function useDashboard(): DashboardState {
             }
             handlePlayScenario(sc, { resumableId });
         },
-        [handlePlayScenario]
+        [handlePlayScenario],
     );
 
     const handlePreviewScenario = useCallback((sc: Scenario) => {
         setSelectedLesson(null);
         setSelectedCourse(null);
         setScenario(sc);
-        setViewState('preview');
+        setViewState("preview");
     }, []);
 
     // ─── HANDLER: CRUD (Saved Lessons) ───
-    const handleDeleteAiLesson = useCallback(async (id: string) => {
-        try {
-            const res = await fetch(`/api/ai-lessons/${id}`, { method: 'DELETE' });
-            if (res.ok) {
-                setSavedAiLessons((prev) => prev.filter((l) => l.id !== id));
-                showToast('Silindi', 'success');
-            } else {
-                showToast('Silinemedi, tekrar deneyin', 'warning');
+    const handleDeleteAiLesson = useCallback(
+        async (id: string) => {
+            try {
+                const res = await backendFetch(`/api/ai-lessons/${id}`, { method: "DELETE" }, true);
+                if (res.ok) {
+                    setSavedAiLessons(prev => prev.filter(l => l.id !== id));
+                    showToast("Silindi", "success");
+                } else {
+                    showToast("Silinemedi, tekrar deneyin", "warning");
+                }
+            } catch {
+                showToast("Bağlantı hatası", "warning");
             }
-        } catch {
-            showToast('Bağlantı hatası', 'warning');
-        }
-    }, [showToast]);
+        },
+        [showToast],
+    );
 
-    const handleDeleteCustomLesson = useCallback(async (id: string) => {
-        try {
-            const res = await fetch(`/api/custom-lessons/${id}`, { method: 'DELETE' });
-            if (res.ok) {
-                setSavedCustomLessons((prev) => prev.filter((l) => l.id !== id));
-                showToast('Silindi', 'success');
-            } else {
-                showToast('Silinemedi, tekrar deneyin', 'warning');
+    const handleDeleteCustomLesson = useCallback(
+        async (id: string) => {
+            try {
+                const res = await backendFetch(`/api/custom-lessons/${id}`, { method: "DELETE" }, true);
+                if (res.ok) {
+                    setSavedCustomLessons(prev => prev.filter(l => l.id !== id));
+                    showToast("Silindi", "success");
+                } else {
+                    showToast("Silinemedi, tekrar deneyin", "warning");
+                }
+            } catch {
+                showToast("Bağlantı hatası", "warning");
             }
-        } catch {
-            showToast('Bağlantı hatası', 'warning');
-        }
-    }, [showToast]);
+        },
+        [showToast],
+    );
 
     const handleEditStart = useCallback((id: string, currentTitle: string) => {
         setEditingLessonId(id);
@@ -519,85 +552,110 @@ export function useDashboard(): DashboardState {
 
     const handleEditCancel = useCallback(() => {
         setEditingLessonId(null);
-        setEditingTitle('');
+        setEditingTitle("");
     }, []);
 
-    const handleRenameAiLesson = useCallback(async (id: string, title: string) => {
-        if (!title.trim()) { setEditingLessonId(null); setEditingTitle(''); return; }
-        try {
-            const res = await fetch(`/api/ai-lessons/${id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title: title.trim() }),
-            });
-            if (res.ok) {
-                setSavedAiLessons((prev) =>
-                    prev.map((l) => l.id === id ? { ...l, title: title.trim() } : l)
-                );
-            } else {
-                showToast('Yeniden adlandırılamadı', 'warning');
+    const handleRenameAiLesson = useCallback(
+        async (id: string, title: string) => {
+            if (!title.trim()) {
+                setEditingLessonId(null);
+                setEditingTitle("");
+                return;
             }
-        } catch {
-            showToast('Bağlantı hatası', 'warning');
-        }
-        setEditingLessonId(null);
-        setEditingTitle('');
-    }, [showToast]);
+            try {
+                const res = await backendFetch(
+                    `/api/ai-lessons/${id}`,
+                    {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ title: title.trim() }),
+                    },
+                    true,
+                );
+                if (res.ok) {
+                    setSavedAiLessons(prev => prev.map(l => (l.id === id ? { ...l, title: title.trim() } : l)));
+                } else {
+                    showToast("Yeniden adlandırılamadı", "warning");
+                }
+            } catch {
+                showToast("Bağlantı hatası", "warning");
+            }
+            setEditingLessonId(null);
+            setEditingTitle("");
+        },
+        [showToast],
+    );
 
-    const handleRenameCustomLesson = useCallback(async (id: string, title: string) => {
-        if (!title.trim()) { setEditingLessonId(null); setEditingTitle(''); return; }
-        try {
-            const res = await fetch(`/api/custom-lessons/${id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title: title.trim() }),
-            });
-            if (res.ok) {
-                setSavedCustomLessons((prev) =>
-                    prev.map((l) => l.id === id ? { ...l, title: title.trim() } : l)
-                );
-            } else {
-                showToast('Yeniden adlandırılamadı', 'warning');
+    const handleRenameCustomLesson = useCallback(
+        async (id: string, title: string) => {
+            if (!title.trim()) {
+                setEditingLessonId(null);
+                setEditingTitle("");
+                return;
             }
-        } catch {
-            showToast('Bağlantı hatası', 'warning');
-        }
-        setEditingLessonId(null);
-        setEditingTitle('');
-    }, [showToast]);
+            try {
+                const res = await backendFetch(
+                    `/api/custom-lessons/${id}`,
+                    {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ title: title.trim() }),
+                    },
+                    true,
+                );
+                if (res.ok) {
+                    setSavedCustomLessons(prev => prev.map(l => (l.id === id ? { ...l, title: title.trim() } : l)));
+                } else {
+                    showToast("Yeniden adlandırılamadı", "warning");
+                }
+            } catch {
+                showToast("Bağlantı hatası", "warning");
+            }
+            setEditingLessonId(null);
+            setEditingTitle("");
+        },
+        [showToast],
+    );
 
     // ─── HANDLER: Custom Submit ───
-    const handleCustomSubmit = useCallback((customScenario: Scenario) => {
-        showToast('Kendi metniniz yüklendi!', 'success');
-        setLastCustomScenario({ scenario: customScenario });
-        if (session?.user?.id) void saveNewCustomLessonImmediate(customScenario);
-    }, [session, showToast, saveNewCustomLessonImmediate]);
+    const handleCustomSubmit = useCallback(
+        (customScenario: Scenario) => {
+            showToast("Kendi metniniz yüklendi!", "success");
+            setLastCustomScenario({ scenario: customScenario });
+            if (session?.user?.id) void saveNewCustomLessonImmediate(customScenario);
+        },
+        [session, showToast, saveNewCustomLessonImmediate],
+    );
 
     // ─── HANDLER: Progress / Completion ───
     const handleComplete = useCallback(async () => {
-        console.log('[DashboardPage] ✅ Session complete');
+        console.log("[DashboardPage] ✅ Session complete");
 
         // Kurs: giriş yapılmış ve yapılandırılmış ders ise API ile kaydet
         if (session?.user?.id && selectedCourse && selectedLesson) {
             try {
-                const res = await fetch('/api/progress', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        courseId: selectedCourse.id,
-                        lessonId: selectedLesson.id,
-                        lastLineIndex: -1,
-                        completed: true,
-                    }),
-                });
+                const res = await backendFetch(
+                    "/api/progress",
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            courseId: selectedCourse.id,
+                            lessonId: selectedLesson.id,
+                            lastLineIndex: -1,
+                            completed: true,
+                        }),
+                    },
+                    true,
+                );
                 if (!res.ok) return;
                 const progress: ProgressData = await res.json();
-                setProgressMap((prev) => ({ ...prev, [selectedLesson.id]: progress }));
+                setProgressMap(prev => ({ ...prev, [selectedLesson.id]: progress }));
                 const remaining = progress.targetCount - progress.completionCount;
                 if (remaining > 0) {
-                    showToast(`Tekrar: ${remaining} seans kaldı`, 'success');
+                    showToast(`Tekrar: ${remaining} seans kaldı`, "success");
                 } else {
-                    showToast('Bu ders tam öğrenildi!', 'success');
+                    showToast("Bu ders tam öğrenildi!", "success");
                 }
             } catch {
                 /* silent — progress saving is non-critical */
@@ -612,69 +670,72 @@ export function useDashboard(): DashboardState {
             if (next) {
                 const remaining = next.targetCount - next.completionCount;
                 if (remaining > 0) {
-                    showToast(`Tekrar: ${remaining} seans kaldı`, 'success');
+                    showToast(`Tekrar: ${remaining} seans kaldı`, "success");
                 } else {
-                    showToast('Bu ders tam öğrenildi!', 'success');
+                    showToast("Bu ders tam öğrenildi!", "success");
                 }
             }
         }
     }, [session, selectedCourse, selectedLesson, showToast]);
 
-    const handleBack = useCallback(async (lastLineIndex: number) => {
-        console.log(`[DashboardPage] ← Back (lastLineIndex: ${lastLineIndex})`);
+    const handleBack = useCallback(
+        async (lastLineIndex: number) => {
+            console.log(`[DashboardPage] ← Back (lastLineIndex: ${lastLineIndex})`);
 
-        const sessionRef = playbackSessionRef.current;
-        if (sessionRef) {
-            await setStoredLastLineIndex(sessionRef.resumableId, lastLineIndex, sessionRef.isCourse, {
-                session,
-                courseId: sessionRef.courseId,
-                lessonId: sessionRef.lessonId,
-                setProgressMap: setProgressMap as (fn: (prev: Record<string, ProgressDataLike>) => Record<string, ProgressDataLike>) => void,
-            });
-            playbackSessionRef.current = null;
-        }
+            const sessionRef = playbackSessionRef.current;
+            if (sessionRef) {
+                await setStoredLastLineIndex(sessionRef.resumableId, lastLineIndex, sessionRef.isCourse, {
+                    session,
+                    courseId: sessionRef.courseId,
+                    lessonId: sessionRef.lessonId,
+                    setProgressMap: setProgressMap as (fn: (prev: Record<string, ProgressDataLike>) => Record<string, ProgressDataLike>) => void,
+                });
+                playbackSessionRef.current = null;
+            }
 
-        setScenario(null);
-        setSelectedLesson(null);
-        setStartFromIndex(0);
-        if (selectedCourse) {
-            setViewState('course-detail');
-        } else {
-            setViewState('dashboard');
-        }
-    }, [session, selectedCourse]);
+            setScenario(null);
+            setSelectedLesson(null);
+            setStartFromIndex(0);
+            if (selectedCourse) {
+                setViewState("course-detail");
+            } else {
+                setViewState("dashboard");
+            }
+        },
+        [session, selectedCourse],
+    );
 
     // ─── HANDLER: Back Navigation ───
     const handleBackFromCourseDetail = useCallback(() => {
         setScenario(null);
         setSelectedCourse(null);
         if (selectedSubcategory || selectedCategory) {
-            setViewState('subcategory');
+            setViewState("subcategory");
         } else {
-            setViewState('dashboard');
+            setViewState("dashboard");
         }
     }, [selectedCategory, selectedSubcategory]);
 
     const handleBackFromSubcategory = useCallback(() => {
         setSelectedSubcategory(null);
         if (selectedCategory) {
-            const categoryCourses = courses.filter((c) => c.category === selectedCategory);
-            const hasSubcategories = categoryCourses.some((c) => c.subcategory !== null);
+            const categoryCourses = courses.filter(c => c.category === selectedCategory);
+            const hasSubcategories = categoryCourses.some(c => c.subcategory !== null);
             if (hasSubcategories) {
-                setViewState('category');
+                setViewState("category");
             } else {
                 setSelectedCategory(null);
-                setViewState('dashboard');
+                setViewState("dashboard");
             }
         } else {
-            setViewState('dashboard');
+            setViewState("dashboard");
         }
     }, [selectedCategory, courses]);
 
     const handleBackFromCategory = useCallback(() => {
         setSelectedCategory(null);
         setSelectedSubcategory(null);
-        setViewState('dashboard');
+        setViewState("dashboard");
     }, []);
 
     const handleBackToDashboard = useCallback(() => {
@@ -683,7 +744,7 @@ export function useDashboard(): DashboardState {
         setSelectedLesson(null);
         setSelectedCategory(null);
         setSelectedSubcategory(null);
-        setViewState('dashboard');
+        setViewState("dashboard");
     }, []);
 
     // ─── RETURN STATE BAG ───

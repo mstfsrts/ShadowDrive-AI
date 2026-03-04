@@ -15,7 +15,7 @@ export interface AuthRequest extends Request {
     user?: AuthPayload;
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || "dev-secret-change-in-production";
+const JWT_SECRET = process.env.AUTH_SECRET || process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || "dev-secret-change-in-production";
 
 export function signToken(payload: AuthPayload): string {
     return jwt.sign(payload, JWT_SECRET, { expiresIn: "30d" });
