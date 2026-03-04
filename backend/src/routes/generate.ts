@@ -1,32 +1,53 @@
 // ─── Generate Route ───
 // POST /api/generate — Gemini-powered Dutch-Turkish scenario generator
-// Migrated from app/api/generate/route.ts
 
-import { Router, Request, Response } from 'express';
-import { GenerateRequestSchema, ScenarioSchema } from '../../../packages/shared/src/validators';
-import { generateWithFallback } from '../services/gemini';
-import { generateLimiter } from '../middleware/rateLimiter';
-import { prisma } from '../services/prisma';
+import { Router, Request, Response } from "express";
+import { z } from "zod";
+import { generateWithFallback } from "../services/gemini";
+import { generateLimiter } from "../middleware/rateLimiter";
+import { prisma } from "../services/prisma";
 
 export const generateRouter = Router();
 
-generateRouter.post('/generate', generateLimiter, async (req: Request, res: Response) => {
-  console.log('\n[API /generate] ========== NEW REQUEST ==========');
+// ─── Request Validation ───
+const GenerateRequestSchema = z.object({
+    topic: z.string().min(1).max(200),
+    difficulty: z.enum(["A0-A1", "A2", "B1", "B2", "C1-C2"]),
+});
 
-  try {
-    // 1. Validate request
-    const parsed = GenerateRequestSchema.safeParse(req.body);
-    if (!parsed.success) {
-      console.error('[API /generate] Validation failed:', parsed.error.flatten());
-      res.status(400).json({ error: 'Invalid request', details: parsed.error.flatten() });
-      return;
-    }
+const ScenarioSchema = z.object({
+    title: z.string(),
+    targetLang: z.string(),
+    nativeLang: z.string(),
+    lines: z
+        .array(
+            z.object({
+                id: z.number(),
+                targetText: z.string(),
+                nativeText: z.string(),
+                pauseMultiplier: z.number().optional().default(1.0),
+            }),
+        )
+        .min(4),
+});
 
-    const { topic, difficulty } = parsed.data;
-    console.log(`[API /generate] Topic: "${topic}", Difficulty: "${difficulty}"`);
+generateRouter.post("/generate", generateLimiter, async (req: Request, res: Response) => {
+    console.log("\n[API /generate] ========== NEW REQUEST ==========");
 
-    // 2. Build the Gemini prompt
-    const prompt = `You are an expert Dutch language coach for Turkish-speaking professionals living in the Netherlands (such as UX Designers, Psychologists, teachers, or office workers).
+    try {
+        // 1. Validate request
+        const parsed = GenerateRequestSchema.safeParse(req.body);
+        if (!parsed.success) {
+            console.error("[API /generate] Validation failed:", parsed.error.flatten());
+            res.status(400).json({ error: "Invalid request", details: parsed.error.flatten() });
+            return;
+        }
+
+        const { topic, difficulty } = parsed.data;
+        console.log(`[API /generate] Topic: "${topic}", Difficulty: "${difficulty}"`);
+
+        // 2. Build the Gemini prompt
+        const prompt = `You are an expert Dutch language coach for Turkish-speaking professionals living in the Netherlands (such as UX Designers, Psychologists, teachers, or office workers).
 
 The user wants to practice a scenario about: "${topic}"
 Difficulty level: ${difficulty}
@@ -54,59 +75,62 @@ Return ONLY a raw JSON object (no markdown, no code fences) matching this exact 
 
 MUST return raw JSON only. No explanation, no markdown.`;
 
-    console.log('[API /generate] Sending prompt to Gemini...');
+        console.log("[API /generate] Sending prompt to Gemini...");
 
-    // 3. Call Gemini with model fallback
-    const responseText = await generateWithFallback(prompt);
+        // 3. Call Gemini with model fallback
+        const responseText = await generateWithFallback(prompt);
 
-    console.log('[API /generate] Gemini raw response length:', responseText.length);
+        console.log("[API /generate] Gemini raw response length:", responseText.length);
 
-    // 4. Clean markdown fences if present
-    let cleanJson = responseText.trim();
-    if (cleanJson.startsWith('```')) {
-      cleanJson = cleanJson.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?\s*```$/, '');
+        // 4. Clean markdown fences if present
+        let cleanJson = responseText.trim();
+        if (cleanJson.startsWith("```")) {
+            cleanJson = cleanJson.replace(/^```(?:json)?\s*\n?/, "").replace(/\n?\s*```$/, "");
+        }
+
+        // 5. Parse & validate
+        let scenario;
+        try {
+            scenario = JSON.parse(cleanJson);
+        } catch {
+            console.error("[API /generate] JSON parse failed");
+            res.status(502).json({
+                error: "Gemini returned invalid JSON",
+                raw: responseText.substring(0, 500),
+            });
+            return;
+        }
+
+        const validated = ScenarioSchema.safeParse(scenario);
+        if (!validated.success) {
+            console.error("[API /generate] Schema validation failed:", validated.error.flatten());
+            res.status(422).json({
+                error: "Gemini response does not match schema",
+                details: validated.error.flatten(),
+            });
+            return;
+        }
+
+        console.log(`[API /generate] ✅ Scenario: "${validated.data.title}" (${validated.data.lines.length} lines)`);
+
+        // 6. Persist generated scenario to DB (fire-and-forget)
+        prisma.generatedScenario
+            .create({
+                data: {
+                    topicHash: `anon:${topic}:${Date.now()}`,
+                    topic,
+                    title: validated.data.title,
+                    level: difficulty,
+                    content: validated.data,
+                },
+            })
+            .catch(err => console.warn("[API /generate] Failed to persist scenario:", err));
+
+        // 7. Return
+        res.json(validated.data);
+    } catch (error) {
+        console.error("[API /generate] RAW ERROR:", error);
+        const message = error instanceof Error ? error.message : "Unknown API Error";
+        res.status(500).json({ error: message });
     }
-
-    // 5. Parse & validate
-    let scenario;
-    try {
-      scenario = JSON.parse(cleanJson);
-    } catch {
-      console.error('[API /generate] JSON parse failed');
-      res.status(502).json({
-        error: 'Gemini returned invalid JSON',
-        raw: responseText.substring(0, 500),
-      });
-      return;
-    }
-
-    const validated = ScenarioSchema.safeParse(scenario);
-    if (!validated.success) {
-      console.error('[API /generate] Schema validation failed:', validated.error.flatten());
-      res.status(422).json({
-        error: 'Gemini response does not match schema',
-        details: validated.error.flatten(),
-      });
-      return;
-    }
-
-    console.log(`[API /generate] ✅ Scenario: "${validated.data.title}" (${validated.data.lines.length} lines)`);
-
-    // 6. Persist generated scenario to DB (fire-and-forget)
-    prisma.generatedScenario.create({
-      data: {
-        topic,
-        difficulty,
-        data: validated.data,
-      },
-    }).catch(err => console.warn('[API /generate] Failed to persist scenario:', err));
-
-    // 7. Return
-    res.json(validated.data);
-
-  } catch (error) {
-    console.error('[API /generate] RAW ERROR:', error);
-    const message = error instanceof Error ? error.message : 'Unknown API Error';
-    res.status(500).json({ error: message });
-  }
 });
