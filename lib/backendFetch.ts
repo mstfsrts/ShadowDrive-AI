@@ -1,18 +1,24 @@
 "use client";
 
-// ─── ShadowDrive AI — Backend Fetch Helper ───
-// Wraps fetch calls to Express backend with automatic JWT management.
-// When NEXT_PUBLIC_API_URL is set, calls go to Express.
-// When not set, calls fall back to Next.js API routes (same origin).
-
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "";
+// ─── ShadowDrive AI — Backend Fetch Helper ───────────────────────────────────
+//
+// Architecture: Client always calls same-origin Next.js URLs (/api/courses, etc.)
+// Routing is handled transparently at the infrastructure level via next.config.js rewrites:
+//
+//   BACKEND_URL set in env  →  Next.js rewrites proxy to Express backend
+//   BACKEND_URL not set     →  Next.js own route.ts files handle the request
+//
+// This file ONLY handles:
+//   1. Automatic JWT token attachment for authenticated endpoints
+//   2. Consistent error handling
+// ─────────────────────────────────────────────────────────────────────────────
 
 // ─── Token Cache ───
 let cachedToken: string | null = null;
 let tokenExpiresAt = 0;
 
 async function getBackendToken(): Promise<string | null> {
-    // Return cached token if still valid (with 5min buffer)
+    // Return cached token if still valid (with 5-min buffer)
     if (cachedToken && Date.now() < tokenExpiresAt - 5 * 60 * 1000) {
         return cachedToken;
     }
@@ -40,37 +46,37 @@ export function clearBackendToken(): void {
 }
 
 /**
- * Fetch wrapper that sends requests to Express backend when configured,
- * or falls back to Next.js API routes (same origin).
+ * Fetch wrapper for ShadowDrive API calls.
  *
- * - For authenticated endpoints: includes Bearer token automatically
- * - For public endpoints: no token needed
+ * Always calls same-origin Next.js URLs. Infrastructure (next.config.js rewrites)
+ * transparently routes to Express backend when BACKEND_URL is configured.
+ *
+ * @param path       - API path, e.g. "/api/courses"
+ * @param options    - Standard fetch options
+ * @param requireAuth - If true, attaches Bearer JWT token automatically
  */
-export async function backendFetch<T = unknown>(path: string, options: RequestInit = {}, requireAuth = false): Promise<Response> {
-    const baseUrl = BACKEND_URL;
-    const url = `${baseUrl}${path}`;
-
+export async function backendFetch(path: string, options: RequestInit = {}, requireAuth = false): Promise<Response> {
     const headers: Record<string, string> = {
         "Content-Type": "application/json",
         ...((options.headers as Record<string, string>) || {}),
     };
 
-    // Add auth token for authenticated requests to Express backend
-    if (requireAuth && baseUrl) {
+    // Attach JWT token for authenticated endpoints
+    if (requireAuth) {
         const token = await getBackendToken();
         if (token) {
             headers["Authorization"] = `Bearer ${token}`;
         }
     }
 
-    return fetch(url, {
+    return fetch(path, {
         ...options,
         headers,
     });
 }
 
 /**
- * Typed convenience: fetch JSON from backend.
+ * Typed convenience: fetch JSON from the API.
  */
 export async function backendJson<T>(path: string, options: RequestInit = {}, requireAuth = false): Promise<T> {
     const res = await backendFetch(path, options, requireAuth);
