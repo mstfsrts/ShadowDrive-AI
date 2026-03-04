@@ -13,10 +13,6 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Build-time env vars for Next.js
-ARG NEXT_PUBLIC_API_URL
-ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
-
 # Compile seed.ts → seed.cjs (bundles JSON data, no tsx required at runtime)
 # esbuild is available via Next.js devDependencies
 RUN node_modules/.bin/esbuild prisma/seed.ts \
