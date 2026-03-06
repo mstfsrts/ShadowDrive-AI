@@ -48,12 +48,16 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
     try {
         const payload = verifyToken(token);
         if (!payload.userId) {
+            console.error("[Auth Middleware] Invalid token: missing user ID in payload:", payload);
             res.status(401).json({ error: "Invalid token: missing user ID" });
             return;
         }
         req.user = payload;
         next();
-    } catch {
+    } catch (err: any) {
+        console.error("[Auth Middleware] JWT Validation Failed! Error:", err.message);
+        console.error("[Auth Middleware] Failed Token:", token.substring(0, 20) + "...");
+        console.error("[Auth Middleware] Expected Secret snippet:", JWT_SECRET.substring(0, 5) + "...");
         res.status(401).json({ error: "Invalid or expired token" });
     }
 }

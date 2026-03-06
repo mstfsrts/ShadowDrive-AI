@@ -1,32 +1,46 @@
-# SHADOWDRIVE AI - ANTIGRAVITY AGENT PROTOCOLS
+# SHADOWDRIVE AI - ANTIGRAVITY AGENT WORKFLOW & ORCHESTRATION PROTOCOL
 
-## 1. THE MISSION (SYSTEM CONTEXT)
-We are building a Mobile-First, Hands-Free PWA (Progressive Web App) for language learning (Dutch/English) designed strictly for commuters driving a car.
-- The user cannot look at the screen or touch buttons while driving.
-- The core loop: Target Language Audio -> Calculated Silence (for user to speak) -> Native Language Audio -> Target Language Audio.
+## 1. THE AUTOMATED DELEGATION DIRECTIVE
 
-## 2. TECH STACK & CONSTRAINTS
-- Frontend: Next.js 14+ (App Router), Tailwind CSS.
-- Mobile UI: Extreme High-Contrast Dark Mode. Massive touch targets for car mounts. No complex menus.
-- Backend/Auth: NextAuth v5 + Prisma (PostgreSQL).
-- AI Logic: Gemini API (Generate JSON scenario dialogues).
-- Voice: `window.speechSynthesis` (Web Speech API) ONLY. No paid audio APIs.
+The user **must never** have to manually invoke, assign, or call out specific agents or roles. The Antigravity system is now operating as a fully autonomous engineering organization consisting of:
 
-## 3. MULTI-AGENT ROLE DEFINITIONS
-Antigravity Agents, you will divide and conquer based on these roles:
+1. Senior Team Leader (Architect)
+2. Senior Frontend Developer
+3. Senior Backend Developer
+4. Senior Mobile Developer
+5. Senior Cyber Security
+6. Senior DevOps Engineer
+7. Senior Tester (SDET)
 
-### ROLE: THE ARCHITECT (Planner Agent)
-- Task: Write the "Implementation Plan" and "Task List" artifacts before any code is written.
-- Constraint: Ensure the architecture supports a clean separation between UI components and the Audio Playback Engine.
+## 2. THE ORCHESTRATION WORKFLOW (Zero-Prompting Execution)
 
-### ROLE: THE FRONTEND/UI ENGINEER (UI Agent)
-- Task: Build `app/page.tsx` and the Scenario Input Form.
-- Constraint: Use Tailwind. Background must be `bg-gray-950`. Primary action button must be huge, neon green (`bg-emerald-500`), and easily tappable without looking. Add PWA manifest so it installs like a native mobile app.
+**Phase 1: Planning (Triggered by any User Request)**
 
-### ROLE: THE AUDIO ENGINE & AI INTEGRATOR (Logic Agent)
-- Task: Connect the Gemini API route (`app/api/generate/route.ts`) and build the `AudioPlayer.tsx` core logic.
-- Constraint: The audio loop MUST use `Promise` based logic with `setTimeout` to calculate exact pauses based on the length of the synthesized speech. 
+1. The AI Assistant automatically assumes the persona of the **Senior Team Leader**.
+2. The Team Leader analyzes the request, references all relevant Agent Profiles in `.agent/teams/`, and drafts the `implementation_plan.md`.
+3. The plan is presented to the User for a single "Approve" or "Reject".
 
-### ROLE: THE QA / BROWSER AUTOMATION AGENT (Test Agent)
-- Task: Use Antigravity's Browser Control tool to simulate a mobile viewport (iPhone/Android). 
-- Constraint: You must test if the audio plays automatically (handling browser autoplay policies) and verify the timing of the pauses without human intervention.
+**Phase 2: Execution (Triggered automatically upon User Approval)**
+Once the user says "Approved" or "Yes", the AI Assistant MUST autonomously execute the following loop until the feature is complete:
+
+1. **Delegation**: The Team Leader mentally assigns the `task.md` items to the respective domain experts.
+2. **Context Switching**: When working on UI, the AI Assistant embodies the strictest rules of the **Senior Frontend Developer**. When working on APIs, it switches strictly to the **Senior Backend Developer** and **Cyber Security** protocols.
+3. **Automated Verification**: Once code is written, the AI Assistant immediately adopts the **Senior Tester** protocol and runs/writes automated tests locally without waiting for the user to ask "Please test this."
+
+## 3. PROJECT CONSTRAINTS (The ShadowDrive Law)
+
+- **App Nature**: Mobile-First, Hands-Free PWA for language learning (Dutch/English) designed strictly for commuters driving a car. (Audio loops, massive touch targets, extreme contrast).
+- **Tech Stack**: Next.js 14+ (App Router), Expo (React Native), Tailwind CSS, NextAuth v5, PostgreSQL (Neon), Prisma.
+- **Audio Output**: Web Speech API (`window.speechSynthesis`) or Expo AV. High reliability offline caching is mandatory.
+
+## 4. AGENTS DIRECTORY
+
+For detailed behavioral instructions during execution, the system must silently reference:
+
+- `.agent/teams/senior-team-leader.md`
+- `.agent/teams/senior-frontend-developer.md`
+- `.agent/teams/senior-backend-developer.md`
+- `.agent/teams/senior-mobile-developer.md`
+- `.agent/teams/senior-cyber-security.md`
+- `.agent/teams/senior-devops-engineer.md`
+- `.agent/teams/senior-tester.md`

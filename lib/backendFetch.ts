@@ -69,10 +69,31 @@ export async function backendFetch(path: string, options: RequestInit = {}, requ
         }
     }
 
-    return fetch(path, {
+    let response = await fetch(path, {
         ...options,
         headers,
     });
+
+    // Handle race-condition 401s (usually right after Google login redirect)
+    // Retry up to 3 times with exponential backoff if the endpoint demands auth
+    if (response.status === 401 && requireAuth) {
+        let retries = 3;
+        let delay = 1000;
+        while (retries > 0 && response.status === 401) {
+            console.log(`[backendFetch] Refetching token for ${path} due to 401. Retries left: ${retries}`);
+            cachedToken = null; // Force a fresh token fetch
+            const newToken = await getBackendToken();
+            if (newToken) headers["Authorization"] = `Bearer ${newToken}`;
+
+            await new Promise(r => setTimeout(r, delay));
+            response = await fetch(path, { ...options, headers });
+
+            retries--;
+            delay *= 2; // Exponential backoff
+        }
+    }
+
+    return response;
 }
 
 /**
