@@ -14,8 +14,6 @@ const BACKEND_URL = process.env.BACKEND_URL ?? "";
 const PROXY_ROUTES = ["/api/courses", "/api/progress", "/api/ai-lessons", "/api/custom-lessons", "/api/generate"];
 
 const nextConfig = {
-    output: "standalone",
-
     // ─── Service Worker headers ───
     async headers() {
         return [
