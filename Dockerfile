@@ -1,11 +1,12 @@
 # ─── ShadowDrive Frontend Dockerfile ───
-# Multi-stage build for Next.js
+# Multi-stage build for Next.js (non-standalone mode)
 
 # Stage 1: Install dependencies
+# --ignore-scripts skips postinstall (prisma generate would fail without schema)
 FROM node:20-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json* ./
-RUN npm ci
+RUN npm ci --ignore-scripts
 
 # Stage 2: Build
 FROM node:20-alpine AS builder
@@ -13,7 +14,10 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Compile seed.ts → seed.cjs (bundles JSON data, no tsx required at runtime)
+# Generate Prisma client (schema.prisma is now available)
+RUN node_modules/.bin/prisma generate
+
+# Compile seed.ts → seed.cjs (bundles course data, no tsx required at runtime)
 # esbuild is available via Next.js devDependencies
 RUN node_modules/.bin/esbuild prisma/seed.ts \
     --bundle \
@@ -32,23 +36,18 @@ ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Next.js standalone output
+# Next.js build output (non-standalone: full .next directory)
 COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
 
-# Prisma client runtime (query engine)
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+# All node_modules from builder (includes Prisma CLI, Next.js CLI, prisma client)
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 
-# Prisma CLI (needed for `prisma migrate deploy`)
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
+# package.json needed for npm scripts resolution
+COPY --from=builder /app/package.json ./package.json
 
-# Schema + migration files + compiled seed script
-COPY --from=builder /app/prisma/schema.prisma ./prisma/schema.prisma
-COPY --from=builder /app/prisma/migrations ./prisma/migrations
-COPY --from=builder /app/prisma/seed.cjs ./prisma/seed.cjs
+# Prisma schema + migrations + compiled seed
+COPY --from=builder /app/prisma ./prisma
 
 # Startup script: migrate → seed → start
 COPY docker-entrypoint.sh ./docker-entrypoint.sh
