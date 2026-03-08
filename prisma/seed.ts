@@ -223,7 +223,7 @@ const derdeRonde: CourseData = {
 const hollandacaOgreniyoruzLessons: LessonData[] = [
   {
     id: 'ho_les_1',
-    title: 'Introductie',
+    title: 'Les 1 - Giriş/Isınma',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Introductie (Giriş)',
       targetLang: 'nl-NL',
@@ -303,7 +303,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_2',
-    title: 'Hebben',
+    title: 'Les 2 - Hebben',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Hebben (Sahip Olmak)',
       targetLang: 'nl-NL',
@@ -378,7 +378,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_3',
-    title: 'Kunnen 1',
+    title: 'Les 3 - Kunnen I',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Kunnen 1 (Yapabilmek 1)',
       targetLang: 'nl-NL',
@@ -430,7 +430,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_4',
-    title: 'Kunnen II',
+    title: 'Les 4 - Kunnen II',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Kunnen II (Yapabilmek 2)',
       targetLang: 'nl-NL',
@@ -497,7 +497,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_5',
-    title: 'Willen',
+    title: 'Les 5 - Willen',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Willen',
       targetLang: 'nl-NL',
@@ -564,7 +564,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_6',
-    title: 'Gaan',
+    title: 'Les 6 - Gaan',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Gaan',
       targetLang: 'nl-NL',
@@ -627,7 +627,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_7',
-    title: 'Herhalen/Tekrar',
+    title: 'Les 7 - Tekrar 1',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Herhalen/Tekrar',
       targetLang: 'nl-NL',
@@ -734,7 +734,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_8',
-    title: 'Zijn  I',
+    title: 'Les 8 - Zijn/1',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Zijn  I',
       targetLang: 'nl-NL',
@@ -808,7 +808,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_9',
-    title: 'Zijn  II',
+    title: 'Les 9 - Zijn/2',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Zijn  II',
       targetLang: 'nl-NL',
@@ -872,7 +872,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_10',
-    title: 'Herhalen/Tekrar',
+    title: 'Les 10 - Tekrar 2',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Herhalen/Tekrar',
       targetLang: 'nl-NL',
@@ -940,7 +940,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_11',
-    title: 'Hebben [Perfectum/Gecmis zaman]',
+    title: 'Les 11 - Hebben [Perfectum/Gecmis zaman]',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Hebben [Perfectum/Gecmis zaman]',
       targetLang: 'nl-NL',
@@ -999,7 +999,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_12',
-    title: 'Zijn [Perfectum / Gecmis zaman]',
+    title: 'Les 12 - Zijn [Perfectum/Gecmis zaman]',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Zijn [Perfectum / Gecmis zaman]',
       targetLang: 'nl-NL',
@@ -1056,7 +1056,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_13',
-    title: 'Oefeningen/Alistirmalar',
+    title: 'Les 13 - Tekrar 3',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Oefeningen/Alistirmalar',
       targetLang: 'nl-NL',
@@ -1095,7 +1095,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_14',
-    title: '[Gaan-gelecek zaman]',
+    title: 'Les 14 - [Gaan-gelecek zaman]',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – [Gaan-gelecek zaman]',
       targetLang: 'nl-NL',
@@ -1161,7 +1161,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_15',
-    title: 'Om + te I',
+    title: 'Les 15 - Om+te/I',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Om + te I',
       targetLang: 'nl-NL',
@@ -1223,7 +1223,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_16',
-    title: 'Om+te  II',
+    title: 'Les 16 - Om+te/II',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Om+te  II',
       targetLang: 'nl-NL',
@@ -1265,7 +1265,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_17',
-    title: '[Hebben-Kunnen tekrar]',
+    title: 'Les 17 - Tekrar 4 [Hebben-Kunnen]',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – [Hebben-Kunnen tekrar]',
       targetLang: 'nl-NL',
@@ -1377,7 +1377,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_18',
-    title: '[Willen/kunnen tekrar]',
+    title: 'Les 18 - Tekrar 5 [Willen/kunnen]',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – [Willen/kunnen tekrar]',
       targetLang: 'nl-NL',
@@ -1467,7 +1467,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_19',
-    title: '[Tekrar: gaan/zijn]',
+    title: 'Les 19 - Tekrar 6 [gaan/zijn]',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – [Tekrar: gaan/zijn]',
       targetLang: 'nl-NL',
@@ -1533,7 +1533,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_20',
-    title: '[Tekrar: perfectum]',
+    title: 'Les 20 - Tekrar 7 [perfectum]',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – [Tekrar: perfectum]',
       targetLang: 'nl-NL',
@@ -1584,7 +1584,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_21',
-    title: '[Tekrar: gaan/gelecek zaman]',
+    title: 'Les 21 - Tekrar 8 [Gelecek zaman]',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – [Tekrar: gaan/gelecek zaman]',
       targetLang: 'nl-NL',
@@ -1638,7 +1638,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_23',
-    title: 'Kendimizi Tanitma I',
+    title: 'Les 23 - Kendimizi Tanitma I',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Kendimizi Tanitma I',
       targetLang: 'nl-NL',
@@ -1684,7 +1684,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_24',
-    title: 'Kendimizi Tanitma II',
+    title: 'Les 24 - Kendimizi Tanitma II',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Kendimizi Tanitma II',
       targetLang: 'nl-NL',
@@ -1709,7 +1709,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_25',
-    title: 'Kennismaking vragen/Tanisma sorulari I',
+    title: 'Les 25 - Kennismaking vragen/Tanisma sorulari',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Kennismaking vragen/Tanisma sorulari I',
       targetLang: 'nl-NL',
@@ -1769,7 +1769,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_26',
-    title: 'Kennismaking vragen/tanisma sorulari II',
+    title: 'Les 26 - Kennismaking vragen/tanisma sorulari II',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Kennismaking vragen/tanisma sorulari II',
       targetLang: 'nl-NL',
@@ -1815,7 +1815,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_27',
-    title: 'Moeten/Hoeven/Mogen I',
+    title: 'Les 27 - Moeten/hoeven/mogen I',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Moeten/Hoeven/Mogen I',
       targetLang: 'nl-NL',
@@ -1856,7 +1856,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_28',
-    title: 'Moeten/Hoeven/Mogen II',
+    title: 'Les 28 - Moeten/hoeven/mogen II',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Moeten/Hoeven/Mogen II',
       targetLang: 'nl-NL',
@@ -1895,7 +1895,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_29',
-    title: 'Moeten/Hoeven/Mogen III',
+    title: 'Les 29 - Moeten/hoeven/mogen III',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Moeten/Hoeven/Mogen III',
       targetLang: 'nl-NL',
@@ -1922,7 +1922,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_30',
-    title: 'Dat\'li cumleler I',
+    title: 'Les 30 - Dat\'li cumleler I',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Dat\'li cumleler I',
       targetLang: 'nl-NL',
@@ -1968,7 +1968,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_31',
-    title: 'Dat\'li cumleler II',
+    title: 'Les 31 - Dat\'li cumleler II',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Dat\'li cumleler II',
       targetLang: 'nl-NL',
@@ -2005,7 +2005,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_32',
-    title: 'Soru zarflariyla cumleleri birlestirme',
+    title: 'Les 32 - Soru zarflariyla cumleleri birlestirme',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Soru zarflariyla cumleleri birlestirme',
       targetLang: 'nl-NL',
@@ -2051,7 +2051,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_33',
-    title: 'Bedanken/Tesekkur etme senaryolari',
+    title: 'Les 33 - Bedanken/Tesekkur etme senaryolari',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Bedanken/Tesekkur etme senaryolari',
       targetLang: 'nl-NL',
@@ -2092,7 +2092,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_34',
-    title: 'Dat cumle basinda',
+    title: 'Les 34 - Dat cumle basinda',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Dat cumle basinda',
       targetLang: 'nl-NL',
@@ -2152,7 +2152,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_35',
-    title: 'Want en omdat',
+    title: 'Les 35 - Want en omdat',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Want en omdat',
       targetLang: 'nl-NL',
@@ -2182,7 +2182,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_36',
-    title: '[Als je vragen hebt, mag je altijd bellen]',
+    title: 'Les 36 - Als [Als je vragen hebt, mag je altijd bellen]',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – [Als je vragen hebt, mag je altijd bellen]',
       targetLang: 'nl-NL',
@@ -2220,7 +2220,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_37',
-    title: '[Randevulasma - Afspreken]',
+    title: 'Les 37 - 39 - [Randevulasma - Afspreken]',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – [Randevulasma - Afspreken]',
       targetLang: 'nl-NL',
@@ -2276,7 +2276,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_40',
-    title: 'Havadan sudan konusma ornekleri [praten over koetjes en kalfjes]',
+    title: 'Les 40 - Havadan sudan konusma ornekleri [praten over koetjes en kalfjes]',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Havadan sudan konusma ornekleri [praten over koetjes en kalfjes]',
       targetLang: 'nl-NL',
@@ -2321,7 +2321,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_41',
-    title: 'Geçmiş zaman 1/4 [imperfectum] Ik  deed. Ik  maakte…',
+    title: 'Les 41 - Geçmiş zaman 1/4 [imperfectum] Ik deed. Ik maakte…',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Geçmiş zaman 1/4 [imperfectum] Ik  deed. Ik  maakte…',
       targetLang: 'nl-NL',
@@ -2367,7 +2367,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_42',
-    title: 'Geçmiş zaman 2/4 [Imperfectum] Ik kwam, ik ging, ik had, ik gaf (...)',
+    title: 'Les 42 - Geçmiş zaman 2/4 [Imperfectum] Ik kwam, ik ging, ik had, ik gaf (...)',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Geçmiş zaman 2/4 [Imperfectum] Ik kwam, ik ging, ik had, ik gaf (...)',
       targetLang: 'nl-NL',
@@ -2425,7 +2425,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_43',
-    title: 'Geçmiş zaman 3/4 [imperfectum] Ik kon/mocht/moest/sprak...',
+    title: 'Les 43 - Geçmiş zaman 3/4 [imperfectum] Ik kon/mocht/moest/sprak ...',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Geçmiş zaman 3/4 [imperfectum] Ik kon/mocht/moest/sprak...',
       targetLang: 'nl-NL',
@@ -2472,7 +2472,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_44',
-    title: 'Geçmiş zaman 4/4 [imperfectum] Ik wist; ik wilde; ik studeerde',
+    title: 'Les 44 - Geçmiş zaman 4/4 [imperfectum] Ik wist; ik wilde; ik studeerde',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Geçmiş zaman 4/4 [imperfectum] Ik wist; ik wilde; ik studeerde',
       targetLang: 'nl-NL',
@@ -2526,7 +2526,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_45',
-    title: 'Ayrilabilen fiiller 1/5 (scheidbare werkwoorden) meedoen, oplossen,',
+    title: 'Les 45 - Ayrilabilen fiiller 1/5 (scheidbare werkwoorden) meedoen, oplossen, meenemen,ophalen',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Ayrilabilen fiiller 1/5 (scheidbare werkwoorden) meedoen, oplossen,',
       targetLang: 'nl-NL',
@@ -2577,7 +2577,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_46',
-    title: 'Ayrilabilen fiiller 2/5 (scheidbare werkwoorden) Uitleggen, overslaan,',
+    title: 'Les 46 - Ayrilabilen fiiller 2/5 (scheidbare werkwoorden) Uitleggen, overslaan, doorgaan',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Ayrilabilen fiiller 2/5 (scheidbare werkwoorden) Uitleggen, overslaan,',
       targetLang: 'nl-NL',
@@ -2615,7 +2615,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_47',
-    title: 'Ayrilabilen fiiller 3/5 (scheidbare werkwoorden) Super fiiller',
+    title: 'Les 47 - Ayrilabilen fiiller 3/5 (scheidbare werkwoorden) Super fiiller',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Ayrilabilen fiiller 3/5 (scheidbare werkwoorden) Super fiiller',
       targetLang: 'nl-NL',
@@ -2666,7 +2666,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_48',
-    title: 'Ayrilabilen fiiller 4/5 (scheidbare werkwoorden) Super fiillere devam',
+    title: 'Les 48 - Ayrilabilen fiiller 4/5 (scheidbare werkwoorden) Super fiillere devam',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Ayrilabilen fiiller 4/5 (scheidbare werkwoorden) Super fiillere devam',
       targetLang: 'nl-NL',
@@ -2716,7 +2716,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_49',
-    title: 'Ayrilabilen     fiiller   5/5 (scheidbare     werkwoorden)',
+    title: 'Les 49 - Ayrilabilen fiiller 5/5 (scheidbare werkwoorden)',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Ayrilabilen     fiiller   5/5 (scheidbare     werkwoorden)',
       targetLang: 'nl-NL',
@@ -2762,7 +2762,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_50',
-    title: 'Simdiki zaman [Ik ben aan het lezen] + emir kipi (gundelik kisa ve hos kullanimlar)',
+    title: 'Les 50 - Simdiki zaman [Ik ben aan het lezen]+emir kipi ile gundelik cumleler',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Simdiki zaman [Ik ben aan het lezen] + emir kipi (gundelik kisa ve hos kullanimlar)',
       targetLang: 'nl-NL',
@@ -2816,7 +2816,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_51',
-    title: 'Fiillerin emir  kipinde (yumusatilmis) kullanimlari/2',
+    title: 'Les 51 - Fiillerin emir kipinde (yumusatilmis) kullanimlari/2',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Fiillerin emir  kipinde (yumusatilmis) kullanimlari/2',
       targetLang: 'nl-NL',
@@ -2870,7 +2870,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_52',
-    title: 'Zouden 1/3 [Dat zou ik niet weten] Kritik konu!!!',
+    title: 'Les 52 - Zouden 1/3 [Dat zou ik niet weten] Kritik konu!!!',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Zouden 1/3 [Dat zou ik niet weten] Kritik konu!!!',
       targetLang: 'nl-NL',
@@ -2931,7 +2931,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_53',
-    title: 'Zouden 2/3 [Ik zou het heel leuk vinden]',
+    title: 'Les 53 - Zouden 2/3 [Ik zou het heel leuk vinden]',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Zouden 2/3 [Ik zou het heel leuk vinden]',
       targetLang: 'nl-NL',
@@ -2990,7 +2990,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_54',
-    title: 'Zouden 3/3 [Semih zou wat minder moeten gamen]',
+    title: 'Les 54 - Zouden 3/3 [Semih zou wat minder moeten gamen]',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Zouden 3/3 [Semih zou wat minder moeten gamen]',
       targetLang: 'nl-NL',
@@ -3035,7 +3035,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_55',
-    title: 'Relatief pronomen 1 [die/dat ile yan cumle kurma]',
+    title: 'Les 55 - Relatief pronomen 1 [die/dat ile yan cumle kurma]',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Relatief pronomen 1 [die/dat ile yan cumle kurma]',
       targetLang: 'nl-NL',
@@ -3072,7 +3072,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_56',
-    title: 'Relatief pronomen 2 [wat ile isim hakkinda bilgi verme]',
+    title: 'Les 56 - Relatief pronomen 2 [wat ile isim hakkinda bilgi verme]',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Relatief pronomen 2 [wat ile isim hakkinda bilgi verme]',
       targetLang: 'nl-NL',
@@ -3114,7 +3114,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_57',
-    title: 'Relatief pronomen 3 [die, dat, wat ile yan cumle kurma]',
+    title: 'Les 57 - Relatief pronomen 3 [die, dat, wat ile yan cumle kurma]',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Relatief pronomen 3 [die, dat, wat ile yan cumle kurma]',
       targetLang: 'nl-NL',
@@ -3149,7 +3149,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_58',
-    title: 'Relatief pronomen 4 [die, dat, wat ile yan cumle kurma]',
+    title: 'Les 58 - Relatief pronomen 4 [die, dat, wat ile yan cumle kurma]',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Relatief pronomen 4 [die, dat, wat ile yan cumle kurma]',
       targetLang: 'nl-NL',
@@ -3181,7 +3181,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_59',
-    title: 'Relatief pronomen 5 [die, dat, wat ile yan cumle kurma]',
+    title: 'Les 59 - Relatief pronomen 5 [die, dat, wat ile yan cumle kurma]',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Relatief pronomen 5 [die, dat, wat ile yan cumle kurma]',
       targetLang: 'nl-NL',
@@ -3213,7 +3213,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_60',
-    title: '\'\'Er\'\' konusu 1',
+    title: 'Les 60 - Er is/er zijn [Er is grote vraag naar leraren]',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – \'\'Er\'\' konusu 1',
       targetLang: 'nl-NL',
@@ -3257,7 +3257,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_61',
-    title: '\'\'Er\'\' konusu 2',
+    title: 'Les 61 - Er is/er zijn [Zijn er nog vragen?]',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – \'\'Er\'\' konusu 2',
       targetLang: 'nl-NL',
@@ -3302,7 +3302,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_62',
-    title: 'Yaz tatilinden konusmak [Praten over vakantie]',
+    title: 'Les 62 - Yaz tatilinden konusmak [Praten over vakantie]',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Yaz tatilinden konusmak [Praten over vakantie]',
       targetLang: 'nl-NL',
@@ -3357,7 +3357,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_63',
-    title: '\'\'Er\'\' konusu 3',
+    title: 'Les 63 - Onemli bir "er\'\' kullanimi [Ik begrijp er niets van]',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – \'\'Er\'\' konusu 3',
       targetLang: 'nl-NL',
@@ -3404,7 +3404,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_64',
-    title: 'Reflexieve werkwoorden 1 (Ik maak me geen zorgen)',
+    title: 'Les 64 - Reflexieve werkwoorden (Ik maak me geen zorgen)',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Reflexieve werkwoorden 1 (Ik maak me geen zorgen)',
       targetLang: 'nl-NL',
@@ -3454,7 +3454,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_65',
-    title: 'Reflexieve werkwoorden 2 (Ik vraag me af of hij komt)',
+    title: 'Les 65 - Reflexieve werkwoorden II (Ik vraag me af)',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Reflexieve werkwoorden 2 (Ik vraag me af of hij komt)',
       targetLang: 'nl-NL',
@@ -3497,7 +3497,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_66',
-    title: 'Alisverislerde hangi cumleleri kullaniyoruz?',
+    title: 'Les 66 - Alisverislerde hangi cumleleri kullaniyoruz?',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Alisverislerde hangi cumleleri kullaniyoruz?',
       targetLang: 'nl-NL',
@@ -3563,7 +3563,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_67',
-    title: 'Edilgen/pasif yapilar 1',
+    title: 'Les 67 - Edilgen/pasif cumleler nasil kurulur? [Hoe worden passieve zinnen gemaakt?]',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Edilgen/pasif yapilar 1',
       targetLang: 'nl-NL',
@@ -3599,7 +3599,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_68',
-    title: 'Edilgen/pasif yapilar 2',
+    title: 'Les 68 - Edilgen/pasif cumleler nasil kurulur? II [Hoe worden passieve zinnen gemaakt?]',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Edilgen/pasif yapilar 2',
       targetLang: 'nl-NL',
@@ -3641,7 +3641,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_70',
-    title: 'Edilgen/pasif yapilar 3',
+    title: 'Les 70 - Lijdende vorm [Edilgen yapi] 4/4',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Edilgen/pasif yapilar 3',
       targetLang: 'nl-NL',
@@ -3694,7 +3694,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_71',
-    title: 'Handige zinnen 1 (Kullanisli cumleler)',
+    title: 'Les 71 - Handige zinnen 1 (Kullanisli cumleler)',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Handige zinnen 1 (Kullanisli cumleler)',
       targetLang: 'nl-NL',
@@ -3757,7 +3757,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_72',
-    title: '\'\'Laten\'\' fiili kullanimi',
+    title: 'Les 72 - \'Laten\'\' we beginnen (laten fiili ile ilgili hersey)',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – \'\'Laten\'\' fiili kullanimi',
       targetLang: 'nl-NL',
@@ -3824,7 +3824,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_73',
-    title: 'Dat had ik moeten weten (hadden fiiliyle koşul cümlesi)',
+    title: 'Les 73 - Dat had ik moeten weten (hadden fiiliyle yapabileceklerimiz)',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Dat had ik moeten weten (hadden fiiliyle koşul cümlesi)',
       targetLang: 'nl-NL',
@@ -3877,7 +3877,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_74',
-    title: 'Kritik edat, baglac ve zarflar 1',
+    title: 'Les 74 - Kritik edat, baglac ve zarflar I',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Kritik edat, baglac ve zarflar 1',
       targetLang: 'nl-NL',
@@ -3947,7 +3947,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_75',
-    title: 'Kritik edat, baglac ve zarflar 2',
+    title: 'Les 75 - Kritik edat, baglac ve zarflar II',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Kritik edat, baglac ve zarflar 2',
       targetLang: 'nl-NL',
@@ -4006,7 +4006,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_76',
-    title: 'Helemaal & Allemaal',
+    title: 'Les 76 - helemaal & allemaal',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Helemaal & Allemaal',
       targetLang: 'nl-NL',
@@ -4068,7 +4068,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_77',
-    title: 'Vroeg, vroeger, te vroeg, eerder, in het verleden',
+    title: 'Les 77 - Vroeg, vroeger, te vroeg, eerder, in het verleden',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Vroeg, vroeger, te vroeg, eerder, in het verleden',
       targetLang: 'nl-NL',
@@ -4117,7 +4117,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_78',
-    title: 'Een paar/aantal/heleboel/hoop/beetje',
+    title: 'Les 78 - Een paar/aantal/heleboel/hoop/beetje',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Een paar/aantal/heleboel/hoop/beetje',
       targetLang: 'nl-NL',
@@ -4178,7 +4178,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_79',
-    title: 'Wel 1 tussenwoordje=ara kelimeler-duruma gore anlami',
+    title: 'Les 79 - Wel',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Wel 1 tussenwoordje=ara kelimeler-duruma gore anlami',
       targetLang: 'nl-NL',
@@ -4249,7 +4249,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_80',
-    title: 'Wel 2',
+    title: 'Les 80 - Wel II',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Wel 2',
       targetLang: 'nl-NL',
@@ -4322,7 +4322,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_81',
-    title: 'Naar/naartoe/heen, enz.',
+    title: 'Les 81 - Naar/naartoe/heen, enz.',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Naar/naartoe/heen, enz.',
       targetLang: 'nl-NL',
@@ -4387,7 +4387,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_82',
-    title: 'Isiga yaklastiracak bir \'\'er\'\' kullanimi [\'\'Er\'\' konusu 4]',
+    title: 'Les 82 - Isiga yaklastiracak bir \'\'er\'\' kullanimi :)',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Isiga yaklastiracak bir \'\'er\'\' kullanimi [\'\'Er\'\' konusu 4]',
       targetLang: 'nl-NL',
@@ -4457,7 +4457,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_83',
-    title: 'Noel/yilbasi kartlari hazirlama + konu tekrari',
+    title: 'Les 83 - Noel/yilbasi kartlari hazirlama + konu tekrari',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Noel/yilbasi kartlari hazirlama + konu tekrari',
       targetLang: 'nl-NL',
@@ -4496,7 +4496,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_84',
-    title: 'Hizli genel tekrar 1',
+    title: 'Les 84 - Hizli genel tekrar 1',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Hizli genel tekrar 1',
       targetLang: 'nl-NL',
@@ -4548,7 +4548,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_85',
-    title: 'Hizli genel tekrar 2',
+    title: 'Les 85 - Hizli genel tekrar 2',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Hizli genel tekrar 2',
       targetLang: 'nl-NL',
@@ -4615,7 +4615,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_86',
-    title: 'Zelfs, zelf, eigen, alleen, niet eens',
+    title: 'Les 86 - Zelfs, zelf, eigen, alleen, niet eens',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Zelfs, zelf, eigen, alleen, niet eens',
       targetLang: 'nl-NL',
@@ -4678,7 +4678,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_87',
-    title: 'Pas & al',
+    title: 'Les 87 - Pas & al',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Pas & al',
       targetLang: 'nl-NL',
@@ -4732,7 +4732,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_88',
-    title: 'Genel tekrar 3',
+    title: 'Les 88 - Genel tekrar 3',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Genel tekrar 3',
       targetLang: 'nl-NL',
@@ -4787,7 +4787,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_89',
-    title: 'Zo & zoiets kullanimiyla gundelik devrik cumle ornekleri',
+    title: 'Les 89 - Zo & zoiets kullanimiyla gundelik devrik cumle ornekleri',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Zo & zoiets kullanimiyla gundelik devrik cumle ornekleri',
       targetLang: 'nl-NL',
@@ -4847,7 +4847,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_90',
-    title: 'Ozel ve onemli bir \'\'ook\'\' kullanimi',
+    title: 'Les 90 - Ook',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Ozel ve onemli bir \'\'ook\'\' kullanimi',
       targetLang: 'nl-NL',
@@ -4921,7 +4921,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_91',
-    title: 'Duruma gore degisir',
+    title: 'Les 91 - Duruma gore degisir',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Duruma gore degisir',
       targetLang: 'nl-NL',
@@ -4996,7 +4996,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_92_a',
-    title: 'een vriend/mijn vriend arasindaki kritik fark ve \'\'muhtelif\'\' onemli konular',
+    title: 'Les 92/A - een vriend ile mijn vriend arasindaki kritik fark ve \'\'muhtelif\'\' onemli konular',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – een vriend/mijn vriend arasindaki kritik fark ve \'\'muhtelif\'\' onemli konular',
       targetLang: 'nl-NL',
@@ -5050,7 +5050,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_92_b',
-    title: 'Verschillend/meerdere/andere/de kans is…',
+    title: 'Les 92/B - Verschillend/meerdere/andere/de kans is…',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Verschillend/meerdere/andere/de kans is…',
       targetLang: 'nl-NL',
@@ -5084,7 +5084,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_93',
-    title: 'Sık karşılaşacağınız atasözleri ve deyimler 1',
+    title: 'Les 93 - Sık karşılaşacağınız atasözleri ve deyimler 1',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Sık karşılaşacağınız atasözleri ve deyimler 1',
       targetLang: 'nl-NL',
@@ -5143,7 +5143,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_94',
-    title: 'Sık karşılaşacağınız atasözleri ve deyimler (2) Spreekwoorden en',
+    title: 'Les 94 - Sık karşılaşacağınız atasözleri ve deyimler (2) Spreekwoorden en uitdrukkingen',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Sık karşılaşacağınız atasözleri ve deyimler (2) Spreekwoorden en',
       targetLang: 'nl-NL',
@@ -5228,7 +5228,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_95',
-    title: 'De Het',
+    title: 'Les 95 - De - Het',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – De Het',
       targetLang: 'nl-NL',
@@ -5289,7 +5289,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_96',
-    title: 'Zullen we koffie gaan halen? Had ik al gezegd dat ze zwanger is?',
+    title: 'Les 96 - Zullen we koffie gaan halen? Had ik al gezegd dat ze zwanger is?',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Zullen we koffie gaan halen? Had ik al gezegd dat ze zwanger is?',
       targetLang: 'nl-NL',
@@ -5355,7 +5355,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_97',
-    title: 'Zeggen, praten, vertellen, spreken, bespreken, uitleggen, bellen',
+    title: 'Les 97 - Zeggen, praten, vertellen, spreken, bespreken, uitleggen, bellen',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Zeggen, praten, vertellen, spreken, bespreken, uitleggen, bellen',
       targetLang: 'nl-NL',
@@ -5409,7 +5409,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_98',
-    title: 'Meevallen, tegenvallen, bevallen, per se, eruit zien',
+    title: 'Les 98 - Meevallen, tegenvallen, bevallen, per se, eruit zien',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Meevallen, tegenvallen, bevallen, per se, eruit zien',
       targetLang: 'nl-NL',
@@ -5487,7 +5487,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_99',
-    title: 'Wat ve Dat kelimelerinin cumle basinda (soru cumlesi olmaksizin)',
+    title: 'Les 99 - Wat ve Dat kelimelerinin cumle basinda (soru cumlesi olmaksizin) kullanilisi',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Wat ve Dat kelimelerinin cumle basinda (soru cumlesi olmaksizin)',
       targetLang: 'nl-NL',
@@ -5533,7 +5533,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_100',
-    title: 'Yeni konu oncesi isinma turu',
+    title: 'Les 100 - Yeni konu oncesi isinma turu',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Yeni konu oncesi isinma turu',
       targetLang: 'nl-NL',
@@ -5599,7 +5599,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_101',
-    title: 'Voor, voordat, terwijl, tijdens, zolang, zodra, als, wanneer',
+    title: 'Les 101 - Voor, voordat, terwijl, tijdens, zolang, zodra, als, wanneer',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Voor, voordat, terwijl, tijdens, zolang, zodra, als, wanneer',
       targetLang: 'nl-NL',
@@ -5660,7 +5660,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_102',
-    title: 'Toen (Imperfectum genelde) O zaman - Dan (Als kullanilir)',
+    title: 'Les 102 - Toen - Dan',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Toen (Imperfectum genelde) O zaman - Dan (Als kullanilir)',
       targetLang: 'nl-NL',
@@ -5712,7 +5712,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_103',
-    title: 'Konusmalariniza zenginlik/nuanslar katacak 15 giris yapisi',
+    title: 'Les 103 - Konusmalariniza zenginlik/nuanslar katacak 15 giris yapisi',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Konusmalariniza zenginlik/nuanslar katacak 15 giris yapisi',
       targetLang: 'nl-NL',
@@ -5774,7 +5774,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_104',
-    title: 'Zitliklari belirtmede gerekli 5 anahtar kelime',
+    title: 'Les 104 - Zitliklari belirtmede gerekli 5 anahtar kelime',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Zitliklari belirtmede gerekli 5 anahtar kelime',
       targetLang: 'nl-NL',
@@ -5835,7 +5835,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_105',
-    title: 'Birkaç tüyo ve işyerlerinde sıkça kullanılan ifadeler 1',
+    title: 'Les 105 - Işyerlerinde sıkça kullanılan gundelik ifadeler-1',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Birkaç tüyo ve işyerlerinde sıkça kullanılan ifadeler 1',
       targetLang: 'nl-NL',
@@ -5893,7 +5893,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_106',
-    title: 'Işyerlerinde sıkça kullanılan gundelik ifadeler 2',
+    title: 'Les 106 - Işyerlerinde sıkça kullanılan gundelik ifadeler-2',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Işyerlerinde sıkça kullanılan gundelik ifadeler 2',
       targetLang: 'nl-NL',
@@ -5969,7 +5969,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_108',
-    title: 'Hizli genel tekrar',
+    title: 'Les 108 - Hizli genel tekrar',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Hizli genel tekrar',
       targetLang: 'nl-NL',
@@ -6061,7 +6061,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_109',
-    title: 'Iki fiilli cumlelerde \'\'te\'\', \'\'om te\'\' kullanimi',
+    title: 'Les 109 - Iki fiilli cumlelerde \'\'te\'\', \'\'om te\'\' kullanimi',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Iki fiilli cumlelerde \'\'te\'\', \'\'om te\'\' kullanimi',
       targetLang: 'nl-NL',
@@ -6125,7 +6125,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_110',
-    title: 'Tam oturmadigi gorulen geen/niet konusu',
+    title: 'Les 110 - Geen - Niet',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Tam oturmadigi gorulen geen/niet konusu',
       targetLang: 'nl-NL',
@@ -6190,7 +6190,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_111',
-    title: 'Uzun cumle anahtarlari - 1',
+    title: 'Les 111 - Uzun Cumle anahtarlari 1',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Uzun cumle anahtarlari - 1',
       targetLang: 'nl-NL',
@@ -6237,7 +6237,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_112',
-    title: 'Uzun cumle anahtarlari - 2',
+    title: 'Les 112 - Uzun Cumle anahtarlari 2',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Uzun cumle anahtarlari - 2',
       targetLang: 'nl-NL',
@@ -6275,7 +6275,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_113',
-    title: 'Uzun cumle anahtarlari 3',
+    title: 'Les 113 - Uzun Cumle anahtarlari 3',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Uzun cumle anahtarlari 3',
       targetLang: 'nl-NL',
@@ -6316,7 +6316,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_114',
-    title: 'Bu defa kisa cumleler',
+    title: 'Les 114 - Bu defa kisa cumleler',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Bu defa kisa cumleler',
       targetLang: 'nl-NL',
@@ -6399,7 +6399,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_115',
-    title: '\'Hoe\'\' soru zarfinin muhtelif fonksiyonlari',
+    title: 'Les 115 - “Hoe\'\' soru zarfinin muhtelif fonksiyonlari',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – \'Hoe\'\' soru zarfinin muhtelif fonksiyonlari',
       targetLang: 'nl-NL',
@@ -6452,7 +6452,7 @@ const hollandacaOgreniyoruzLessons: LessonData[] = [
   },
   {
     id: 'ho_les_116',
-    title: 'Nazik/diplomatik soru sorma/ifade sekilleri',
+    title: 'Les 116 - Nazik/diplomatik soru sorma/ifade sekilleri',
     scenario: {
       title: 'Hollandaca Ogreniyoruz – Nazik/diplomatik soru sorma/ifade sekilleri',
       targetLang: 'nl-NL',
@@ -6661,37 +6661,41 @@ const ALL_COURSES: CourseData[] = [
 async function main() {
   console.log('🌱 Seeding courses...');
 
-  await prisma.$transaction(async (tx) => {
-    // Delete all existing lessons and courses
-    await tx.lesson.deleteMany();
-    await tx.course.deleteMany();
+  for (const course of ALL_COURSES) {
+    const courseData = {
+      title: course.title,
+      description: course.description,
+      emoji: course.emoji,
+      color: course.color,
+      order: course.order,
+      category: course.category,
+      subcategory: course.subcategory,
+    };
 
-    for (const course of ALL_COURSES) {
-      await tx.course.create({
-        data: {
-          id: course.id,
-          title: course.title,
-          description: course.description,
-          emoji: course.emoji,
-          color: course.color,
-          order: course.order,
-          category: course.category,
-          subcategory: course.subcategory,
-          lessons: {
-            create: course.lessons.map((lesson, index) => ({
-              id: lesson.id,
-              title: lesson.title,
-              order: index,
-              content: lesson.scenario as object,
-            })),
-          },
-        },
+    await prisma.course.upsert({
+      where: { id: course.id },
+      update: courseData,
+      create: { id: course.id, ...courseData },
+    });
+
+    for (let index = 0; index < course.lessons.length; index++) {
+      const lesson = course.lessons[index];
+      const lessonData = {
+        title: lesson.title,
+        order: index,
+        content: lesson.scenario as object,
+        courseId: course.id,
+      };
+
+      await prisma.lesson.upsert({
+        where: { id: lesson.id },
+        update: lessonData,
+        create: { id: lesson.id, ...lessonData },
       });
-
-      const lessonCount = course.lessons.length;
-      console.log(`  ✓ ${course.emoji} ${course.title} (${lessonCount} ders)`);
     }
-  });
+
+    console.log(`  ✓ ${course.emoji} ${course.title} (${course.lessons.length} ders)`);
+  }
 
   const courseCount = await prisma.course.count();
   const lessonCount = await prisma.lesson.count();
