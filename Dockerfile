@@ -37,16 +37,10 @@ ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Next.js build output
+# Next.js standalone build output
 COPY --from=builder /app/frontend/public ./frontend/public
-COPY --from=builder --chown=nextjs:nodejs /app/frontend/.next ./frontend/.next
-
-# Node modules (hoisted to root in workspaces)
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
-
-# Package files for npm scripts resolution
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/frontend/package.json ./frontend/package.json
+COPY --from=builder --chown=nextjs:nodejs /app/frontend/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/frontend/.next/static ./frontend/.next/static
 
 # Prisma schema + migrations + compiled seed
 COPY --from=builder /app/backend/prisma ./backend/prisma
