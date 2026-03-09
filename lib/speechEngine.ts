@@ -2,27 +2,31 @@
 // Pure logic module: Promise-based TTS using Web Speech API.
 // No UI dependencies. This is the heart of the app.
 
-import { Scenario, PlaybackStatus, PlaybackPhase, CEFRLevel } from '@/types/dialogue';
-import { getBestVoice, getRateForLevel, clearVoiceCache } from '@/lib/voiceSelector';
+import { Scenario, PlaybackStatus, PlaybackPhase, CEFRLevel } from "@/types/dialogue";
+import { getBestVoice, getRateForLevel, clearVoiceCache } from "@/lib/voiceSelector";
 
 // ─── iOS WebKit: Preload voices ───
 // iOS Safari has a known delay loading voices. Call this once on first user gesture.
 let voicesLoaded = false;
 export function preloadVoices(): void {
-    if (typeof window === 'undefined' || !window.speechSynthesis) return;
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
     if (voicesLoaded) return;
 
     // Force voice loading
     window.speechSynthesis.getVoices();
 
     // iOS fires 'voiceschanged' after initial load
-    window.speechSynthesis.addEventListener('voiceschanged', () => {
-        voicesLoaded = true;
-        clearVoiceCache(); // Re-evaluate voices after they finish loading
-        console.log('[SpeechEngine] Voices loaded:', window.speechSynthesis.getVoices().length);
-    }, { once: true });
+    window.speechSynthesis.addEventListener(
+        "voiceschanged",
+        () => {
+            voicesLoaded = true;
+            clearVoiceCache(); // Re-evaluate voices after they finish loading
+            console.log("[SpeechEngine] Voices loaded:", window.speechSynthesis.getVoices().length);
+        },
+        { once: true },
+    );
 
-    console.log('[SpeechEngine] Voice preload triggered');
+    console.log("[SpeechEngine] Voice preload triggered");
 }
 
 /**
@@ -32,8 +36,8 @@ export function preloadVoices(): void {
  */
 export function speakAsync(text: string, lang: string, level?: CEFRLevel): Promise<number> {
     return new Promise((resolve, reject) => {
-        if (typeof window === 'undefined' || !window.speechSynthesis) {
-            reject(new Error('Speech synthesis not available'));
+        if (typeof window === "undefined" || !window.speechSynthesis) {
+            reject(new Error("Speech synthesis not available"));
             return;
         }
 
@@ -58,9 +62,9 @@ export function speakAsync(text: string, lang: string, level?: CEFRLevel): Promi
             resolve(duration);
         };
 
-        utterance.onerror = (event) => {
+        utterance.onerror = event => {
             // 'interrupted' and 'cancelled' are expected when user stops playback
-            if (event.error === 'interrupted' || event.error === 'canceled') {
+            if (event.error === "interrupted" || event.error === "canceled") {
                 resolve(0);
             } else {
                 reject(new Error(`Speech synthesis error: ${event.error}`));
@@ -78,16 +82,20 @@ export function speakAsync(text: string, lang: string, level?: CEFRLevel): Promi
 export function waitMs(ms: number, signal?: AbortSignal): Promise<void> {
     return new Promise((resolve, reject) => {
         if (signal?.aborted) {
-            reject(new DOMException('Aborted', 'AbortError'));
+            reject(new DOMException("Aborted", "AbortError"));
             return;
         }
 
         const timer = setTimeout(resolve, ms);
 
-        signal?.addEventListener('abort', () => {
-            clearTimeout(timer);
-            reject(new DOMException('Aborted', 'AbortError'));
-        }, { once: true });
+        signal?.addEventListener(
+            "abort",
+            () => {
+                clearTimeout(timer);
+                reject(new DOMException("Aborted", "AbortError"));
+            },
+            { once: true },
+        );
     });
 }
 
@@ -96,7 +104,7 @@ export function waitMs(ms: number, signal?: AbortSignal): Promise<void> {
  * iOS 17+ workaround: double-cancel to ensure utterance queue is fully cleared.
  */
 export function cancelSpeech(): void {
-    if (typeof window !== 'undefined' && window.speechSynthesis) {
+    if (typeof window !== "undefined" && window.speechSynthesis) {
         window.speechSynthesis.cancel();
         // iOS 17+ bug: first cancel() sometimes leaves utterance in pending state
         setTimeout(() => {
@@ -128,7 +136,8 @@ export async function* playScenario(
     scenario: Scenario,
     signal: AbortSignal,
     level?: CEFRLevel,
-    startFromIndex: number = 0
+    startFromIndex: number = 0,
+    startFromSubPhaseIndex: number = 0,
 ): AsyncGenerator<PlaybackStatus> {
     const { lines, targetLang, nativeLang } = scenario;
 
@@ -143,108 +152,129 @@ export async function* playScenario(
 
     // iOS: resume speechSynthesis when returning from background
     const handleVisibility = () => {
-        if (document.visibilityState === 'visible' && typeof window !== 'undefined') {
+        if (document.visibilityState === "visible" && typeof window !== "undefined") {
             window.speechSynthesis.resume();
         }
     };
-    document.addEventListener('visibilitychange', handleVisibility);
+    document.addEventListener("visibilitychange", handleVisibility);
 
     // Cleanup listener when generator completes
-    const cleanup = () => document.removeEventListener('visibilitychange', handleVisibility);
+    const cleanup = () => document.removeEventListener("visibilitychange", handleVisibility);
 
     for (let i = startFromIndex; i < lines.length; i++) {
         const line = lines[i];
 
-        if (signal.aborted) return;
+        // Determine current starting subphase for this line.
+        // It's only non-zero for the very first line we resume on.
+        const subPhase = i === startFromIndex ? startFromSubPhaseIndex : 0;
+        let targetDuration = 0;
+        let pauseMs = 1500;
 
-        // Phase 1: Speak target language (e.g. Dutch) — Edge TTS or Web Speech
-        yield {
-            lineIndex: i,
-            totalLines: lines.length,
-            phase: 'target' as PlaybackPhase,
-            text: line.targetText,
-            nativeText: line.nativeText,
-        };
-        const targetDuration = await speakAsync(line.targetText, targetLang, level);
-
-        if (signal.aborted) return;
+        // Phase 1: Speak target language (e.g. Dutch)
+        if (subPhase <= 0) {
+            if (signal.aborted) return;
+            yield {
+                lineIndex: i,
+                subPhaseIndex: 0,
+                totalLines: lines.length,
+                phase: "target" as PlaybackPhase,
+                text: line.targetText,
+                nativeText: line.nativeText,
+            };
+            targetDuration = await speakAsync(line.targetText, targetLang, level);
+        } else {
+            // Estimate target duration if we skipped Phase 1 so we can compute correct pause lengths later
+            targetDuration = Math.max(1000, line.targetText.length * 60);
+        }
 
         // Phase 2: Calculated silence — user speaks aloud
-        const pauseMs = Math.max(targetDuration * line.pauseMultiplier, 1500);
-        yield {
-            lineIndex: i,
-            totalLines: lines.length,
-            phase: 'pause' as PlaybackPhase,
-            text: line.targetText,
-            nativeText: line.nativeText,
-        };
-        try {
-            await waitMs(pauseMs, signal);
-        } catch {
-            return; // AbortError — user stopped
+        pauseMs = Math.max(targetDuration * line.pauseMultiplier, 1500);
+        if (subPhase <= 1) {
+            if (signal.aborted) return;
+            yield {
+                lineIndex: i,
+                subPhaseIndex: 1,
+                totalLines: lines.length,
+                phase: "pause" as PlaybackPhase,
+                text: line.targetText,
+                nativeText: line.nativeText,
+            };
+            try {
+                await waitMs(pauseMs, signal);
+            } catch {
+                return; // AbortError — user stopped
+            }
         }
-
-        if (signal.aborted) return;
 
         // Phase 3: Native language (e.g. Turkish) — NEVER spoken, text displayed only
-        yield {
-            lineIndex: i,
-            totalLines: lines.length,
-            phase: 'native' as PlaybackPhase,
-            text: line.targetText,
-            nativeText: line.nativeText,
-        };
+        if (subPhase <= 2) {
+            if (signal.aborted) return;
+            yield {
+                lineIndex: i,
+                subPhaseIndex: 2,
+                totalLines: lines.length,
+                phase: "native" as PlaybackPhase,
+                text: line.targetText,
+                nativeText: line.nativeText,
+            };
 
-        // Always show text with a reading-time pause — native language is never spoken
-        const estimatedReadingMs = Math.max(1500, line.nativeText.length * 60);
-        try {
-            await waitMs(estimatedReadingMs, signal);
-        } catch {
-            return;
+            // Always show text with a reading-time pause
+            const estimatedReadingMs = Math.max(1500, line.nativeText.length * 60);
+            try {
+                await waitMs(estimatedReadingMs, signal);
+            } catch {
+                return;
+            }
         }
-
-        if (signal.aborted) return;
 
         // Phase 4: Short gap before repeating
-        yield {
-            lineIndex: i,
-            totalLines: lines.length,
-            phase: 'gap' as PlaybackPhase,
-            text: '',
-        };
-        try {
-            await waitMs(800, signal);
-        } catch {
-            return;
+        if (subPhase <= 3) {
+            if (signal.aborted) return;
+            yield {
+                lineIndex: i,
+                subPhaseIndex: 3,
+                totalLines: lines.length,
+                phase: "gap" as PlaybackPhase,
+                text: "",
+            };
+            try {
+                await waitMs(800, signal);
+            } catch {
+                return;
+            }
         }
 
-        if (signal.aborted) return;
-
         // Phase 5: Repeat target language for reinforcement
-        yield {
-            lineIndex: i,
-            totalLines: lines.length,
-            phase: 'repeat' as PlaybackPhase,
-            text: line.targetText,
-            nativeText: line.nativeText,
-        };
-        await speakAsync(line.targetText, targetLang, level);
-
-        if (signal.aborted) return;
+        if (subPhase <= 4) {
+            if (signal.aborted) return;
+            yield {
+                lineIndex: i,
+                subPhaseIndex: 4,
+                totalLines: lines.length,
+                phase: "repeat" as PlaybackPhase,
+                text: line.targetText,
+                nativeText: line.nativeText,
+            };
+            await speakAsync(line.targetText, targetLang, level);
+        }
 
         // Phase 6: Second calculated silence — user repeats aloud again
-        yield {
-            lineIndex: i,
-            totalLines: lines.length,
-            phase: 'pause' as PlaybackPhase,
-            text: line.targetText,
-            nativeText: line.nativeText,
-        };
-        try {
-            await waitMs(pauseMs, signal);
-        } catch {
-            cleanup();
-            return;
+        if (subPhase <= 5) {
+            if (signal.aborted) return;
+            yield {
+                lineIndex: i,
+                subPhaseIndex: 5,
+                totalLines: lines.length,
+                phase: "pause" as PlaybackPhase,
+                text: line.targetText,
+                nativeText: line.nativeText,
+            };
+            try {
+                await waitMs(pauseMs, signal);
+            } catch {
+                cleanup();
+                return;
+            }
         }
     }
 

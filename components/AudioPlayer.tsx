@@ -26,6 +26,7 @@ export default function AudioPlayer({ scenario, startFromIndex = 0, onComplete, 
     const isPlayingRef = useRef(false);
     // Track current line index in a ref so handleBack can read it reliably
     const currentLineIndexRef = useRef(startFromIndex);
+    const currentSubPhaseIndexRef = useRef(0);
 
     // Cleanup on unmount
     useEffect(() => {
@@ -52,9 +53,10 @@ export default function AudioPlayer({ scenario, startFromIndex = 0, onComplete, 
         document.body.classList.add("playback-active");
 
         try {
-            for await (const status of playScenario(scenario, controller.signal, undefined, startFromIndex)) {
+            for await (const status of playScenario(scenario, controller.signal, undefined, currentLineIndexRef.current, currentSubPhaseIndexRef.current)) {
                 if (controller.signal.aborted) break;
                 currentLineIndexRef.current = status.lineIndex;
+                currentSubPhaseIndexRef.current = status.subPhaseIndex;
                 setCurrentStatus(status);
                 setPhase(status.phase);
             }
@@ -87,6 +89,17 @@ export default function AudioPlayer({ scenario, startFromIndex = 0, onComplete, 
             startPlayback();
         }
     }, [isPlaying, startPlayback, stopPlayback]);
+
+    const handleRestart = useCallback(() => {
+        if (window.confirm("Dersi baştan başlatmak istediğinize emin misiniz?")) {
+            stopPlayback();
+            currentLineIndexRef.current = 0;
+            currentSubPhaseIndexRef.current = 0;
+            setPhase("idle");
+            setCurrentStatus(null);
+            setHasStarted(false);
+        }
+    }, [stopPlayback]);
 
     const handleBack = useCallback(() => {
         const lastLineIndex = currentLineIndexRef.current;
@@ -150,19 +163,32 @@ export default function AudioPlayer({ scenario, startFromIndex = 0, onComplete, 
             <div className="flex flex-col items-center gap-4 w-full max-w-md px-4 pb-4">
                 {/* Main Play/Pause Button — THE BIG ONE */}
                 {phase !== "complete" && (
-                    <button
-                        id="play-pause-button"
-                        onClick={togglePlayback}
-                        className={`w-full min-h-[88px] rounded-3xl text-3xl font-bold uppercase tracking-widest
-                       transition-all duration-300 active:scale-95 select-none
-                       ${
-                           isPlaying
-                               ? "bg-amber-500 text-shadow-950 hover:bg-amber-400 shadow-2xl shadow-amber-500/30"
-                               : "bg-emerald-500 text-shadow-950 hover:bg-emerald-400 animate-glow shadow-2xl shadow-emerald-500/30"
-                       }`}
-                    >
-                        {isPlaying ? "⏸  PAUSE" : hasStarted ? "▶  RESUME" : "▶  START"}
-                    </button>
+                    <div className="w-full flex gap-4">
+                        {!isPlaying && hasStarted && (
+                            <button
+                                onClick={handleRestart}
+                                className="w-1/3 min-h-[88px] rounded-3xl text-sm sm:text-lg font-bold uppercase tracking-widest
+                                transition-all duration-300 active:scale-95 select-none
+                                bg-card border border-border hover:border-border-hover text-foreground-secondary hover:text-foreground"
+                            >
+                                🔄 BAŞA DÖN
+                            </button>
+                        )}
+                        <button
+                            id="play-pause-button"
+                            onClick={togglePlayback}
+                            className={`min-h-[88px] rounded-3xl text-xl sm:text-3xl font-bold uppercase tracking-widest
+                           transition-all duration-300 active:scale-95 select-none
+                           ${!isPlaying && hasStarted ? "w-2/3" : "w-full"}
+                           ${
+                               isPlaying
+                                   ? "bg-amber-500 text-shadow-950 hover:bg-amber-400 shadow-2xl shadow-amber-500/30"
+                                   : "bg-emerald-500 text-shadow-950 hover:bg-emerald-400 animate-glow shadow-2xl shadow-emerald-500/30"
+                           }`}
+                        >
+                            {isPlaying ? "⏸  PAUSE" : hasStarted ? "▶  RESUME" : "▶  START"}
+                        </button>
+                    </div>
                 )}
 
                 {/* Back / New Session button */}
