@@ -5,6 +5,7 @@ node_modules/
 
 # ─── Next.js Build ───
 .next/
+frontend/.next/
 out/
 tsconfig.tsbuildinfo
 

@@ -8,6 +8,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { Scenario, PlaybackStatus, PlaybackPhase } from "@/types/dialogue";
 import { playScenario, cancelSpeech } from "@/lib/speechEngine";
 import StatusBar from "./StatusBar";
+import ConfirmModal from "./ConfirmModal";
 
 interface AudioPlayerProps {
     scenario: Scenario;
@@ -21,12 +22,12 @@ export default function AudioPlayer({ scenario, startFromIndex = 0, onComplete, 
     const [hasStarted, setHasStarted] = useState(false);
     const [currentStatus, setCurrentStatus] = useState<PlaybackStatus | null>(null);
     const [phase, setPhase] = useState<PlaybackPhase | "idle" | "complete">("idle");
+    const [showRestartConfirm, setShowRestartConfirm] = useState(false);
 
     const abortControllerRef = useRef<AbortController | null>(null);
     const isPlayingRef = useRef(false);
-    // Track current line index in a ref so handleBack can read it reliably
+    // Track current line index in a ref so handleBack and resume can read it reliably
     const currentLineIndexRef = useRef(startFromIndex);
-    const currentSubPhaseIndexRef = useRef(0);
 
     // Cleanup on unmount
     useEffect(() => {
@@ -53,10 +54,11 @@ export default function AudioPlayer({ scenario, startFromIndex = 0, onComplete, 
         document.body.classList.add("playback-active");
 
         try {
-            for await (const status of playScenario(scenario, controller.signal, undefined, currentLineIndexRef.current, currentSubPhaseIndexRef.current)) {
+            // Always resume from the START of the current line (subPhase=0)
+            // so the user hears the full sentence before being asked to repeat
+            for await (const status of playScenario(scenario, controller.signal, undefined, currentLineIndexRef.current)) {
                 if (controller.signal.aborted) break;
                 currentLineIndexRef.current = status.lineIndex;
-                currentSubPhaseIndexRef.current = status.subPhaseIndex;
                 setCurrentStatus(status);
                 setPhase(status.phase);
             }
@@ -71,7 +73,7 @@ export default function AudioPlayer({ scenario, startFromIndex = 0, onComplete, 
         } catch {
             // Aborted — expected on pause/stop
         }
-    }, [scenario, onComplete, startFromIndex]);
+    }, [scenario, onComplete]);
 
     const stopPlayback = useCallback(() => {
         cancelSpeech();
@@ -90,15 +92,17 @@ export default function AudioPlayer({ scenario, startFromIndex = 0, onComplete, 
         }
     }, [isPlaying, startPlayback, stopPlayback]);
 
-    const handleRestart = useCallback(() => {
-        if (window.confirm("Dersi baştan başlatmak istediğinize emin misiniz?")) {
-            stopPlayback();
-            currentLineIndexRef.current = 0;
-            currentSubPhaseIndexRef.current = 0;
-            setPhase("idle");
-            setCurrentStatus(null);
-            setHasStarted(false);
-        }
+    const handleRestartRequest = useCallback(() => {
+        setShowRestartConfirm(true);
+    }, []);
+
+    const handleRestartConfirm = useCallback(() => {
+        setShowRestartConfirm(false);
+        stopPlayback();
+        currentLineIndexRef.current = 0;
+        setPhase("idle");
+        setCurrentStatus(null);
+        setHasStarted(false);
     }, [stopPlayback]);
 
     const handleBack = useCallback(() => {
@@ -166,7 +170,7 @@ export default function AudioPlayer({ scenario, startFromIndex = 0, onComplete, 
                     <div className="w-full flex gap-4">
                         {!isPlaying && hasStarted && (
                             <button
-                                onClick={handleRestart}
+                                onClick={handleRestartRequest}
                                 className="w-1/3 min-h-[88px] rounded-3xl text-sm sm:text-lg font-bold uppercase tracking-widest
                                 transition-all duration-300 active:scale-95 select-none
                                 bg-card border border-border hover:border-border-hover text-foreground-secondary hover:text-foreground"
@@ -186,7 +190,7 @@ export default function AudioPlayer({ scenario, startFromIndex = 0, onComplete, 
                                    : "bg-emerald-500 text-shadow-950 hover:bg-emerald-400 animate-glow shadow-2xl shadow-emerald-500/30"
                            }`}
                         >
-                            {isPlaying ? "⏸  PAUSE" : hasStarted ? "▶  RESUME" : "▶  START"}
+                            {isPlaying ? "⏸  DURDUR" : hasStarted ? "▶  DEVAM ET" : "▶  BAŞLAT"}
                         </button>
                     </div>
                 )}
@@ -202,6 +206,16 @@ export default function AudioPlayer({ scenario, startFromIndex = 0, onComplete, 
                     {phase === "complete" ? "🔄  Yeni Ders" : "←  Geri"}
                 </button>
             </div>
+            <ConfirmModal
+                open={showRestartConfirm}
+                title="Dersi baştan başlatmak istediğinize emin misiniz?"
+                subtitle="İlerlemeniz sıfırlanacak ve ders en baştan başlayacak."
+                confirmLabel="Başa Dön"
+                cancelLabel="İptal"
+                variant="danger"
+                onConfirm={handleRestartConfirm}
+                onCancel={() => setShowRestartConfirm(false)}
+            />
         </div>
     );
 }

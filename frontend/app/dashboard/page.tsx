@@ -91,14 +91,17 @@ function DashboardTabsView({ dash }: { dash: ReturnType<typeof useDashboard> }) 
                 confirmLabel="Sil"
                 cancelLabel="İptal"
                 variant="danger"
-                onConfirm={() => {
+                onConfirm={async () => {
                     if (!dash.deleteConfirm) return;
-                    if (dash.deleteConfirm.type === 'ai') {
-                        void dash.handleDeleteAiLesson(dash.deleteConfirm.id);
-                    } else {
-                        void dash.handleDeleteCustomLesson(dash.deleteConfirm.id);
+                    try {
+                        if (dash.deleteConfirm.type === 'ai') {
+                            await dash.handleDeleteAiLesson(dash.deleteConfirm.id);
+                        } else {
+                            await dash.handleDeleteCustomLesson(dash.deleteConfirm.id);
+                        }
+                    } finally {
+                        dash.setDeleteConfirm(null);
                     }
-                    dash.setDeleteConfirm(null);
                 }}
                 onCancel={() => dash.setDeleteConfirm(null)}
             />

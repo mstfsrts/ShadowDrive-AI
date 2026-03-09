@@ -1,9 +1,12 @@
 node_modules
-.next
+frontend/.next
 .env
 .env.local
 *.log
 .git
 backend/node_modules
+backend/dist
 mobile/node_modules
-.expo
+mobile/.expo
+frontend/node_modules
+packages/shared/node_modules

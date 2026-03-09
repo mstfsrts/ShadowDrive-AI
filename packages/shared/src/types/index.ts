@@ -29,7 +29,6 @@ export interface PlaybackStatus {
     lineIndex: number;
     totalLines: number;
     phase: PlaybackPhase;
-    subPhaseIndex: number;
     text: string;
     nativeText?: string;
 }

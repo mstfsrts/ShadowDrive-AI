@@ -1,25 +1,27 @@
 'use client';
 
-// ─── ShadowDrive AI — Custom Tab ───
+// ─── ShadowDrive AI — AI Tab ───
 
 import type { Session } from 'next-auth';
-import CustomTextForm from '@/components/CustomTextForm';
+import ScenarioForm from '@/components/ScenarioForm';
+import GeneratingLoader from '@/components/GeneratingLoader';
 import SavedLessonCard from '@/components/SavedLessonCard';
-import { Scenario } from '@/types/dialogue';
+import { Scenario, type CEFRLevel } from '@/types/dialogue';
 import { getResumableId, getStoredProgress } from '@/lib/resumablePlayback';
-import type { SavedCustomLesson } from '../_types';
+import type { GeneratedLessonState, SavedAiLesson } from '../_types';
 
-export interface CustomTabProps {
+export interface AiTabProps {
     session: Session | null;
+    isGenerating: boolean;
     isSaving: boolean;
-    lastCustomScenario: { scenario: Scenario; savedId?: string } | null;
-    savedCustomLessons: SavedCustomLesson[];
+    lastGeneratedLesson: GeneratedLessonState | null;
+    savedAiLessons: SavedAiLesson[];
     editingLessonId: string | null;
     editingTitle: string;
-    onCustomSubmit: (scenario: Scenario) => void;
-    onDismissLastScenario: () => void;
+    onGenerate: (topic: string, difficulty: CEFRLevel) => Promise<void>;
+    onDismissLastLesson: () => void;
     onPreviewScenario: (sc: Scenario) => void;
-    onPlayCustomScenario: (sc: Scenario, options?: { savedId?: string }) => void;
+    onPlayAiScenario: (sc: Scenario, options: { topic: string; level: string; savedId?: string }) => void;
     onEditStart: (id: string, currentTitle: string) => void;
     onEditChange: (value: string) => void;
     onEditCommit: (id: string) => void;
@@ -27,58 +29,65 @@ export interface CustomTabProps {
     onDeleteRequest: (id: string, title: string) => void;
 }
 
-export default function CustomTab({
+export default function AiTab({
     session,
+    isGenerating,
     isSaving,
-    lastCustomScenario,
-    savedCustomLessons,
+    lastGeneratedLesson,
+    savedAiLessons,
     editingLessonId,
     editingTitle,
-    onCustomSubmit,
-    onDismissLastScenario,
+    onGenerate,
+    onDismissLastLesson,
     onPreviewScenario,
-    onPlayCustomScenario,
+    onPlayAiScenario,
     onEditStart,
     onEditChange,
     onEditCommit,
     onEditCancel,
     onDeleteRequest,
-}: CustomTabProps) {
+}: AiTabProps) {
     return (
         <div className="flex flex-col gap-4 animate-fade-in">
             <div className="flex items-center gap-2 mb-2">
-                <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="text-xs text-foreground-muted uppercase tracking-widest font-medium">
-                    Özel İçerik · Manuel Format
+                    Çevrimiçi · AI Senaryo
                 </span>
             </div>
 
-            <CustomTextForm onSubmit={onCustomSubmit} />
+            {isGenerating ? (
+                <GeneratingLoader />
+            ) : (
+                <>
+                    <ScenarioForm onSubmit={onGenerate} isLoading={isGenerating} />
+                    <p className="mt-2 text-foreground-faint text-xs text-center max-w-xs mx-auto">
+                        Konunuzu yazın ve AI sizin için Hollandaca-Türkçe bir ders oluştursun.
+                    </p>
+                </>
+            )}
 
-            <p className="mt-2 text-foreground-faint text-xs text-center max-w-xs mx-auto">
-                Kendi cümlelerinizi yapıştırın ve anında çalışın.
-            </p>
-
-            {/* ── Custom lesson card ── */}
-            {lastCustomScenario && (() => {
-                const customResumableId = getResumableId('custom', {
-                    scenario: lastCustomScenario.scenario,
-                    savedId: lastCustomScenario.savedId ?? undefined,
+            {/* ── Generated lesson card ── */}
+            {lastGeneratedLesson && (() => {
+                const aiResumableId = getResumableId('ai', {
+                    topic: lastGeneratedLesson.topic,
+                    level: lastGeneratedLesson.level,
+                    savedId: lastGeneratedLesson.savedId ?? undefined,
                 });
-                const prog = getStoredProgress(customResumableId, null, false);
+                const prog = getStoredProgress(aiResumableId, null, false);
                 const isMastered = prog.completionCount >= prog.targetCount;
                 const isStarted = prog.completionCount >= 1;
                 const isPartial = prog.lastLineIndex > 0;
                 return (
-                <div className="p-4 rounded-2xl border border-purple-500/30 bg-purple-500/5">
+                <div className="p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/5">
                     <div className="flex items-start justify-between mb-3">
                         <div className="flex-1 min-w-0">
                             <p className="text-foreground font-semibold truncate">
-                                {lastCustomScenario.scenario.title}
+                                {lastGeneratedLesson.scenario.title}
                             </p>
                             <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                                 <p className="text-foreground-muted text-sm">
-                                    {lastCustomScenario.scenario.lines.length} cümle
+                                    {lastGeneratedLesson.level} · {lastGeneratedLesson.scenario.lines.length} cümle
                                 </p>
                                 {isMastered && (
                                     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400">
@@ -98,16 +107,18 @@ export default function CustomTab({
                             </div>
                         </div>
                         <button
-                            onClick={onDismissLastScenario}
-                            className="text-foreground-muted hover:text-foreground ml-2 flex-shrink-0 w-8 h-8
-                             flex items-center justify-center rounded-lg hover:bg-background transition-colors"
+                            onClick={onDismissLastLesson}
+                            disabled={isSaving}
+                            className="text-foreground-muted hover:text-foreground ml-2 flex-shrink-0 w-11 h-11
+                             flex items-center justify-center rounded-lg hover:bg-background transition-colors
+                             disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                             ✕
                         </button>
                     </div>
                     <div className="flex gap-2">
                         <button
-                            onClick={() => onPreviewScenario(lastCustomScenario.scenario)}
+                            onClick={() => onPreviewScenario(lastGeneratedLesson.scenario)}
                             title="Önizle"
                             className="flex items-center justify-center w-12 min-h-[44px] rounded-xl
                              bg-background border border-border hover:border-border-hover
@@ -116,16 +127,16 @@ export default function CustomTab({
                             👁
                         </button>
                         <button
-                            onClick={() => onPlayCustomScenario(lastCustomScenario.scenario, { savedId: lastCustomScenario.savedId })}
-                            className="flex-1 min-h-[44px] rounded-xl bg-purple-500 text-white font-semibold
-                             hover:bg-purple-400 transition-colors duration-200 active:scale-95"
+                            onClick={() => onPlayAiScenario(lastGeneratedLesson.scenario, { topic: lastGeneratedLesson.topic, level: lastGeneratedLesson.level, savedId: lastGeneratedLesson.savedId })}
+                            className="flex-1 min-h-[44px] rounded-xl bg-emerald-500 text-white font-semibold
+                             hover:bg-emerald-400 transition-colors duration-200 active:scale-95"
                         >
                             ▶ Dinle
                         </button>
                         {session?.user?.id && (
                             <span className="flex items-center justify-center px-3 min-h-[44px] rounded-xl text-sm font-medium
-                             bg-purple-500/10 text-purple-400 border border-purple-500/30">
-                                {lastCustomScenario.savedId ? '✓ Kaydedildi' : isSaving ? 'Kaydediliyor…' : '…'}
+                             bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                                {lastGeneratedLesson.savedId ? '✓ Kaydedildi' : isSaving ? 'Kaydediliyor…' : '…'}
                             </span>
                         )}
                     </div>
@@ -133,21 +144,21 @@ export default function CustomTab({
                 );
             })()}
 
-            {/* ── Saved custom lessons list ── */}
-            {session?.user?.id && savedCustomLessons.length > 0 && (
+            {/* ── Saved AI lessons list ── */}
+            {session?.user?.id && savedAiLessons.length > 0 && (
                 <div className="flex flex-col gap-3 mt-2">
                     <h3 className="text-xs text-foreground-muted uppercase tracking-widest font-medium">
-                        Kaydedilmiş Metinlerim
+                        Kaydedilmiş Senaryolar
                     </h3>
-                    {savedCustomLessons.map((lesson) => {
-                        const rid = getResumableId('custom', { savedId: lesson.id });
+                    {savedAiLessons.map((lesson) => {
+                        const rid = getResumableId('ai', { savedId: lesson.id });
                         const p = getStoredProgress(rid, null, false);
                         return (
                         <SavedLessonCard
                             key={lesson.id}
                             id={lesson.id}
-                            title={lesson.title}
-                            subtitle={`${(lesson.content as Scenario).lines?.length ?? 0} cümle`}
+                            title={lesson.title ?? lesson.topic}
+                            subtitle={`${lesson.level} · ${(lesson.content as Scenario).lines?.length ?? 0} cümle`}
                             progress={{
                                 completionCount: p.completionCount,
                                 targetCount: p.targetCount,
@@ -155,13 +166,13 @@ export default function CustomTab({
                             }}
                             isEditing={editingLessonId === lesson.id}
                             editValue={editingTitle}
-                            onPlay={() => onPlayCustomScenario(lesson.content, { savedId: lesson.id })}
+                            onPlay={() => onPlayAiScenario(lesson.content, { topic: lesson.topic, level: lesson.level, savedId: lesson.id })}
                             onPreview={() => onPreviewScenario(lesson.content)}
-                            onEditStart={() => onEditStart(lesson.id, lesson.title)}
+                            onEditStart={() => onEditStart(lesson.id, lesson.title ?? lesson.topic)}
                             onEditChange={onEditChange}
                             onEditCommit={() => onEditCommit(lesson.id)}
                             onEditCancel={onEditCancel}
-                            onDelete={() => onDeleteRequest(lesson.id, lesson.title)}
+                            onDelete={() => onDeleteRequest(lesson.id, lesson.title ?? lesson.topic)}
                         />
                         );
                     })}

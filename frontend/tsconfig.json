@@ -27,7 +27,7 @@
                 "./*"
             ],
             "@shadowdrive/shared": [
-                "packages/shared/src/index.ts"
+                "../packages/shared/src/index.ts"
             ]
         }
     },
@@ -38,8 +38,6 @@
         ".next/types/**/*.ts"
     ],
     "exclude": [
-        "node_modules",
-        "backend",
-        "mobile"
+        "node_modules"
     ]
 }

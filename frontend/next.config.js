@@ -11,7 +11,8 @@
 const BACKEND_URL = process.env.BACKEND_URL ?? "";
 
 // Routes to proxy to Express backend (auth routes are NEVER proxied — they stay Next.js)
-const PROXY_ROUTES = ["/api/courses", "/api/progress", "/api/ai-lessons", "/api/custom-lessons", "/api/generate"];
+// NOTE: /api/generate is NOT proxied — it uses Next.js route.ts with OpenRouter → Gemini fallback
+const PROXY_ROUTES = ["/api/courses", "/api/progress", "/api/ai-lessons", "/api/custom-lessons"];
 
 const nextConfig = {
     // ─── Service Worker headers ───

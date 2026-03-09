@@ -3,6 +3,7 @@
 
 import { Router, Request, Response } from "express";
 import { z } from "zod";
+import { generateWithOpenRouter, isOpenRouterConfigured } from "../services/openrouter";
 import { generateWithFallback } from "../services/gemini";
 import { generateLimiter } from "../middleware/rateLimiter";
 import { prisma } from "../services/prisma";
@@ -75,12 +76,30 @@ Return ONLY a raw JSON object (no markdown, no code fences) matching this exact 
 
 MUST return raw JSON only. No explanation, no markdown.`;
 
-        console.log("[API /generate] Sending prompt to Gemini...");
+        // 3. Call AI — OpenRouter first, Gemini as fallback
+        let responseText: string;
 
-        // 3. Call Gemini with model fallback
-        const responseText = await generateWithFallback(prompt);
+        if (isOpenRouterConfigured()) {
+            try {
+                console.log("[API /generate] Using OpenRouter...");
+                responseText = await generateWithOpenRouter(prompt);
+            } catch (routerErr) {
+                console.warn("[API /generate] OpenRouter failed:", routerErr instanceof Error ? routerErr.message : routerErr);
 
-        console.log("[API /generate] Gemini raw response length:", responseText.length);
+                const geminiKey = process.env.GEMINI_API_KEY;
+                if (geminiKey && geminiKey !== "your_gemini_api_key_here") {
+                    console.log("[API /generate] Falling back to Gemini...");
+                    responseText = await generateWithFallback(prompt);
+                } else {
+                    throw routerErr;
+                }
+            }
+        } else {
+            console.log("[API /generate] OpenRouter not configured, using Gemini...");
+            responseText = await generateWithFallback(prompt);
+        }
+
+        console.log("[API /generate] Raw response length:", responseText.length);
 
         // 4. Clean markdown fences if present
         let cleanJson = responseText.trim();

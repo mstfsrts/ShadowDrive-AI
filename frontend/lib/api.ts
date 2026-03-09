@@ -2,7 +2,7 @@
 // HTTP client for communicating with the standalone backend.
 // Used by the Next.js frontend to replace direct API route calls.
 
-import { TOKEN_KEY, API_ROUTES } from '../packages/shared/src/constants';
+import { TOKEN_KEY, API_ROUTES } from '@shadowdrive/shared';
 import type {
   Scenario,
   AuthResponse,
@@ -14,7 +14,7 @@ import type {
   FavoriteRecord,
   CourseRecord,
   LessonRecord,
-} from '../packages/shared/src/types';
+} from '@shadowdrive/shared';
 
 // ─── Base URL ───
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
@@ -63,6 +63,10 @@ async function apiFetch<T>(
     throw new Error(error.error || `API error: ${res.status}`);
   }
 
+  const contentType = res.headers.get('content-type');
+  if (!contentType || !contentType.includes('application/json')) {
+    return {} as T;
+  }
   return res.json();
 }
 

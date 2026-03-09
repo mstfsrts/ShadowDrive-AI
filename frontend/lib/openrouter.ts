@@ -6,6 +6,9 @@
 
 const TIMEOUT_MS = 60_000; // 60s — cloud API, no CPU bottleneck
 
+// Use native globalThis.fetch to bypass Next.js fetch patching (which can cause hangs in API routes)
+const nativeFetch = globalThis.fetch;
+
 /**
  * Returns true if OPENROUTER_API_KEY is set in the environment.
  */
@@ -31,7 +34,7 @@ export async function generateWithOpenRouter(prompt: string, maxTokens: number =
     try {
         console.log(`[OpenRouter] → model: ${model}`);
 
-        const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        const res = await nativeFetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -46,7 +49,6 @@ export async function generateWithOpenRouter(prompt: string, maxTokens: number =
                 temperature: 0.7,
             }),
             signal: controller.signal,
-            cache: 'no-store' as RequestCache,
         });
 
         if (!res.ok) {

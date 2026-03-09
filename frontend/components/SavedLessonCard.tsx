@@ -91,7 +91,7 @@ export default function SavedLessonCard({
                 <button
                     onClick={onPreview}
                     title="Önizle"
-                    className="w-9 h-9 flex items-center justify-center rounded-xl
+                    className="w-11 h-11 flex items-center justify-center rounded-xl
                      text-foreground-muted hover:text-foreground hover:bg-background
                      transition-colors duration-200 active:scale-95"
                 >
@@ -100,7 +100,7 @@ export default function SavedLessonCard({
                 <button
                     onClick={onPlay}
                     title="Dinle"
-                    className="w-9 h-9 flex items-center justify-center rounded-xl
+                    className="w-11 h-11 flex items-center justify-center rounded-xl
                      text-foreground-muted hover:text-emerald-400 hover:bg-emerald-500/10
                      transition-colors duration-200 active:scale-95 text-sm"
                 >
@@ -109,7 +109,7 @@ export default function SavedLessonCard({
                 <button
                     onClick={isEditing ? onEditCancel : onEditStart}
                     title={isEditing ? 'İptal' : 'Yeniden adlandır'}
-                    className="w-9 h-9 flex items-center justify-center rounded-xl
+                    className="w-11 h-11 flex items-center justify-center rounded-xl
                      text-foreground-muted hover:text-foreground hover:bg-background
                      transition-colors duration-200 active:scale-95 text-sm"
                 >
@@ -118,7 +118,7 @@ export default function SavedLessonCard({
                 <button
                     onClick={onDelete}
                     title="Sil"
-                    className="w-9 h-9 flex items-center justify-center rounded-xl
+                    className="w-11 h-11 flex items-center justify-center rounded-xl
                      text-foreground-muted hover:text-red-400 hover:bg-red-500/10
                      transition-colors duration-200 active:scale-95 text-sm"
                 >

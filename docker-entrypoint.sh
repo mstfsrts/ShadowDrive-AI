@@ -4,10 +4,11 @@
 set -e
 
 echo "🔄 Running database migrations..."
-node_modules/.bin/prisma migrate deploy || echo "⚠️  Migration failed, skipping (app will start anyway)..."
+cd frontend && npx prisma migrate deploy || echo "⚠️  Migration failed, skipping (app will start anyway)..."
+cd /app
 
 echo "🌱 Seeding database (safe: upsert)..."
-node prisma/seed.cjs || echo "⚠️  Seed failed, skipping (app will start anyway)..."
+node backend/prisma/seed.cjs || echo "⚠️  Seed failed, skipping (app will start anyway)..."
 
 echo "🚀 Starting Next.js..."
-exec node_modules/.bin/next start --port "${PORT:-3000}"
+exec node_modules/.bin/next start --port "${PORT:-3000}" -H "${HOSTNAME:-0.0.0.0}" --dir frontend

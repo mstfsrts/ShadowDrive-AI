@@ -127,6 +127,9 @@ function hasVoiceForLang(lang: string): boolean {
  * Yields PlaybackStatus on each phase transition so the UI can update.
  * Accepts an AbortSignal for clean cancellation (pause/stop).
  *
+ * Resume behavior: always resumes from the START of the given line index,
+ * so the user always hears the full sentence before being asked to repeat.
+ *
  * @param scenario - The scenario to play
  * @param signal - AbortSignal for cancellation
  * @param level - CEFR level for speech rate adjustment
@@ -137,7 +140,6 @@ export async function* playScenario(
     signal: AbortSignal,
     level?: CEFRLevel,
     startFromIndex: number = 0,
-    startFromSubPhaseIndex: number = 0,
 ): AsyncGenerator<PlaybackStatus> {
     const { lines, targetLang, nativeLang } = scenario;
 
@@ -158,123 +160,105 @@ export async function* playScenario(
     };
     document.addEventListener("visibilitychange", handleVisibility);
 
-    // Cleanup listener when generator completes
+    // Cleanup listener when generator completes or is aborted
     const cleanup = () => document.removeEventListener("visibilitychange", handleVisibility);
+
+    // Ensure cleanup runs even if the generator is abandoned (component unmount)
+    signal.addEventListener("abort", cleanup, { once: true });
 
     for (let i = startFromIndex; i < lines.length; i++) {
         const line = lines[i];
 
-        // Determine current starting subphase for this line.
-        // It's only non-zero for the very first line we resume on.
-        const subPhase = i === startFromIndex ? startFromSubPhaseIndex : 0;
-        let targetDuration = 0;
-        let pauseMs = 1500;
+        if (signal.aborted) return;
 
-        // Phase 1: Speak target language (e.g. Dutch)
-        if (subPhase <= 0) {
-            if (signal.aborted) return;
-            yield {
-                lineIndex: i,
-                subPhaseIndex: 0,
-                totalLines: lines.length,
-                phase: "target" as PlaybackPhase,
-                text: line.targetText,
-                nativeText: line.nativeText,
-            };
-            targetDuration = await speakAsync(line.targetText, targetLang, level);
-        } else {
-            // Estimate target duration if we skipped Phase 1 so we can compute correct pause lengths later
-            targetDuration = Math.max(1000, line.targetText.length * 60);
-        }
+        // Phase 1: Speak target language (e.g. Dutch) — Edge TTS or Web Speech
+        yield {
+            lineIndex: i,
+            totalLines: lines.length,
+            phase: "target" as PlaybackPhase,
+            text: line.targetText,
+            nativeText: line.nativeText,
+        };
+        const targetDuration = await speakAsync(line.targetText, targetLang, level);
+
+        if (signal.aborted) return;
 
         // Phase 2: Calculated silence — user speaks aloud
-        pauseMs = Math.max(targetDuration * line.pauseMultiplier, 1500);
-        if (subPhase <= 1) {
-            if (signal.aborted) return;
-            yield {
-                lineIndex: i,
-                subPhaseIndex: 1,
-                totalLines: lines.length,
-                phase: "pause" as PlaybackPhase,
-                text: line.targetText,
-                nativeText: line.nativeText,
-            };
-            try {
-                await waitMs(pauseMs, signal);
-            } catch {
-                return; // AbortError — user stopped
-            }
+        const pauseMs = Math.max(targetDuration * line.pauseMultiplier, 1500);
+        yield {
+            lineIndex: i,
+            totalLines: lines.length,
+            phase: "pause" as PlaybackPhase,
+            text: line.targetText,
+            nativeText: line.nativeText,
+        };
+        try {
+            await waitMs(pauseMs, signal);
+        } catch {
+            return; // AbortError — user stopped
         }
+
+        if (signal.aborted) return;
 
         // Phase 3: Native language (e.g. Turkish) — NEVER spoken, text displayed only
-        if (subPhase <= 2) {
-            if (signal.aborted) return;
-            yield {
-                lineIndex: i,
-                subPhaseIndex: 2,
-                totalLines: lines.length,
-                phase: "native" as PlaybackPhase,
-                text: line.targetText,
-                nativeText: line.nativeText,
-            };
+        yield {
+            lineIndex: i,
+            totalLines: lines.length,
+            phase: "native" as PlaybackPhase,
+            text: line.targetText,
+            nativeText: line.nativeText,
+        };
 
-            // Always show text with a reading-time pause
-            const estimatedReadingMs = Math.max(1500, line.nativeText.length * 60);
-            try {
-                await waitMs(estimatedReadingMs, signal);
-            } catch {
-                return;
-            }
+        // Always show text with a reading-time pause — native language is never spoken
+        const estimatedReadingMs = Math.max(1500, line.nativeText.length * 60);
+        try {
+            await waitMs(estimatedReadingMs, signal);
+        } catch {
+            return;
         }
+
+        if (signal.aborted) return;
 
         // Phase 4: Short gap before repeating
-        if (subPhase <= 3) {
-            if (signal.aborted) return;
-            yield {
-                lineIndex: i,
-                subPhaseIndex: 3,
-                totalLines: lines.length,
-                phase: "gap" as PlaybackPhase,
-                text: "",
-            };
-            try {
-                await waitMs(800, signal);
-            } catch {
-                return;
-            }
+        yield {
+            lineIndex: i,
+            totalLines: lines.length,
+            phase: "gap" as PlaybackPhase,
+            text: "",
+        };
+        try {
+            await waitMs(800, signal);
+        } catch {
+            return;
         }
+
+        if (signal.aborted) return;
 
         // Phase 5: Repeat target language for reinforcement
-        if (subPhase <= 4) {
-            if (signal.aborted) return;
-            yield {
-                lineIndex: i,
-                subPhaseIndex: 4,
-                totalLines: lines.length,
-                phase: "repeat" as PlaybackPhase,
-                text: line.targetText,
-                nativeText: line.nativeText,
-            };
-            await speakAsync(line.targetText, targetLang, level);
-        }
+        yield {
+            lineIndex: i,
+            totalLines: lines.length,
+            phase: "repeat" as PlaybackPhase,
+            text: line.targetText,
+            nativeText: line.nativeText,
+        };
+        await speakAsync(line.targetText, targetLang, level);
+
+        if (signal.aborted) return;
 
         // Phase 6: Second calculated silence — user repeats aloud again
-        if (subPhase <= 5) {
-            if (signal.aborted) return;
-            yield {
-                lineIndex: i,
-                subPhaseIndex: 5,
-                totalLines: lines.length,
-                phase: "pause" as PlaybackPhase,
-                text: line.targetText,
-                nativeText: line.nativeText,
-            };
-            try {
-                await waitMs(pauseMs, signal);
-            } catch {
-                cleanup();
-                return;
-            }
+        yield {
+            lineIndex: i,
+            totalLines: lines.length,
+            phase: "pause" as PlaybackPhase,
+            text: line.targetText,
+            nativeText: line.nativeText,
+        };
+        try {
+            await waitMs(pauseMs, signal);
+        } catch {
+            cleanup();
+            return;
         }
     }
 

@@ -64,6 +64,7 @@ export async function backendFetch(path: string, options: RequestInit = {}, requ
     // Attach JWT token for authenticated endpoints
     if (requireAuth) {
         const token = await getBackendToken();
+        console.log(`[backendFetch] ${path} — token: ${token ? "yes" : "NO"}`);
         if (token) {
             headers["Authorization"] = `Bearer ${token}`;
         }
@@ -73,6 +74,7 @@ export async function backendFetch(path: string, options: RequestInit = {}, requ
         ...options,
         headers,
     });
+    console.log(`[backendFetch] ${path} — status: ${response.status}`);
 
     // Handle race-condition 401s (usually right after Google login redirect)
     // Retry up to 3 times with exponential backoff if the endpoint demands auth
