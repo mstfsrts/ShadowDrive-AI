@@ -3,18 +3,15 @@ import { backendFetch } from "@/lib/backendFetch";
 import { Scenario, type CEFRLevel } from "@/types/dialogue";
 import { getCachedScenario, cacheScenario } from "@/lib/scenarioCache";
 import { getOfflineScenario } from "@/lib/offlineScenarios";
-import { getResumableId } from "@/lib/resumablePlayback";
-import type { SavedAiLesson, GeneratedLessonState, PlaybackSession, ViewState } from "../_types";
+import type { SavedAiLesson, GeneratedLessonState } from "../_types";
 
 interface AiLessonsConfig {
     userId?: string;
     showToast: (msg: string, type?: "success" | "warning") => void;
-    setScenario: (sc: Scenario) => void;
-    setViewState: (view: ViewState) => void;
-    playbackSessionRef: React.MutableRefObject<PlaybackSession | null>;
+    onOfflineFallback?: (scenario: Scenario, topic: string, level: CEFRLevel) => void;
 }
 
-export function useAiLessonsState({ userId, showToast, setScenario, setViewState, playbackSessionRef }: AiLessonsConfig) {
+export function useAiLessonsState({ userId, showToast, onOfflineFallback }: AiLessonsConfig) {
     const [isGenerating, setIsGenerating] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [lastGeneratedLesson, setLastGeneratedLesson] = useState<GeneratedLessonState | null>(null);
@@ -108,16 +105,13 @@ export function useAiLessonsState({ userId, showToast, setScenario, setViewState
             } catch {
                 showToast("Bağlantı sorunu — çevrimdışı ders yükleniyor", "warning");
                 const offline = getOfflineScenario(topic);
-                const rid = getResumableId("ai", { topic, level: difficulty });
-                playbackSessionRef.current = { resumableId: rid, isCourse: false };
-                setScenario(offline);
-                setViewState("playback");
+                onOfflineFallback?.(offline, topic, difficulty);
             } finally {
                 setIsGenerating(false);
                 isFetchingRef.current = false;
             }
         },
-        [userId, showToast, saveNewAiLessonImmediate, setScenario, setViewState, playbackSessionRef],
+        [userId, showToast, saveNewAiLessonImmediate, onOfflineFallback],
     );
 
     const handleDeleteAiLesson = useCallback(

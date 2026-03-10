@@ -11,7 +11,7 @@ import { useToastContext } from '../_contexts/ToastContext';
 import { useAiLessonsState } from '../_hooks/useAiLessonsState';
 import { setPlaySession, setPreviewSession } from '@/lib/playSession';
 import { getResumableId, getStoredLastLineIndex } from '@/lib/resumablePlayback';
-import { Scenario } from '@/types/dialogue';
+import { Scenario, type CEFRLevel } from '@/types/dialogue';
 import ScenarioForm from '@/components/ScenarioForm';
 import GeneratingLoader from '@/components/GeneratingLoader';
 import SavedLessonCard from '@/components/SavedLessonCard';
@@ -24,16 +24,15 @@ export default function AiPage() {
     const { showToast } = useToastContext();
     const userId = session?.user?.id;
 
-    // ─── AI lessons state (refactored: no nav dependencies) ───
+    // ─── AI lessons state ───
     const ai = useAiLessonsState({
         userId,
         showToast,
-        // These are still needed by the hook for offline fallback
-        setScenario: (sc: Scenario) => {
-            // Offline fallback: go straight to play
+        onOfflineFallback: (sc: Scenario, topic: string, level: CEFRLevel) => {
+            const resumableId = getResumableId('ai', { topic, level });
             setPlaySession({
                 scenario: sc,
-                resumableId: 'ai:offline',
+                resumableId,
                 startFromIndex: 0,
                 isCourse: false,
                 type: 'ai',
@@ -41,8 +40,6 @@ export default function AiPage() {
             });
             router.push('/play/ai/offline');
         },
-        setViewState: () => {}, // no-op, navigation is URL-based
-        playbackSessionRef: { current: null },
     });
 
     // ─── Edit state (local) ───

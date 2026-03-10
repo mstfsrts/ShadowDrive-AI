@@ -1,16 +1,6 @@
-'use client';
-
 // ─── ShadowDrive AI — Dashboard Types ───
 
 import type { Scenario, CEFRLevel } from '@/types/dialogue';
-
-export type ToastType = 'info' | 'success' | 'warning';
-
-export interface ToastData {
-    message: string;
-    type: ToastType;
-    id: number;
-}
 
 export interface ApiLesson {
     id: string;
@@ -40,8 +30,6 @@ export interface ProgressData {
     lastLineIndex: number;
 }
 
-export type ProgressDataMap = Record<string, ProgressData>;
-
 export interface SavedAiLesson {
     id: string;
     title: string | null;
@@ -65,9 +53,6 @@ export interface GeneratedLessonState {
     savedId?: string;
 }
 
-export type ActiveTab = 'courses' | 'ai' | 'custom';
-export type ViewState = 'dashboard' | 'category' | 'subcategory' | 'course-detail' | 'preview' | 'playback';
-
 export interface ResumeState {
     resumableId: string;
     title: string;
@@ -78,9 +63,3 @@ export interface ResumeState {
     course?: ApiCourse;
 }
 
-export interface PlaybackSession {
-    resumableId: string;
-    isCourse: boolean;
-    courseId?: string;
-    lessonId?: string;
-}
