@@ -29,6 +29,13 @@ export default function AudioPlayer({ scenario, startFromIndex = 0, onComplete, 
     // Track current line index in a ref so handleBack and resume can read it reliably
     const currentLineIndexRef = useRef(startFromIndex);
 
+    // Sync ref when startFromIndex prop changes (e.g., resume from different position)
+    useEffect(() => {
+        if (!isPlayingRef.current) {
+            currentLineIndexRef.current = startFromIndex;
+        }
+    }, [startFromIndex]);
+
     // Cleanup on unmount
     useEffect(() => {
         return () => {

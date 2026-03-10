@@ -27,24 +27,18 @@ export function useAiLessonsState({ userId, showToast, setScenario, setViewState
         if (!userId) return;
         (async () => {
             try {
-                console.log("[AI Load] Fetching saved lessons...");
                 const r = await backendFetch("/api/ai-lessons", {}, true);
-                console.log("[AI Load] Response status:", r.status);
                 if (!r.ok) return;
-                const text = await r.text();
-                console.log("[AI Load] Raw body length:", text.length, "preview:", text.substring(0, 100));
-                const data = JSON.parse(text);
-                console.log("[AI Load] Parsed:", Array.isArray(data) ? data.length + " lessons" : typeof data);
+                const data = await r.json();
                 setSavedAiLessons(Array.isArray(data) ? data : []);
-            } catch (err) {
-                console.error("[AI Load] Error:", err);
+            } catch {
+                // silent
             }
         })();
     }, [userId]);
 
     const saveNewAiLessonImmediate = useCallback(
         async (payload: { scenario: Scenario; topic: string; level: CEFRLevel }) => {
-            console.log("[AI Save] userId:", userId, "— will save:", !!userId);
             if (!userId) return;
             setIsSaving(true);
             try {
@@ -68,12 +62,9 @@ export function useAiLessonsState({ userId, showToast, setScenario, setViewState
                     setLastGeneratedLesson(prev => (prev ? { ...prev, savedId: saved.id } : null));
                     showToast("Senaryo kaydedildi!", "success");
                 } else {
-                    const err = await res.json().catch(() => ({}));
-                    console.error("[AI Save] Failed:", res.status, err);
                     showToast("Ders kaydedilemedi", "warning");
                 }
-            } catch (err) {
-                console.error("[AI Save] Error:", err);
+            } catch {
                 showToast("Ders kaydedilemedi", "warning");
             } finally {
                 setIsSaving(false);
