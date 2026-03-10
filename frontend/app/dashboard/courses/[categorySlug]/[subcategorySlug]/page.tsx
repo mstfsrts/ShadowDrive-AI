@@ -21,7 +21,7 @@ export default function SubcategoryPage() {
         return (
             <main className="min-h-dvh flex flex-col items-center justify-center px-4">
                 <p className="text-foreground-secondary text-lg">Kategori bulunamadı</p>
-                <button onClick={() => router.push('/dashboard/courses')} className="mt-4 text-emerald-500 underline">
+                <button onClick={() => router.push('/dashboard/courses')} className="mt-4 text-emerald-500 underline min-h-[44px] flex items-center">
                     Kurslara Dön
                 </button>
             </main>
@@ -60,6 +60,9 @@ export default function SubcategoryPage() {
             </div>
 
             <div className="flex flex-col gap-4">
+                {filteredCourses.length === 0 && (
+                    <p className="text-foreground-muted text-center py-8">Bu kategoride henüz kurs bulunmuyor.</p>
+                )}
                 {filteredCourses.map(course => {
                     const completedLessons = course.lessons.filter(
                         l => progressMap[l.id]?.completionCount >= 1

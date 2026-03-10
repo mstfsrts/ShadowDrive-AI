@@ -13,6 +13,14 @@ import { setPlaySession, setPreviewSession } from '@/lib/playSession';
 import { getResumableId, getStoredLastLineIndex, setStoredLastLineIndex, type ProgressDataLike } from '@/lib/resumablePlayback';
 import type { ApiLesson, ResumeState } from '../../../../_types';
 
+const COLOR_MAP: Record<string, string> = {
+    emerald: 'bg-emerald-500/10 text-emerald-400',
+    blue: 'bg-blue-500/10 text-blue-400',
+    rose: 'bg-rose-500/10 text-rose-400',
+    amber: 'bg-amber-500/10 text-amber-400',
+    violet: 'bg-violet-500/10 text-violet-400',
+};
+
 export default function CourseDetailPage() {
     const { categorySlug, subcategorySlug, courseId } = useParams<{
         categorySlug: string;
@@ -104,7 +112,7 @@ export default function CourseDetailPage() {
         return (
             <main className="min-h-dvh flex flex-col items-center justify-center px-4">
                 <p className="text-foreground-secondary text-lg">Kurs bulunamadı</p>
-                <button onClick={() => router.push('/dashboard/courses')} className="mt-4 text-emerald-500 underline">
+                <button onClick={() => router.push('/dashboard/courses')} className="mt-4 text-emerald-500 underline min-h-[44px] flex items-center">
                     Kurslara Dön
                 </button>
             </main>
@@ -163,7 +171,7 @@ export default function CourseDetailPage() {
                                   text-lg font-bold group-hover:scale-110 transition-transform duration-300
                                   ${isMastered
                                       ? 'bg-emerald-500/20 text-emerald-400'
-                                      : `bg-${course.color}-500/10 text-${course.color}-400`
+                                      : COLOR_MAP[course.color] ?? 'bg-foreground/10 text-foreground-muted'
                                   }`}
                                 >
                                     {isMastered ? '★' : idx + 1}

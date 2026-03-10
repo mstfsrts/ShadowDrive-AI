@@ -18,7 +18,7 @@ export default function CategoryPage() {
         return (
             <main className="min-h-dvh flex flex-col items-center justify-center px-4">
                 <p className="text-foreground-secondary text-lg">Kategori bulunamadı</p>
-                <button onClick={() => router.push('/dashboard/courses')} className="mt-4 text-emerald-500 underline">
+                <button onClick={() => router.push('/dashboard/courses')} className="mt-4 text-emerald-500 underline min-h-[44px] flex items-center">
                     Kurslara Dön
                 </button>
             </main>

@@ -7,10 +7,11 @@ import {
 
 const mockScenario = {
     title: 'Test Lesson',
-    level: 'A1' as const,
+    targetLang: 'nl-NL',
+    nativeLang: 'tr-TR',
     lines: [
-        { targetText: 'Hallo', nativeText: 'Merhaba', speaker: 'A' as const },
-        { targetText: 'Goedemorgen', nativeText: 'Günaydın', speaker: 'B' as const },
+        { id: 1, targetText: 'Hallo', nativeText: 'Merhaba', pauseMultiplier: 1.0 },
+        { id: 2, targetText: 'Goedemorgen', nativeText: 'Günaydın', pauseMultiplier: 1.0 },
     ],
 };
 
