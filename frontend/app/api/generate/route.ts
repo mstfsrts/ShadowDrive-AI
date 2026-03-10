@@ -130,16 +130,12 @@ JSON STRUCTURE:
 }
 
 export async function POST(request: NextRequest) {
-    console.log('\n[API /generate] ========== NEW REQUEST ==========');
-
     try {
         // 1. Parse & validate request body
         const body = await request.json();
-        console.log('[API /generate] Request body:', JSON.stringify(body));
 
         const parsed = RequestSchema.safeParse(body);
         if (!parsed.success) {
-            console.error('[API /generate] Validation failed:', parsed.error.flatten());
             return NextResponse.json(
                 { error: 'Invalid request', details: parsed.error.flatten() },
                 { status: 400 }
@@ -148,7 +144,6 @@ export async function POST(request: NextRequest) {
 
         const { topic, difficulty } = parsed.data;
         const config = CEFR_GUIDELINES[difficulty as CEFRLevel];
-        console.log(`[API /generate] Topic: "${topic}", CEFR Level: "${difficulty}", Lines: ${config.lineCount}`);
 
         // 2. Build smart prompt with CEFR-specific guidelines
         const prompt = buildPrompt(topic, difficulty as CEFRLevel);
@@ -158,31 +153,24 @@ export async function POST(request: NextRequest) {
 
         if (isOpenRouterConfigured()) {
             try {
-                console.log('[API /generate] Using OpenRouter...');
                 responseText = await generateWithOpenRouter(prompt, config.maxTokens);
             } catch (routerErr) {
-                console.warn('[API /generate] OpenRouter failed:', routerErr instanceof Error ? routerErr.message : routerErr);
+                console.warn('[generate] OpenRouter failed:', routerErr instanceof Error ? routerErr.message : routerErr);
 
                 const geminiKey = process.env.GEMINI_API_KEY;
                 if (geminiKey && geminiKey !== 'your_gemini_api_key_here') {
-                    console.log('[API /generate] Falling back to Gemini...');
                     responseText = await generateWithFallback(prompt);
                 } else {
                     throw routerErr;
                 }
             }
         } else {
-            console.log('[API /generate] OpenRouter not configured, using Gemini...');
             responseText = await generateWithFallback(prompt);
         }
-
-        console.log('[API /generate] Raw response length:', responseText.length);
-        console.log('[API /generate] Raw response (first 500 chars):', responseText.substring(0, 500));
 
         // 4. Clean potential markdown fences from response
         let cleanJson = responseText.trim();
         if (cleanJson.startsWith('```')) {
-            console.log('[API /generate] Detected markdown fences, stripping...');
             cleanJson = cleanJson.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?\s*```$/, '');
         }
 
@@ -190,12 +178,8 @@ export async function POST(request: NextRequest) {
         let scenario;
         try {
             scenario = JSON.parse(cleanJson);
-            console.log('[API /generate] JSON parsed successfully');
-            console.log('[API /generate] Scenario title:', scenario.title);
-            console.log('[API /generate] Number of lines:', scenario.lines?.length);
-        } catch (parseError) {
-            console.error('[API /generate] JSON parse failed:', parseError);
-            console.error('[API /generate] Attempted to parse:', cleanJson.substring(0, 300));
+        } catch {
+            console.error('[generate] JSON parse failed, raw:', cleanJson.substring(0, 300));
             return NextResponse.json(
                 { error: 'AI returned invalid JSON', raw: responseText.substring(0, 500) },
                 { status: 502 }
@@ -204,21 +188,18 @@ export async function POST(request: NextRequest) {
 
         const validated = ScenarioSchema.safeParse(scenario);
         if (!validated.success) {
-            console.error('[API /generate] Schema validation failed:', validated.error.flatten());
+            console.error('[generate] Schema validation failed:', validated.error.flatten());
             return NextResponse.json(
                 { error: 'AI response does not match schema', details: validated.error.flatten(), raw: scenario },
                 { status: 422 }
             );
         }
 
-        console.log('[API /generate] Response validated successfully');
-        console.log('[API /generate] Returning scenario:', validated.data.title, `(${validated.data.lines.length} lines)`);
-
         // 6. Return validated scenario
         return NextResponse.json(validated.data);
 
     } catch (error) {
-        console.error('[API /generate] All AI providers failed:', error);
+        console.error('[generate] All providers failed:', error instanceof Error ? error.message : error);
         const message = error instanceof Error ? error.message : 'Unknown API Error';
         return NextResponse.json(
             { error: message },

@@ -71,12 +71,6 @@ export function getBestVoice(lang: string): SpeechSynthesisVoice | undefined {
 
     const best = matching[0];
     voiceCache.set(lang, best);
-
-    console.log(
-        `[VoiceSelector] Best voice for ${lang}: "${best.name}" (score: ${scoreVoice(best)}, ` +
-        `${matching.length} candidates)`
-    );
-
     return best;
 }
 

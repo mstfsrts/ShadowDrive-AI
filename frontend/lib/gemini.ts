@@ -19,16 +19,11 @@ export function getGeminiClient(): GoogleGenerativeAI {
     if (!genAI) {
         const apiKey = process.env.GEMINI_API_KEY;
 
-        console.log("[Gemini] Initializing client...");
-        console.log("[Gemini] GEMINI_API_KEY present:", !!apiKey);
-        console.log("[Gemini] GEMINI_API_KEY length:", apiKey?.length ?? 0);
-
         if (!apiKey || apiKey === "your_gemini_api_key_here") {
             throw new Error("GEMINI_API_KEY is not set. Create a .env.local file in the project root with:\n" + "GEMINI_API_KEY=your_actual_api_key");
         }
 
         genAI = new GoogleGenerativeAI(apiKey);
-        console.log("[Gemini] Client initialized successfully");
     }
     return genAI;
 }
@@ -52,10 +47,8 @@ export async function generateWithFallback(prompt: string): Promise<string> {
     // If we already found a working model, try it first
     if (resolvedModel && resolvedModelName) {
         try {
-            console.log(`[Gemini] Using resolved model: ${resolvedModelName}`);
             return await generateFastWithTimeout(resolvedModel, prompt);
-        } catch (err) {
-            console.warn(`[Gemini] Resolved model failed, falling back to candidates. Error: ${String(err)}`);
+        } catch {
             resolvedModel = null;
             resolvedModelName = null;
         }
@@ -67,19 +60,16 @@ export async function generateWithFallback(prompt: string): Promise<string> {
     let allRateLimited = true;
 
     for (const modelName of MODEL_CANDIDATES) {
-        console.log(`[Gemini] Trying model: ${modelName}...`);
         try {
             const model = client.getGenerativeModel({ model: modelName });
             const text = await generateFastWithTimeout(model, prompt);
 
-            // Success! Lock onto this model.
+            // Success — lock onto this model
             resolvedModel = model;
             resolvedModelName = modelName;
-            console.log(`[Gemini] ✅ Model ${modelName} locked for future calls.`);
             return text;
         } catch (err) {
             const message = err instanceof Error ? err.message : String(err);
-            console.error(`[Gemini] RAW ERROR for ${modelName}:`, message);
             lastError = err instanceof Error ? err : new Error(message);
 
             if (!isRateLimitError(err)) {

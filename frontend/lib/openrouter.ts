@@ -32,8 +32,6 @@ export async function generateWithOpenRouter(prompt: string, maxTokens: number =
     const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
     try {
-        console.log(`[OpenRouter] → model: ${model}`);
-
         const res = await nativeFetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -66,7 +64,6 @@ export async function generateWithOpenRouter(prompt: string, maxTokens: number =
         // Strip <think>...</think> blocks from thinking models (Qwen3, DeepSeek, etc.)
         text = text.replace(/<think>[\s\S]*?<\/think>\s*/g, '').trim();
 
-        console.log(`[OpenRouter] ✅ OK — ${text.length} chars`);
         return text;
 
     } catch (err) {
