@@ -73,7 +73,7 @@ export default function LandingPage() {
 
                 {/* Guest — Ghost */}
                 <button
-                    onClick={() => router.push("/dashboard")}
+                    onClick={() => router.replace("/dashboard")}
                     className="w-full mt-3 py-3 text-foreground-secondary hover:text-foreground text-sm
                                transition-colors duration-200"
                 >

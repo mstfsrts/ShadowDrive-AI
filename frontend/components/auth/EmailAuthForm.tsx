@@ -74,7 +74,7 @@ export default function EmailAuthForm({ redirectAfterLogin, onSuccess }: EmailAu
         } else {
             if (onSuccess) onSuccess();
             if (redirectAfterLogin) {
-                router.push(redirectAfterLogin);
+                router.replace(redirectAfterLogin);
             }
         }
     }

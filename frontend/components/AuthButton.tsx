@@ -63,7 +63,7 @@ export default function AuthButton() {
                             </p>
                             <div className="h-px bg-border my-2" />
                             <button
-                                onClick={() => { signOut(); setShowDropdown(false); }}
+                                onClick={() => { signOut({ callbackUrl: '/' }); setShowDropdown(false); }}
                                 className="w-full text-left px-2 py-2 text-sm text-red-500 dark:text-red-400
                                            hover:bg-card-hover rounded-xl transition-colors duration-200"
                             >

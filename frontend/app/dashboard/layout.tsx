@@ -52,7 +52,6 @@ function TabSwitcher({ activeTab }: { activeTab: string }) {
                 <Link
                     key={tab.key}
                     href={tab.href}
-                    replace
                     id={`tab-${tab.key}`}
                     className={`flex-1 py-3.5 rounded-xl text-xs sm:text-sm font-semibold uppercase tracking-wider
                      transition-all duration-300 text-center ${

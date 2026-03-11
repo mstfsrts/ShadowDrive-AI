@@ -1,5 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
+
+const STORAGE_KEY = 'shadowdrive_google_auth_done';
 
 interface GoogleSignInButtonProps {
     redirectAfterLogin?: string;
@@ -7,11 +10,77 @@ interface GoogleSignInButtonProps {
 }
 
 export default function GoogleSignInButton({ redirectAfterLogin = "/dashboard", label = "Google ile Başla" }: GoogleSignInButtonProps) {
+    const router = useRouter();
     const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
-    async function handleGoogleSignIn() {
+    // Listen for auth completion via localStorage event (works across tabs reliably)
+    const handleStorageChange = useCallback(
+        (event: StorageEvent) => {
+            if (event.key === STORAGE_KEY && event.newValue) {
+                setIsGoogleLoading(false);
+                localStorage.removeItem(STORAGE_KEY);
+                // Refresh server components to pick up the new session cookie
+                router.refresh();
+                router.replace(redirectAfterLogin);
+            }
+        },
+        [router, redirectAfterLogin],
+    );
+
+    // Also listen for postMessage (works when opener is preserved)
+    const handleMessage = useCallback(
+        (event: MessageEvent) => {
+            if (event.origin !== window.location.origin) return;
+            if (event.data?.type === 'google-auth-success') {
+                setIsGoogleLoading(false);
+                localStorage.removeItem(STORAGE_KEY);
+                router.refresh();
+                router.replace(redirectAfterLogin);
+            }
+        },
+        [router, redirectAfterLogin],
+    );
+
+    useEffect(() => {
+        window.addEventListener('storage', handleStorageChange);
+        window.addEventListener('message', handleMessage);
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+            window.removeEventListener('message', handleMessage);
+        };
+    }, [handleStorageChange, handleMessage]);
+
+    function handleGoogleSignIn() {
         setIsGoogleLoading(true);
-        await signIn("google", { callbackUrl: redirectAfterLogin });
+
+        // Clean up any stale flag
+        localStorage.removeItem(STORAGE_KEY);
+
+        // Open popup centered on screen
+        const w = 500;
+        const h = 600;
+        const left = Math.round(window.screenX + (window.outerWidth - w) / 2);
+        const top = Math.round(window.screenY + (window.outerHeight - h) / 2);
+
+        const popup = window.open(
+            '/auth/google-start',
+            'google-signin',
+            `width=${w},height=${h},left=${left},top=${top},popup=yes`,
+        );
+
+        // If popup was blocked by browser, fall back to full-page redirect
+        if (!popup) {
+            signIn("google", { callbackUrl: redirectAfterLogin });
+            return;
+        }
+
+        // Reset loading state if user closes popup without completing auth
+        const pollTimer = setInterval(() => {
+            if (popup.closed) {
+                clearInterval(pollTimer);
+                setIsGoogleLoading(false);
+            }
+        }, 500);
     }
 
     return (
