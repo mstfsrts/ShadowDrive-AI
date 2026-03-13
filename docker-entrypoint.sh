@@ -19,8 +19,31 @@ done
 if [ $RETRY -eq $MAX_RETRIES ]; then
     echo "⚠️  Database not reachable after $MAX_RETRIES retries, starting without migration..."
 else
+    PRISMA_CLI="node ../node_modules/prisma/build/index.js"
+    SCHEMA_FLAG="--schema=./prisma/schema.prisma"
+
+    echo "🔄 Checking migration baseline..."
+    MIGRATION_COUNT=$(node -e "
+      const {PrismaClient}=require('@prisma/client');
+      const p=new PrismaClient();
+      p.\$queryRawUnsafe('SELECT COUNT(*)::int as c FROM _prisma_migrations')
+        .then(r=>{ console.log(r[0].c); process.exit(0); })
+        .catch(()=>{ console.log('0'); process.exit(0); });
+    " 2>/dev/null)
+
+    if [ "$MIGRATION_COUNT" = "0" ]; then
+        echo "📋 No migration history found — baselining existing migrations..."
+        $PRISMA_CLI migrate resolve --applied 20260301000000_init $SCHEMA_FLAG 2>&1
+        $PRISMA_CLI migrate resolve --applied 20260301120000_add_courses_lessons_progress $SCHEMA_FLAG 2>&1
+        $PRISMA_CLI migrate resolve --applied 20260301130000_add_course_categories $SCHEMA_FLAG 2>&1
+        $PRISMA_CLI migrate resolve --applied 20260306000000_add_reset_token_fields $SCHEMA_FLAG 2>&1
+        echo "✅ Baseline complete — 4 existing migrations marked as applied"
+    else
+        echo "✅ Migration history found ($MIGRATION_COUNT entries)"
+    fi
+
     echo "🔄 Running database migrations..."
-    if ! node ../node_modules/prisma/build/index.js migrate deploy --schema=./prisma/schema.prisma 2>&1; then
+    if ! $PRISMA_CLI migrate deploy $SCHEMA_FLAG 2>&1; then
         echo "⚠️  Migration failed (see error above), continuing..."
     fi
 fi
