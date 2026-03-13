@@ -2,17 +2,18 @@
 # ─── ShadowDrive AI — Production Entrypoint ───
 # Runs on every container start: wait for DB → migrate → seed → serve
 
-# Next.js standalone mode does not pack npx/.bin symlinks properly.
-# We must use the exact local binary path that we copied in the Dockerfile.
-PRISMA_CLI="node ../node_modules/prisma/build/index.js"
-SCHEMA_FLAG="--schema=./prisma/schema.prisma"
+# Use the natively installed prisma from runner stage
+PRISMA_CLI="npx prisma"
+SCHEMA_FLAG="--schema=./backend/prisma/schema.prisma"
 
 echo "--- Waiting for database connection..."
 MAX_RETRIES=10
 RETRY=0
-cd backend
 while [ $RETRY -lt $MAX_RETRIES ]; do
-    if echo "SELECT 1" | $PRISMA_CLI db execute --stdin $SCHEMA_FLAG > /dev/null 2>&1; then
+    if $PRISMA_CLI db execute --stdin $SCHEMA_FLAG <<EOF > /dev/null 2>&1
+SELECT 1;
+EOF
+    then
         echo "--- Database connected"
         break
     fi
@@ -25,9 +26,7 @@ if [ $RETRY -eq $MAX_RETRIES ]; then
     echo "--- WARNING: Database not reachable after $MAX_RETRIES retries, starting without migration..."
 else
     # ─── Step 1: Diagnose and fix migration state ───
-    # Problem: If previous deploys ran migrate deploy without baselining,
-    # the _prisma_migrations table may contain FAILED entries (tables already
-    # existed from prisma db push). Failed entries block all future migrate deploy.
+    # We use the freshly installed @prisma/client to check DB state
     echo "--- Checking migration state..."
     node -e "
       const {PrismaClient}=require('@prisma/client');
@@ -86,8 +85,6 @@ else
     [ -n "$CLEANED" ] && echo "--- Cleaned $CLEANED failed/rolled-back migration entries"
 
     # ─── Step 2: Baseline if needed ───
-    # These 4 migrations were already applied via prisma db push (tables exist).
-    # We mark them as "applied" so migrate deploy skips them and only runs new ones.
     NEED_BASELINE="false"
     if [ "$STATE" = "NO_TABLE" ]; then
         echo "--- No _prisma_migrations table — need baselining"
@@ -118,7 +115,6 @@ else
         echo "--- WARNING: migrate deploy returned non-zero exit code (see output above)"
     fi
 fi
-cd /app
 
 echo "--- Seeding database (safe: upsert)..."
 node backend/prisma/seed.cjs || echo "--- WARNING: Seed failed, skipping..."

@@ -46,10 +46,8 @@ COPY --from=builder --chown=nextjs:nodejs /app/frontend/.next/static ./frontend/
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/backend/prisma ./backend/prisma
 
-# Prisma CLI + engine binaries (needed for migrate deploy in entrypoint)
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder /app/node_modules/@prisma/engines ./node_modules/@prisma/engines
-
+# Install Prisma natively in the runner stage to avoid missing dependency errors
+RUN npm install prisma@6.19.2 @prisma/client@6.19.2 --no-save
 # Startup script: migrate → seed → start
 COPY docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x ./docker-entrypoint.sh
