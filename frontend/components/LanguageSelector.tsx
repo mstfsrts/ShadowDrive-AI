@@ -39,6 +39,21 @@ export function changeLocale(locale: Locale) {
     window.location.reload();
 }
 
+function FlagIcon({ locale, size = 20 }: { locale: Locale; size?: number }) {
+    const flag = LOCALE_FLAGS[locale];
+    return (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+            src={flag.src}
+            alt={flag.alt}
+            width={size}
+            height={Math.round(size * 0.67)}
+            className="rounded-sm object-cover"
+            style={{ width: size, height: Math.round(size * 0.67) }}
+        />
+    );
+}
+
 // ─── First-Visit Popup ───────────────────────────────────────────────────────
 
 export function LanguagePopup() {
@@ -61,8 +76,8 @@ export function LanguagePopup() {
             <div className="bg-card border border-border rounded-3xl p-6 w-full max-w-sm shadow-2xl">
                 <div className="text-center mb-6">
                     <span className="text-4xl block mb-3">🌍</span>
-                    <h2 className="text-foreground font-bold text-xl">Choose Language</h2>
-                    <p className="text-foreground-muted text-sm mt-1">Select your preferred app language</p>
+                    <h2 className="text-foreground font-bold text-xl">Choose Language / Dil Seçin</h2>
+                    <p className="text-foreground-muted text-sm mt-1">Select your app language · Uygulama dilini seçin</p>
                 </div>
 
                 <div className="flex flex-col gap-2">
@@ -78,7 +93,7 @@ export function LanguagePopup() {
                                        text-foreground font-medium text-base
                                        active:scale-[0.98] transition-all duration-200"
                         >
-                            <span className="text-2xl">{LOCALE_FLAGS[locale]}</span>
+                            <FlagIcon locale={locale} size={28} />
                             <span>{LOCALE_LABELS[locale]}</span>
                         </button>
                     ))}
@@ -111,8 +126,8 @@ export function LanguageSwitcher() {
                        transition-all duration-200"
             aria-label="Change language"
         >
-            <span>{LOCALE_FLAGS[current]}</span>
-            <span>{LOCALE_LABELS[current]}</span>
+            <FlagIcon locale={current} size={18} />
+            <span className="uppercase text-xs font-bold tracking-wide">{current}</span>
         </button>
     );
 }

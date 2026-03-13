@@ -45,6 +45,10 @@ COPY --from=builder --chown=nextjs:nodejs /app/frontend/.next/static ./frontend/
 # Prisma schema + migrations + compiled seed
 COPY --from=builder /app/backend/prisma ./backend/prisma
 
+# Prisma CLI + engine binaries (needed for migrate deploy in entrypoint)
+COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
+COPY --from=builder /app/node_modules/@prisma/engines ./node_modules/@prisma/engines
+
 # Startup script: migrate → seed → start
 COPY docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x ./docker-entrypoint.sh
