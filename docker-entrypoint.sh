@@ -2,12 +2,17 @@
 # ─── ShadowDrive AI — Production Entrypoint ───
 # Runs on every container start: wait for DB → migrate → seed → serve
 
+# Next.js standalone mode does not pack npx/.bin symlinks properly.
+# We must use the exact local binary path that we copied in the Dockerfile.
+PRISMA_CLI="node ../node_modules/prisma/build/index.js"
+SCHEMA_FLAG="--schema=./prisma/schema.prisma"
+
 echo "⏳ Waiting for database connection..."
 MAX_RETRIES=10
 RETRY=0
 cd backend
 while [ $RETRY -lt $MAX_RETRIES ]; do
-    if node -e "const {PrismaClient}=require('@prisma/client');const p=new PrismaClient();p.\$connect().then(()=>process.exit(0)).catch(()=>process.exit(1))" > /dev/null 2>&1; then
+    if echo "SELECT 1" | $PRISMA_CLI db execute --stdin > /dev/null 2>&1; then
         echo "✅ Database connected"
         break
     fi
@@ -19,9 +24,6 @@ done
 if [ $RETRY -eq $MAX_RETRIES ]; then
     echo "⚠️  Database not reachable after $MAX_RETRIES retries, starting without migration..."
 else
-    PRISMA_CLI="node ../node_modules/prisma/build/index.js"
-    SCHEMA_FLAG="--schema=./prisma/schema.prisma"
-
     echo "🔄 Checking migration baseline..."
     MIGRATION_COUNT=$(node -e "
       const {PrismaClient}=require('@prisma/client');
@@ -33,10 +35,10 @@ else
 
     if [ "$MIGRATION_COUNT" = "0" ]; then
         echo "📋 No migration history found — baselining existing migrations..."
-        $PRISMA_CLI migrate resolve --applied 20260301000000_init $SCHEMA_FLAG 2>&1
-        $PRISMA_CLI migrate resolve --applied 20260301120000_add_courses_lessons_progress $SCHEMA_FLAG 2>&1
-        $PRISMA_CLI migrate resolve --applied 20260301130000_add_course_categories $SCHEMA_FLAG 2>&1
-        $PRISMA_CLI migrate resolve --applied 20260306000000_add_reset_token_fields $SCHEMA_FLAG 2>&1
+        $PRISMA_CLI migrate resolve --applied 20260301000000_init $SCHEMA_FLAG 2>&1 || true
+        $PRISMA_CLI migrate resolve --applied 20260301120000_add_courses_lessons_progress $SCHEMA_FLAG 2>&1 || true
+        $PRISMA_CLI migrate resolve --applied 20260301130000_add_course_categories $SCHEMA_FLAG 2>&1 || true
+        $PRISMA_CLI migrate resolve --applied 20260306000000_add_reset_token_fields $SCHEMA_FLAG 2>&1 || true
         echo "✅ Baseline complete — 4 existing migrations marked as applied"
     else
         echo "✅ Migration history found ($MIGRATION_COUNT entries)"
