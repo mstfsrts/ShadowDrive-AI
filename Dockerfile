@@ -37,6 +37,10 @@ ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
+# Install Prisma natively in the runner stage *before* copying package.json
+# to avoid workspace dependencies resolving to the public registry.
+RUN npm install prisma@6.19.2 @prisma/client@6.19.2 --no-save
+
 # Next.js standalone build output
 COPY --from=builder /app/frontend/public ./frontend/public
 COPY --from=builder --chown=nextjs:nodejs /app/frontend/.next/standalone ./
@@ -46,8 +50,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/frontend/.next/static ./frontend/
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/backend/prisma ./backend/prisma
 
-# Install Prisma natively in the runner stage to avoid missing dependency errors
-RUN npm install prisma@6.19.2 @prisma/client@6.19.2 --no-save
+
 # Startup script: migrate → seed → start
 COPY docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x ./docker-entrypoint.sh
