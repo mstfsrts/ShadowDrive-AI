@@ -20,12 +20,9 @@ if [ $RETRY -eq $MAX_RETRIES ]; then
     echo "⚠️  Database not reachable after $MAX_RETRIES retries, starting without migration..."
 else
     echo "🔄 Running database migrations..."
-    if ! npx prisma migrate deploy --schema=./prisma/schema.prisma 2>&1; then
+    if ! node ../node_modules/prisma/build/index.js migrate deploy --schema=./prisma/schema.prisma 2>&1; then
         echo "⚠️  Migration failed (see error above), continuing..."
     fi
-
-    echo "🔄 Ensuring all tables exist (fallback)..."
-    node ./prisma/ensure-tables.cjs || echo "⚠️  ensure-tables failed, continuing..."
 fi
 cd /app
 
