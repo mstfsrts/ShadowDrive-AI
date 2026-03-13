@@ -7,7 +7,7 @@ MAX_RETRIES=10
 RETRY=0
 cd backend
 while [ $RETRY -lt $MAX_RETRIES ]; do
-    if echo "SELECT 1" | npx prisma db execute --stdin > /dev/null 2>&1; then
+    if node -e "const {PrismaClient}=require('@prisma/client');const p=new PrismaClient();p.\$connect().then(()=>process.exit(0)).catch(()=>process.exit(1))" > /dev/null 2>&1; then
         echo "✅ Database connected"
         break
     fi

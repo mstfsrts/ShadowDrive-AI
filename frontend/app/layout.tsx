@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from "next";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import { ThemeProvider } from "@/lib/theme";
 import { Providers } from "./providers";
 import "./globals.css";
@@ -44,9 +46,12 @@ const themeInitScript = `
 })();
 `;
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+    const locale = await getLocale();
+    const messages = await getMessages();
+
     return (
-        <html lang="tr" className="dark" suppressHydrationWarning>
+        <html lang={locale} className="dark" suppressHydrationWarning>
             <head>
                 {/* Prevent flash of wrong theme */}
                 <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
@@ -66,9 +71,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 />
             </head>
             <body className="bg-background text-foreground antialiased" suppressHydrationWarning>
-                <Providers>
-                    <ThemeProvider>{children}</ThemeProvider>
-                </Providers>
+                <NextIntlClientProvider messages={messages}>
+                    <Providers>
+                        <ThemeProvider>{children}</ThemeProvider>
+                    </Providers>
+                </NextIntlClientProvider>
             </body>
         </html>
     );

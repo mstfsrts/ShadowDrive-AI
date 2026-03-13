@@ -3,6 +3,8 @@
 // ─── ShadowDrive AI — Confirm Modal ───
 // Silme vb. onay ekranı. Tasarım: ResumePromptModal ile uyumlu (koyu tema, büyük dokunma alanları).
 
+import { useTranslations } from 'next-intl';
+
 export interface ConfirmModalProps {
     open: boolean;
     title: string;
@@ -20,12 +22,17 @@ export default function ConfirmModal({
     open,
     title,
     subtitle,
-    confirmLabel = 'Onayla',
-    cancelLabel = 'İptal',
+    confirmLabel,
+    cancelLabel,
     variant = 'default',
     onConfirm,
     onCancel,
 }: ConfirmModalProps) {
+    const tc = useTranslations('common');
+
+    const resolvedConfirmLabel = confirmLabel ?? tc('ok');
+    const resolvedCancelLabel = cancelLabel ?? tc('cancel');
+
     if (!open) return null;
 
     return (
@@ -57,7 +64,7 @@ export default function ConfirmModal({
                             : 'bg-emerald-500 text-white hover:bg-emerald-400'
                         }`}
                     >
-                        {confirmLabel}
+                        {resolvedConfirmLabel}
                     </button>
                     <button
                         type="button"
@@ -66,7 +73,7 @@ export default function ConfirmModal({
                          font-medium text-base hover:border-border-hover hover:text-foreground
                          transition-colors duration-200 active:scale-95"
                     >
-                        {cancelLabel}
+                        {resolvedCancelLabel}
                     </button>
                 </div>
             </div>

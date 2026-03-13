@@ -8,13 +8,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import ThemeToggle from "@/components/ThemeToggle";
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 import AuthModal from "@/components/AuthModal";
+import { LanguagePopup, LanguageSwitcher } from "@/components/LanguageSelector";
 
 export default function LandingPage() {
     const router = useRouter();
     const [showModal, setShowModal] = useState(false);
+    const t = useTranslations('landing');
+    const tc = useTranslations('common');
 
     return (
         <div className="min-h-dvh flex flex-col max-w-lg mx-auto px-4 pb-10">
@@ -31,7 +35,10 @@ export default function LandingPage() {
                         <span className="text-foreground-muted font-light text-sm ml-1">AI</span>
                     </span>
                 </div>
-                <ThemeToggle />
+                <div className="flex items-center gap-2">
+                    <LanguageSwitcher />
+                    <ThemeToggle />
+                </div>
             </header>
 
             {/* ── Hero ───────────────────────────────────────── */}
@@ -52,13 +59,13 @@ export default function LandingPage() {
                     <span className="text-foreground-muted font-light text-3xl sm:text-4xl ml-2">AI</span>
                 </h1>
 
-                <p className="text-foreground-secondary text-base leading-relaxed max-w-[280px]">Trafikte geçen saatleri dil öğrenmeye dönüştür. Sıfır ekran.</p>
+                <p className="text-foreground-secondary text-base leading-relaxed max-w-[280px]">{t('tagline')}</p>
             </section>
 
             {/* ── [UX Fix] Above The Fold Auth (Stack Design) ── */}
             <section className="flex flex-col gap-3 mb-10 mt-2">
                 {/* Google — Primary */}
-                <GoogleSignInButton redirectAfterLogin="/dashboard" label="Google ile Başla" />
+                <GoogleSignInButton redirectAfterLogin="/dashboard" label={t('googleSignIn')} />
 
                 {/* Email — Secondary (Triggers AuthModal) */}
                 <button
@@ -68,7 +75,7 @@ export default function LandingPage() {
                                text-foreground font-semibold text-base
                                active:scale-[0.98] transition-all duration-300 shadow-sm"
                 >
-                    E-posta ile Giriş / Kayıt
+                    {t('emailSignIn')}
                 </button>
 
                 {/* Guest — Ghost */}
@@ -77,7 +84,7 @@ export default function LandingPage() {
                     className="w-full mt-3 py-3 text-foreground-secondary hover:text-foreground text-sm
                                transition-colors duration-200"
                 >
-                    Giriş yapmadan devam et →
+                    {t('guestContinue')}
                 </button>
             </section>
 
@@ -85,9 +92,9 @@ export default function LandingPage() {
             <section className="mb-10">
                 <div className="grid grid-cols-3 gap-3">
                     {[
-                        { icon: "🎧", title: "Eller Serbest", desc: "Ekrana bakmana gerek yok" },
-                        { icon: "🤖", title: "AI Destekli", desc: "Her konuda diyalog üretir" },
-                        { icon: "📚", title: "Müfredat", desc: "Delftse Methode temelli" },
+                        { icon: "🎧", title: t('feature1Title'), desc: t('feature1Desc') },
+                        { icon: "🤖", title: t('feature2Title'), desc: t('feature2Desc') },
+                        { icon: "📚", title: t('feature3Title'), desc: t('feature3Desc') },
                     ].map(f => (
                         <div key={f.title} className="bg-card border border-border/50 rounded-2xl p-3.5 flex flex-col gap-1.5">
                             <span className="text-2xl">{f.icon}</span>
@@ -104,13 +111,13 @@ export default function LandingPage() {
                     className="font-bold text-sm uppercase tracking-wider mb-4 text-center
                                text-foreground-muted"
                 >
-                    Nasıl Çalışır?
+                    {t('howItWorks')}
                 </h2>
                 <div className="flex flex-col gap-2.5">
                     {[
-                        { n: "1", text: "Kurs veya konu seç" },
-                        { n: "2", text: "Hollandacayı dinle, tekrar et" },
-                        { n: "3", text: "Türkçe çeviri otomatik gelir" },
+                        { n: "1", text: t('step1') },
+                        { n: "2", text: t('step2') },
+                        { n: "3", text: t('step3') },
                     ].map((step, idx, arr) => (
                         <div key={step.n}>
                             <div
@@ -137,9 +144,9 @@ export default function LandingPage() {
 
             {/* Footer */}
             <footer className="mt-8 pt-6 border-t border-border/20 text-center">
-                <p className="text-foreground-faint text-xs">© 2026 ShadowDrive AI · Türk profesyoneller için</p>
+                <p className="text-foreground-faint text-xs">{t('footer')}</p>
                 <div className="flex items-center justify-center gap-4 mt-3">
-                    {["Ücretsiz", "Reklamsız", "Veri saklanmaz"].map(tag => (
+                    {[tc('free'), tc('adFree'), tc('noDataStored')].map(tag => (
                         <span key={tag} className="text-foreground-faint text-xs flex items-center gap-1">
                             <span className="text-emerald-500/60">✓</span> {tag}
                         </span>
@@ -147,8 +154,11 @@ export default function LandingPage() {
                 </div>
             </footer>
 
-            {/* Restored AuthModal Wrapper for the exact UX requested  */}
+            {/* Auth Modal */}
             <AuthModal isOpen={showModal} onClose={() => setShowModal(false)} redirectAfterLogin="/dashboard" />
+
+            {/* First-visit language selection popup */}
+            <LanguagePopup />
         </div>
     );
 }

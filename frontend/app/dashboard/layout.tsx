@@ -9,8 +9,10 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import AuthButton from '@/components/AuthButton';
 import ThemeToggle from '@/components/ThemeToggle';
+import { LanguageSwitcher } from '@/components/LanguageSelector';
 import { ToastProvider } from './_contexts/ToastContext';
 import { CoursesProvider } from './_contexts/CoursesContext';
 import { DASHBOARD_TABS } from './_constants';
@@ -18,13 +20,17 @@ import { DASHBOARD_TABS } from './_constants';
 // ─── Dashboard Header ───
 
 function DashboardHeader() {
+    const t = useTranslations('dashboard');
     return (
         <>
             <div className="flex items-center justify-between gap-2 mb-6">
                 <div className="flex-shrink-0 min-w-[44px]">
                     <AuthButton />
                 </div>
-                <ThemeToggle />
+                <div className="flex items-center gap-2">
+                    <LanguageSwitcher />
+                    <ThemeToggle />
+                </div>
             </div>
 
             <div className="flex flex-col items-center mb-8">
@@ -35,7 +41,7 @@ function DashboardHeader() {
                     <span className="text-foreground-muted font-light ml-2 text-xl align-middle">AI</span>
                 </h1>
                 <p className="text-foreground-secondary text-center text-base max-w-xs leading-relaxed">
-                    Araba kullanırken Hollandaca öğren
+                    {t('subtitle')}
                 </p>
                 <div className="mt-4 w-16 h-1 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-300 opacity-60" />
             </div>
@@ -46,6 +52,7 @@ function DashboardHeader() {
 // ─── Tab Switcher (URL-based) ───
 
 function TabSwitcher({ activeTab }: { activeTab: string }) {
+    const t = useTranslations('dashboard');
     return (
         <div className="tab-switcher flex rounded-2xl bg-card border border-border/50 p-1.5 mb-8">
             {DASHBOARD_TABS.map((tab) => (
@@ -60,7 +67,7 @@ function TabSwitcher({ activeTab }: { activeTab: string }) {
                              : 'text-foreground-secondary hover:text-foreground'
                      }`}
                 >
-                    {tab.icon} {tab.label}
+                    {tab.icon} {t(tab.key as 'courses' | 'ai' | 'custom')}
                 </Link>
             ))}
         </div>

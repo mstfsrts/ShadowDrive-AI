@@ -75,8 +75,14 @@ export default function GoogleSignInButton({ redirectAfterLogin = "/dashboard", 
         }
 
         // Reset loading state if user closes popup without completing auth
+        // Wrapped in try-catch: COOP policy may block popup.closed access
         const pollTimer = setInterval(() => {
-            if (popup.closed) {
+            try {
+                if (popup.closed) {
+                    clearInterval(pollTimer);
+                    setIsGoogleLoading(false);
+                }
+            } catch {
                 clearInterval(pollTimer);
                 setIsGoogleLoading(false);
             }

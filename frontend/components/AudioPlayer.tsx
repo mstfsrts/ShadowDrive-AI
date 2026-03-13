@@ -5,27 +5,46 @@
 // renders the giant pause/resume/stop controls for driving safety.
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { Scenario, PlaybackStatus, PlaybackPhase } from "@/types/dialogue";
-import { playScenario, cancelSpeech } from "@/lib/speechEngine";
+import { useTranslations } from "next-intl";
+import { Scenario, PlaybackStatus, PlaybackPhase, RecognitionResult } from "@/types/dialogue";
+import { playScenario, cancelSpeech, type PronunciationOptions } from "@/lib/speechEngine";
+import { requestMicPermission, releaseMic, type RecordingResult } from "@/lib/audioRecorder";
+import { unlockAudio } from "@/lib/soundEffects";
+import { isSpeechRecognitionSupported } from "@/lib/speechRecognition";
 import StatusBar from "./StatusBar";
 import ConfirmModal from "./ConfirmModal";
+
+/** Collected pronunciation attempt data for lesson report */
+export interface PronunciationAttempt {
+    lineIndex: number;
+    result: RecognitionResult;
+    recording?: RecordingResult;
+}
 
 interface AudioPlayerProps {
     scenario: Scenario;
     startFromIndex?: number;
-    onComplete: () => void;
+    /** Enable pronunciation checking (speech recognition + recording) */
+    enablePronunciation?: boolean;
+    onComplete: (attempts?: PronunciationAttempt[]) => void;
     onBack: (lastLineIndex: number) => void;
 }
 
-export default function AudioPlayer({ scenario, startFromIndex = 0, onComplete, onBack }: AudioPlayerProps) {
+export default function AudioPlayer({ scenario, startFromIndex = 0, enablePronunciation = false, onComplete, onBack }: AudioPlayerProps) {
+    const t = useTranslations('player');
+    const tc = useTranslations('common');
+
     const [isPlaying, setIsPlaying] = useState(false);
     const [hasStarted, setHasStarted] = useState(false);
     const [currentStatus, setCurrentStatus] = useState<PlaybackStatus | null>(null);
     const [phase, setPhase] = useState<PlaybackPhase | "idle" | "complete">("idle");
     const [showRestartConfirm, setShowRestartConfirm] = useState(false);
+    const [lastRecognitionResult, setLastRecognitionResult] = useState<RecognitionResult | null>(null);
+    const [micGranted, setMicGranted] = useState(false);
 
     const abortControllerRef = useRef<AbortController | null>(null);
     const isPlayingRef = useRef(false);
+    const attemptsRef = useRef<PronunciationAttempt[]>([]);
     // Track current line index in a ref so handleBack and resume can read it reliably
     const currentLineIndexRef = useRef(startFromIndex);
 
@@ -45,6 +64,7 @@ export default function AudioPlayer({ scenario, startFromIndex = 0, onComplete, 
                 /* ignore cleanup errors */
             }
             abortControllerRef.current?.abort();
+            releaseMic();
             document.body.classList.remove("playback-active");
         };
     }, []);
@@ -60,14 +80,38 @@ export default function AudioPlayer({ scenario, startFromIndex = 0, onComplete, 
         // iOS: lock body scroll during playback
         document.body.classList.add("playback-active");
 
+        // Unlock audio context for sound effects (needs user gesture)
+        unlockAudio();
+
+        // Request mic permission on first start if pronunciation is enabled
+        if (enablePronunciation && !micGranted) {
+            const granted = await requestMicPermission();
+            setMicGranted(granted);
+        }
+
+        // Build pronunciation options
+        const pronunciationOpts: PronunciationOptions = enablePronunciation
+            ? {
+                enableRecognition: isSpeechRecognitionSupported(),
+                enableRecording: micGranted,
+                onAttempt: (lineIndex, result, recording) => {
+                    attemptsRef.current.push({ lineIndex, result, recording });
+                    setLastRecognitionResult(result);
+                },
+            }
+            : {};
+
         try {
-            // Always resume from the START of the current line (subPhase=0)
-            // so the user hears the full sentence before being asked to repeat
-            for await (const status of playScenario(scenario, controller.signal, undefined, currentLineIndexRef.current)) {
+            for await (const status of playScenario(scenario, controller.signal, undefined, currentLineIndexRef.current, pronunciationOpts)) {
                 if (controller.signal.aborted) break;
                 currentLineIndexRef.current = status.lineIndex;
                 setCurrentStatus(status);
                 setPhase(status.phase);
+
+                // Update last recognition result from status
+                if (status.recognitionResult) {
+                    setLastRecognitionResult(status.recognitionResult);
+                }
             }
 
             // If we completed without abort, session is done
@@ -75,12 +119,12 @@ export default function AudioPlayer({ scenario, startFromIndex = 0, onComplete, 
                 setPhase("complete");
                 setIsPlaying(false);
                 isPlayingRef.current = false;
-                onComplete();
+                onComplete(attemptsRef.current.length > 0 ? attemptsRef.current : undefined);
             }
         } catch {
             // Aborted — expected on pause/stop
         }
-    }, [scenario, onComplete]);
+    }, [scenario, onComplete, enablePronunciation, micGranted]);
 
     const stopPlayback = useCallback(() => {
         cancelSpeech();
@@ -133,12 +177,12 @@ export default function AudioPlayer({ scenario, startFromIndex = 0, onComplete, 
 
                 {/* Main Text — very large for readability */}
                 <div className="text-center min-h-[120px] flex items-center justify-center">
-                    {phase === "idle" && !hasStarted && <p className="text-foreground-secondary text-xl">Dersi başlatmak için aşağıdaki düğmeye dokunun</p>}
+                    {phase === "idle" && !hasStarted && <p className="text-foreground-secondary text-xl">{t('startPrompt')}</p>}
                     {phase === "complete" && (
                         <div className="flex flex-col items-center gap-4">
                             <span className="text-6xl">🎉</span>
-                            <p className="text-emerald-600 dark:text-emerald-400 text-2xl font-bold">Harika!</p>
-                            <p className="text-foreground-secondary text-lg">Ders tamamlandı — {scenario.lines.length} cümle çalışıldı</p>
+                            <p className="text-emerald-600 dark:text-emerald-400 text-2xl font-bold">{t('great')}</p>
+                            <p className="text-foreground-secondary text-lg">{t('lessonDone', { count: scenario.lines.length })}</p>
                         </div>
                     )}
                     {currentStatus && phase !== "complete" && phase !== "idle" && (
@@ -147,7 +191,7 @@ export default function AudioPlayer({ scenario, startFromIndex = 0, onComplete, 
                                 className={`text-3xl sm:text-4xl font-bold leading-relaxed transition-all duration-500 text-center
                                 ${phase === "target" || phase === "repeat" ? "text-emerald-600 dark:text-emerald-400" : ""}
                                 ${phase === "native" ? "text-blue-600 dark:text-blue-400" : ""}
-                                ${phase === "pause" ? "text-amber-600 dark:text-amber-400 animate-pulse-slow" : ""}
+                                ${phase === "pause" || phase === "listening" ? "text-amber-600 dark:text-amber-400 animate-pulse-slow" : ""}
                                 ${phase === "gap" ? "text-foreground-faint" : ""}
                             `}
                             >
@@ -162,12 +206,43 @@ export default function AudioPlayer({ scenario, startFromIndex = 0, onComplete, 
                                     {currentStatus.nativeText}
                                 </p>
                             )}
+
+                            {/* Recognition result badge */}
+                            {lastRecognitionResult && lastRecognitionResult.supported && phase === "pause" && currentStatus.recognitionResult && (
+                                <div className={`mt-3 px-4 py-2 rounded-xl text-sm font-medium text-center
+                                    ${currentStatus.recognitionResult.correct
+                                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                                        : currentStatus.recognitionResult.score >= 0.4
+                                            ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
+                                            : "bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20"
+                                    }`}
+                                >
+                                    {currentStatus.recognitionResult.correct ? "✅" : currentStatus.recognitionResult.score >= 0.4 ? "⚠️" : "❌"}
+                                    {" "}
+                                    {Math.round(currentStatus.recognitionResult.score * 100)}%
+                                    {currentStatus.recognitionResult.transcript && (
+                                        <span className="ml-2 text-foreground-secondary">
+                                            &quot;{currentStatus.recognitionResult.transcript}&quot;
+                                        </span>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
 
-                {/* Phase subtitle when speaking */}
-                {phase === "pause" && <p className="mt-6 text-amber-600/70 dark:text-amber-400/70 text-lg animate-pulse">🎤 Hollandaca söyleyin!</p>}
+                {/* Phase subtitle — listening or pause */}
+                {phase === "listening" && (
+                    <div className="mt-6 flex flex-col items-center gap-2">
+                        <div className="w-12 h-12 rounded-full bg-red-500/20 border-2 border-red-500 flex items-center justify-center animate-pulse">
+                            <span className="text-2xl">🎤</span>
+                        </div>
+                        <p className="text-red-500 dark:text-red-400 text-sm font-medium">{t('listening')}</p>
+                    </div>
+                )}
+                {phase === "pause" && !currentStatus?.recognitionResult && (
+                    <p className="mt-6 text-amber-600/70 dark:text-amber-400/70 text-lg animate-pulse">🎤 {t('speakDutch')}</p>
+                )}
             </div>
 
             {/* Controls — massive buttons for driving safety */}
@@ -182,7 +257,7 @@ export default function AudioPlayer({ scenario, startFromIndex = 0, onComplete, 
                                 transition-all duration-300 active:scale-95 select-none
                                 bg-card border border-border hover:border-border-hover text-foreground-secondary hover:text-foreground"
                             >
-                                🔄 BAŞA DÖN
+                                🔄 {t('restart')}
                             </button>
                         )}
                         <button
@@ -197,7 +272,7 @@ export default function AudioPlayer({ scenario, startFromIndex = 0, onComplete, 
                                    : "bg-emerald-500 text-shadow-950 hover:bg-emerald-400 animate-glow shadow-2xl shadow-emerald-500/30"
                            }`}
                         >
-                            {isPlaying ? "⏸  DURDUR" : hasStarted ? "▶  DEVAM ET" : "▶  BAŞLAT"}
+                            {isPlaying ? `⏸  ${t('pause')}` : hasStarted ? `▶  ${t('resume')}` : `▶  ${t('start')}`}
                         </button>
                     </div>
                 )}
@@ -210,15 +285,15 @@ export default function AudioPlayer({ scenario, startFromIndex = 0, onComplete, 
                      bg-card border border-border hover:border-border-hover hover:text-foreground
                      transition-all duration-300 active:scale-95 select-none"
                 >
-                    {phase === "complete" ? "🔄  Yeni Ders" : "←  Geri"}
+                    {phase === "complete" ? `🔄  ${t('newLesson')}` : `←  ${tc('back')}`}
                 </button>
             </div>
             <ConfirmModal
                 open={showRestartConfirm}
-                title="Dersi baştan başlatmak istediğinize emin misiniz?"
-                subtitle="İlerlemeniz sıfırlanacak ve ders en baştan başlayacak."
-                confirmLabel="Başa Dön"
-                cancelLabel="İptal"
+                title={t('restartConfirm')}
+                subtitle={t('restartSubtitle')}
+                confirmLabel={t('restartButton')}
+                cancelLabel={tc('cancel')}
                 variant="danger"
                 onConfirm={handleRestartConfirm}
                 onCancel={() => setShowRestartConfirm(false)}

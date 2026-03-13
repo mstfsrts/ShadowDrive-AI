@@ -3,6 +3,7 @@
 // ─── /dashboard/courses — Kategori Grid ───
 
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useCoursesContext } from '../_contexts/CoursesContext';
 import { categoryToSlug } from '@/lib/slugs';
 import { CATEGORY_META } from '../_constants';
@@ -10,6 +11,7 @@ import CourseCardSkeleton from '../_components/_CourseCardSkeleton';
 
 export default function CoursesPage() {
     const router = useRouter();
+    const t = useTranslations('courses');
     const { courses, coursesLoading } = useCoursesContext();
 
     // Extract unique categories from courses
@@ -29,7 +31,7 @@ export default function CoursesPage() {
             <div className="flex items-center gap-2 mb-2">
                 <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
                 <span className="text-xs text-foreground-muted uppercase tracking-widest font-medium">
-                    Çevrimdışı · Hazır Kurslar
+                    {t('offlineReady')}
                 </span>
             </div>
 
@@ -50,7 +52,7 @@ export default function CoursesPage() {
                         <div className="flex-1 min-w-0">
                             <p className="text-foreground font-semibold truncate">{category}</p>
                             <p className="text-foreground-muted text-sm">
-                                {meta?.description ?? `${courseCount} kurs`}
+                                {meta?.descriptionKey ? t(meta.descriptionKey as 'delftseDesc' | 'goedDesc') : t('courseCount', { count: courseCount })}
                             </p>
                         </div>
                         <span className="text-foreground-faint text-xl">→</span>

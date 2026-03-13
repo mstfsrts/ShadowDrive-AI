@@ -1,11 +1,11 @@
 // ─── ShadowDrive AI — AI Generate Route ───
 // POST /api/generate
-// Accepts { topic, difficulty (CEFR level) } and returns a Dutch-Turkish dialogue.
-// Priority: OpenRouter (Qwen3) → Gemini API (fallback)
+// Accepts { topic, difficulty (CEFR level) } and returns a Dutch dialogue.
+// Provider priority: OpenRouter → Gemini (auto-fallback via ai-provider)
 
 import { NextRequest, NextResponse } from 'next/server';
-import { generateWithOpenRouter, isOpenRouterConfigured } from '@/lib/openrouter';
-import { generateWithFallback } from '@/lib/gemini';
+import { cookies } from 'next/headers';
+import { generateWithProviders } from '@/lib/providers';
 import { z } from 'zod';
 import type { CEFRLevel } from '@/types/dialogue';
 
@@ -92,11 +92,38 @@ const CEFR_GUIDELINES: Record<CEFRLevel, { lineCount: number; maxTokens: number;
     },
 };
 
-// ─── Smart Prompt Builder ───
-function buildPrompt(topic: string, level: CEFRLevel): string {
-    const config = CEFR_GUIDELINES[level];
+// ─── Locale-specific prompt config ───
+interface LocaleConfig {
+    nativeLang: string;
+    nativeLangCode: string;
+    audience: string;
+    nativeTextExample: string;
+    translationNote: string;
+}
 
-    return `You are an expert Dutch (Nederlands) language coach specializing in **spoken Dutch as used in the Netherlands** (NOT Belgian/Flemish Dutch). You create realistic conversational dialogues for Turkish-speaking professionals (UX designers, psychologists, teachers, office workers) who live and work in the Netherlands.
+const LOCALE_CONFIG: Record<string, LocaleConfig> = {
+    en: {
+        nativeLang: 'English',
+        nativeLangCode: 'en-US',
+        audience: 'English-speaking professionals who live and work in the Netherlands',
+        nativeTextExample: 'English translation',
+        translationNote: 'The English translations ("nativeText") must be natural English, not word-for-word translations.',
+    },
+    tr: {
+        nativeLang: 'Turkish',
+        nativeLangCode: 'tr-TR',
+        audience: 'Turkish-speaking professionals (UX designers, psychologists, teachers, office workers) who live and work in the Netherlands',
+        nativeTextExample: 'Türkçe çeviri',
+        translationNote: 'The Turkish translations ("nativeText") must be natural Turkish, not word-for-word translations.',
+    },
+};
+
+// ─── Smart Prompt Builder ───
+function buildPrompt(topic: string, level: CEFRLevel, locale: string): string {
+    const config = CEFR_GUIDELINES[level];
+    const lc = LOCALE_CONFIG[locale] ?? LOCALE_CONFIG['tr'];
+
+    return `You are an expert Dutch (Nederlands) language coach specializing in **spoken Dutch as used in the Netherlands** (NOT Belgian/Flemish Dutch). You create realistic conversational dialogues for ${lc.audience}.
 
 USER'S REQUESTED TOPIC: "${topic}"
 (Note: the user may have typed in Turkish, Dutch, or English. Interpret the intent regardless of input language and create a scenario about this topic.)
@@ -110,7 +137,7 @@ SCENARIO REQUIREMENTS:
 2. The conversation MUST flow naturally — each line should logically follow the previous one. Do NOT generate random unrelated sentences.
 3. Include speaker turns (Person A and Person B alternating naturally).
 4. Use spoken Dutch — contractions, particles, filler words that real Dutch people use in everyday speech.
-5. The Turkish translations ("nativeText") must be natural Turkish, not word-for-word translations.
+5. ${lc.translationNote}
 6. The scenario title should be a short descriptive phrase in Dutch.
 
 TECHNICAL REQUIREMENTS:
@@ -122,9 +149,9 @@ JSON STRUCTURE:
 {
   "title": "Short descriptive title in Dutch",
   "targetLang": "nl-NL",
-  "nativeLang": "tr-TR",
+  "nativeLang": "${lc.nativeLangCode}",
   "lines": [
-    { "id": 1, "targetText": "Dutch phrase", "nativeText": "Türkçe çeviri", "pauseMultiplier": 1.5 }
+    { "id": 1, "targetText": "Dutch phrase", "nativeText": "${lc.nativeTextExample}", "pauseMultiplier": 1.5 }
   ]
 }`;
 }
@@ -145,36 +172,23 @@ export async function POST(request: NextRequest) {
         const { topic, difficulty } = parsed.data;
         const config = CEFR_GUIDELINES[difficulty as CEFRLevel];
 
-        // 2. Build smart prompt with CEFR-specific guidelines
-        const prompt = buildPrompt(topic, difficulty as CEFRLevel);
+        // 2. Determine locale from cookie (NEXT_LOCALE set by next-intl)
+        const cookieStore = cookies();
+        const locale = cookieStore.get('NEXT_LOCALE')?.value ?? 'tr';
 
-        // 3. Call AI — OpenRouter first, Gemini as fallback
-        let responseText: string;
+        // 3. Build smart prompt with CEFR-specific guidelines and locale
+        const prompt = buildPrompt(topic, difficulty as CEFRLevel, locale);
 
-        if (isOpenRouterConfigured()) {
-            try {
-                responseText = await generateWithOpenRouter(prompt, config.maxTokens);
-            } catch (routerErr) {
-                console.warn('[generate] OpenRouter failed:', routerErr instanceof Error ? routerErr.message : routerErr);
+        // 4. Call AI — auto-fallback through provider chain
+        const responseText = await generateWithProviders(prompt, config.maxTokens);
 
-                const geminiKey = process.env.GEMINI_API_KEY;
-                if (geminiKey && geminiKey !== 'your_gemini_api_key_here') {
-                    responseText = await generateWithFallback(prompt);
-                } else {
-                    throw routerErr;
-                }
-            }
-        } else {
-            responseText = await generateWithFallback(prompt);
-        }
-
-        // 4. Clean potential markdown fences from response
+        // 5. Clean potential markdown fences from response
         let cleanJson = responseText.trim();
         if (cleanJson.startsWith('```')) {
             cleanJson = cleanJson.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?\s*```$/, '');
         }
 
-        // 5. Parse & validate the AI response
+        // 6. Parse & validate the AI response
         let scenario;
         try {
             scenario = JSON.parse(cleanJson);
@@ -195,7 +209,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // 6. Return validated scenario
+        // 7. Return validated scenario
         return NextResponse.json(validated.data);
 
     } catch (error) {

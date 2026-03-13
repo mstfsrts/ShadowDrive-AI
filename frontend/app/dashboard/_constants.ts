@@ -1,8 +1,9 @@
 // ─── ShadowDrive AI — Dashboard Constants ───
 
-export const CATEGORY_META: Record<string, { emoji: string; description: string }> = {
-    'Delftse Methode': { emoji: '📚', description: 'Üniversite müfredatı bazlı kurslar' },
-    'Goedbezig Youtube Series': { emoji: '🎬', description: 'YouTube video derslerinden uyarlama' },
+// Description keys map to messages/*.json → courses namespace
+export const CATEGORY_META: Record<string, { emoji: string; descriptionKey: string }> = {
+    'Delftse Methode': { emoji: '📚', descriptionKey: 'delftseDesc' },
+    'Goedbezig Youtube Series': { emoji: '🎬', descriptionKey: 'goedDesc' },
 };
 
 export const SUBCATEGORY_META: Record<string, { emoji: string }> = {

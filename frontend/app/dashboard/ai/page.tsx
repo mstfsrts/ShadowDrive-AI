@@ -7,6 +7,7 @@
 import { useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useToastContext } from '../_contexts/ToastContext';
 import { useAiLessonsState } from '../_hooks/useAiLessonsState';
 import { setPlaySession, setPreviewSession } from '@/lib/playSession';
@@ -23,6 +24,8 @@ export default function AiPage() {
     const { data: session } = useSession();
     const { showToast } = useToastContext();
     const userId = session?.user?.id;
+    const t = useTranslations('lessons');
+    const tc = useTranslations('common');
 
     // ─── AI lessons state ───
     const ai = useAiLessonsState({
@@ -108,10 +111,10 @@ export default function AiPage() {
         <div className="flex flex-col gap-4 animate-fade-in">
             <ConfirmModal
                 open={!!deleteConfirm}
-                title="Bu dersi silmek istediğinize emin misiniz?"
+                title={t('deleteConfirmTitle')}
                 subtitle={deleteConfirm?.title}
-                confirmLabel="Sil"
-                cancelLabel="İptal"
+                confirmLabel={t('delete')}
+                cancelLabel={tc('cancel')}
                 variant="danger"
                 onConfirm={async () => {
                     if (!deleteConfirm) return;
@@ -127,7 +130,7 @@ export default function AiPage() {
             <div className="flex items-center gap-2 mb-2">
                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="text-xs text-foreground-muted uppercase tracking-widest font-medium">
-                    Çevrimiçi · AI Senaryo
+                    {t('onlineAi')}
                 </span>
             </div>
 
@@ -137,7 +140,7 @@ export default function AiPage() {
                 <>
                     <ScenarioForm onSubmit={ai.handleGenerate} isLoading={ai.isGenerating} />
                     <p className="mt-2 text-foreground-faint text-xs text-center max-w-xs mx-auto">
-                        Konunuzu yazın ve AI sizin için Hollandaca-Türkçe bir ders oluştursun.
+                        {t('aiGenerateHint')}
                     </p>
                 </>
             )}
@@ -162,11 +165,11 @@ export default function AiPage() {
                                 </p>
                                 <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                                     <p className="text-foreground-muted text-sm">
-                                        {ai.lastGeneratedLesson.level} · {ai.lastGeneratedLesson.scenario.lines.length} cümle
+                                        {ai.lastGeneratedLesson.level} · {ai.lastGeneratedLesson.scenario.lines.length} {t('sentences')}
                                     </p>
                                     {isMastered && (
                                         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400">
-                                            Öğrenildi
+                                            {t('mastered')}
                                         </span>
                                     )}
                                     {!isMastered && isStarted && (
@@ -176,7 +179,7 @@ export default function AiPage() {
                                     )}
                                     {isPartial && (
                                         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400">
-                                            ⏸ Yarıda
+                                            ⏸ {t('partial')}
                                         </span>
                                     )}
                                 </div>
@@ -198,7 +201,7 @@ export default function AiPage() {
                                     level: ai.lastGeneratedLesson!.level,
                                     savedId: ai.lastGeneratedLesson!.savedId,
                                 })}
-                                title="Önizle"
+                                title={t('preview')}
                                 className="flex items-center justify-center w-12 min-h-[44px] rounded-xl
                                  bg-background border border-border hover:border-border-hover
                                  text-foreground-muted hover:text-foreground transition-colors duration-200 active:scale-95"
@@ -214,12 +217,12 @@ export default function AiPage() {
                                 className="flex-1 min-h-[44px] rounded-xl bg-emerald-500 text-white font-semibold
                                  hover:bg-emerald-400 transition-colors duration-200 active:scale-95"
                             >
-                                ▶ Dinle
+                                ▶ {t('listen')}
                             </button>
                             {session?.user?.id && (
                                 <span className="flex items-center justify-center px-3 min-h-[44px] rounded-xl text-sm font-medium
                                  bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                                    {ai.lastGeneratedLesson.savedId ? '✓ Kaydedildi' : ai.isSaving ? 'Kaydediliyor…' : '…'}
+                                    {ai.lastGeneratedLesson.savedId ? `✓ ${t('saved')}` : ai.isSaving ? t('saving') : '…'}
                                 </span>
                             )}
                         </div>
@@ -231,7 +234,7 @@ export default function AiPage() {
             {session?.user?.id && ai.savedAiLessons.length > 0 && (
                 <div className="flex flex-col gap-3 mt-2">
                     <h3 className="text-xs text-foreground-muted uppercase tracking-widest font-medium">
-                        Kaydedilmiş Senaryolar
+                        {t('savedScenarios')}
                     </h3>
                     {ai.savedAiLessons.map((lesson) => {
                         const rid = getResumableId('ai', { savedId: lesson.id });
@@ -241,7 +244,7 @@ export default function AiPage() {
                                 key={lesson.id}
                                 id={lesson.id}
                                 title={lesson.title ?? lesson.topic}
-                                subtitle={`${lesson.level} · ${(lesson.content as Scenario).lines?.length ?? 0} cümle`}
+                                subtitle={`${lesson.level} · ${(lesson.content as Scenario).lines?.length ?? 0} ${t('sentences')}`}
                                 progress={{
                                     completionCount: p.completionCount,
                                     targetCount: p.targetCount,

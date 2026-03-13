@@ -22,7 +22,15 @@ export interface Scenario {
 }
 
 /** Playback phases for the audio engine */
-export type PlaybackPhase = "target" | "pause" | "native" | "repeat" | "gap";
+export type PlaybackPhase = "target" | "pause" | "listening" | "native" | "repeat" | "gap";
+
+/** Result of a pronunciation recognition attempt */
+export interface RecognitionResult {
+    transcript: string;
+    score: number;       // 0.0 - 1.0
+    correct: boolean;
+    supported: boolean;  // false = browser doesn't support speech recognition
+}
 
 /** Status yielded by the audio engine on each step */
 export interface PlaybackStatus {
@@ -31,6 +39,8 @@ export interface PlaybackStatus {
     phase: PlaybackPhase;
     text: string;
     nativeText?: string;
+    /** Present after a "listening" phase completes */
+    recognitionResult?: RecognitionResult;
 }
 
 /** CEFR language proficiency levels */
@@ -102,6 +112,47 @@ export interface LessonRecord {
     title: string;
     order: number;
     lines: DialogueLine[];
+}
+
+// ─── Pronunciation & Progress Types ───
+
+export interface PronunciationAttemptData {
+    lessonType: "course" | "ai" | "custom";
+    lessonId: string;
+    lessonTitle: string;
+    lineIndex: number;
+    targetText: string;
+    transcript: string;
+    score: number;
+    correct: boolean;
+    recordingUrl?: string;
+}
+
+export interface LessonReportData {
+    lessonType: "course" | "ai" | "custom";
+    lessonId: string;
+    lessonTitle: string;
+    totalLines: number;
+    correctCount: number;
+    averageScore: number;
+    attempts: PronunciationAttemptData[];
+}
+
+export interface ProfileStats {
+    completedLessons: number;
+    masteredLessons: number;
+    pronunciationScore: number;
+    dailyStreak: number;
+    totalRepetitions: number;
+    aiLessons: number;
+    customLessons: number;
+}
+
+export interface UserGoalData {
+    dailyTarget: number;
+    weeklyTarget: number;
+    todayCount: number;
+    weekCount: number;
 }
 
 // ─── API Response Wrappers ───

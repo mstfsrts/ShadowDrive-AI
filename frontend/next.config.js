@@ -1,3 +1,6 @@
+const createNextIntlPlugin = require("next-intl/plugin");
+const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
+
 /** @type {import('next').NextConfig} */
 
 // ─── Backend API Proxy ───────────────────────────────────────────────────────
@@ -25,6 +28,10 @@ const nextConfig = {
                 source: "/sw.js",
                 headers: [{ key: "Service-Worker-Allowed", value: "/" }],
             },
+            {
+                source: '/((?!api/auth).*)',
+                headers: [{ key: 'Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups' }],
+            },
         ];
     },
 
@@ -46,4 +53,4 @@ const nextConfig = {
     },
 };
 
-module.exports = nextConfig;
+module.exports = withNextIntl(nextConfig);

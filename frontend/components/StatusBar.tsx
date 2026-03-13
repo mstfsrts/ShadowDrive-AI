@@ -3,6 +3,7 @@
 // ─── ShadowDrive AI — Status Bar ───
 // Shows the current playback state in large, readable text
 
+import { useTranslations } from 'next-intl';
 import { PlaybackPhase } from '@/types/dialogue';
 
 interface StatusBarProps {
@@ -11,27 +12,57 @@ interface StatusBarProps {
     totalLines: number;
 }
 
-const PHASE_CONFIG: Record<string, { label: string; color: string; icon: string }> = {
-    idle: { label: 'Hazır', color: 'text-foreground-secondary', icon: '⏸' },
-    loading: { label: 'Yükleniyor...', color: 'text-amber-400', icon: '⏳' },
-    target: { label: 'Dinle — Hollandaca', color: 'text-emerald-600 dark:text-emerald-400', icon: '🇳🇱' },
-    pause: { label: 'Senin sıran — Söyle!', color: 'text-amber-600 dark:text-amber-400', icon: '🎤' },
-    native: { label: 'Cevap — Türkçe', color: 'text-blue-600 dark:text-blue-400', icon: '🇹🇷' },
-    repeat: { label: 'Tekrar dinle — Hollandaca', color: 'text-emerald-600 dark:text-emerald-300', icon: '🔁' },
-    gap: { label: 'Sonraki cümle...', color: 'text-foreground-muted', icon: '⏭' },
-    complete: { label: 'Ders Tamamlandı!', color: 'text-emerald-600 dark:text-emerald-400', icon: '✅' },
+const PHASE_ICONS: Record<string, string> = {
+    idle: '⏸',
+    loading: '⏳',
+    target: '🇳🇱',
+    pause: '🎤',
+    listening: '🎤',
+    native: '🇹🇷',
+    repeat: '🔁',
+    gap: '⏭',
+    complete: '✅',
+};
+
+const PHASE_COLORS: Record<string, string> = {
+    idle: 'text-foreground-secondary',
+    loading: 'text-amber-400',
+    target: 'text-emerald-600 dark:text-emerald-400',
+    pause: 'text-amber-600 dark:text-amber-400',
+    listening: 'text-red-500 dark:text-red-400',
+    native: 'text-blue-600 dark:text-blue-400',
+    repeat: 'text-emerald-600 dark:text-emerald-300',
+    gap: 'text-foreground-muted',
+    complete: 'text-emerald-600 dark:text-emerald-400',
 };
 
 export default function StatusBar({ phase, lineIndex, totalLines }: StatusBarProps) {
-    const config = PHASE_CONFIG[phase] || PHASE_CONFIG.idle;
+    const t = useTranslations('player');
+    const tc = useTranslations('common');
+
+    const PHASE_LABELS: Record<string, string> = {
+        idle: t('ready'),
+        loading: tc('loading'),
+        target: t('listenDutch'),
+        pause: t('yourTurn'),
+        listening: t('listening'),
+        native: t('answerNative'),
+        repeat: t('repeatDutch'),
+        gap: t('nextSentence'),
+        complete: t('lessonComplete'),
+    };
+
+    const label = PHASE_LABELS[phase] ?? PHASE_LABELS.idle;
+    const icon = PHASE_ICONS[phase] ?? PHASE_ICONS.idle;
+    const color = PHASE_COLORS[phase] ?? PHASE_COLORS.idle;
 
     return (
         <div className="w-full flex items-center justify-between px-6 py-4">
             {/* Phase indicator */}
             <div className="flex items-center gap-3">
-                <span className="text-2xl">{config.icon}</span>
-                <span className={`text-lg font-semibold ${config.color} transition-colors duration-300`}>
-                    {config.label}
+                <span className="text-2xl">{icon}</span>
+                <span className={`text-lg font-semibold ${color} transition-colors duration-300`}>
+                    {label}
                 </span>
             </div>
 

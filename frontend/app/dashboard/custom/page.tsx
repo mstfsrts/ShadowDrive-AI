@@ -7,6 +7,7 @@
 import { useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useToastContext } from '../_contexts/ToastContext';
 import { useCustomLessonsState } from '../_hooks/useCustomLessonsState';
 import { setPlaySession, setPreviewSession } from '@/lib/playSession';
@@ -21,6 +22,8 @@ export default function CustomPage() {
     const { data: session } = useSession();
     const { showToast } = useToastContext();
     const userId = session?.user?.id;
+    const t = useTranslations('lessons');
+    const tc = useTranslations('common');
 
     const custom = useCustomLessonsState({ userId, showToast });
 
@@ -85,10 +88,10 @@ export default function CustomPage() {
         <div className="flex flex-col gap-4 animate-fade-in">
             <ConfirmModal
                 open={!!deleteConfirm}
-                title="Bu dersi silmek istediğinize emin misiniz?"
+                title={t('deleteConfirmTitle')}
                 subtitle={deleteConfirm?.title}
-                confirmLabel="Sil"
-                cancelLabel="İptal"
+                confirmLabel={t('delete')}
+                cancelLabel={tc('cancel')}
                 variant="danger"
                 onConfirm={async () => {
                     if (!deleteConfirm) return;
@@ -104,14 +107,14 @@ export default function CustomPage() {
             <div className="flex items-center gap-2 mb-2">
                 <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
                 <span className="text-xs text-foreground-muted uppercase tracking-widest font-medium">
-                    Özel İçerik · Manuel Format
+                    {t('onlineCustom')}
                 </span>
             </div>
 
             <CustomTextForm onSubmit={custom.handleCustomSubmit} />
 
             <p className="mt-2 text-foreground-faint text-xs text-center max-w-xs mx-auto">
-                Kendi cümlelerinizi yapıştırın ve anında çalışın.
+                {t('customHint')}
             </p>
 
             {/* ── Custom lesson card ── */}
@@ -133,11 +136,11 @@ export default function CustomPage() {
                                 </p>
                                 <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                                     <p className="text-foreground-muted text-sm">
-                                        {custom.lastCustomScenario.scenario.lines.length} cümle
+                                        {custom.lastCustomScenario.scenario.lines.length} {t('sentences')}
                                     </p>
                                     {isMastered && (
                                         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400">
-                                            Öğrenildi
+                                            {t('mastered')}
                                         </span>
                                     )}
                                     {!isMastered && isStarted && (
@@ -147,7 +150,7 @@ export default function CustomPage() {
                                     )}
                                     {isPartial && (
                                         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400">
-                                            ⏸ Yarıda
+                                            ⏸ {t('partial')}
                                         </span>
                                     )}
                                 </div>
@@ -163,7 +166,7 @@ export default function CustomPage() {
                         <div className="flex gap-2">
                             <button
                                 onClick={() => handlePreviewScenario(custom.lastCustomScenario!.scenario, custom.lastCustomScenario!.savedId)}
-                                title="Önizle"
+                                title={t('preview')}
                                 className="flex items-center justify-center w-12 min-h-[44px] rounded-xl
                                  bg-background border border-border hover:border-border-hover
                                  text-foreground-muted hover:text-foreground transition-colors duration-200 active:scale-95"
@@ -175,12 +178,12 @@ export default function CustomPage() {
                                 className="flex-1 min-h-[44px] rounded-xl bg-purple-500 text-white font-semibold
                                  hover:bg-purple-400 transition-colors duration-200 active:scale-95"
                             >
-                                ▶ Dinle
+                                ▶ {t('listen')}
                             </button>
                             {session?.user?.id && (
                                 <span className="flex items-center justify-center px-3 min-h-[44px] rounded-xl text-sm font-medium
                                  bg-purple-500/10 text-purple-400 border border-purple-500/30">
-                                    {custom.lastCustomScenario.savedId ? '✓ Kaydedildi' : custom.isSaving ? 'Kaydediliyor…' : '…'}
+                                    {custom.lastCustomScenario.savedId ? `✓ ${t('saved')}` : custom.isSaving ? t('saving') : '…'}
                                 </span>
                             )}
                         </div>
@@ -192,7 +195,7 @@ export default function CustomPage() {
             {session?.user?.id && custom.savedCustomLessons.length > 0 && (
                 <div className="flex flex-col gap-3 mt-2">
                     <h3 className="text-xs text-foreground-muted uppercase tracking-widest font-medium">
-                        Kaydedilmiş Metinlerim
+                        {t('savedTexts')}
                     </h3>
                     {custom.savedCustomLessons.map((lesson) => {
                         const rid = getResumableId('custom', { savedId: lesson.id });
@@ -202,7 +205,7 @@ export default function CustomPage() {
                                 key={lesson.id}
                                 id={lesson.id}
                                 title={lesson.title}
-                                subtitle={`${(lesson.content as Scenario).lines?.length ?? 0} cümle`}
+                                subtitle={`${(lesson.content as Scenario).lines?.length ?? 0} ${t('sentences')}`}
                                 progress={{
                                     completionCount: p.completionCount,
                                     targetCount: p.targetCount,

@@ -5,6 +5,7 @@
 // All complex state, API fetching, and OAuth interactions are offloaded
 // to the atomic child components below.
 
+import { useTranslations } from "next-intl";
 import GoogleSignInButton from "./auth/GoogleSignInButton";
 import EmailAuthForm from "./auth/EmailAuthForm";
 
@@ -15,6 +16,8 @@ interface AuthModalProps {
 }
 
 export default function AuthModal({ isOpen, onClose, redirectAfterLogin }: AuthModalProps) {
+    const t = useTranslations('auth');
+
     if (!isOpen) return null;
 
     return (
@@ -31,8 +34,8 @@ export default function AuthModal({ isOpen, onClose, redirectAfterLogin }: AuthM
                 {/* Handle bar */}
                 <div className="w-12 h-1.5 bg-border rounded-full mx-auto mb-6" />
 
-                <h2 className="text-xl font-bold text-foreground text-center mb-1">Giriş Yap / Kaydol</h2>
-                <p className="text-foreground-muted text-sm text-center mb-6">İlerlemeni kaydet, istediğin yerden devam et</p>
+                <h2 className="text-xl font-bold text-foreground text-center mb-1">{t('modalTitle')}</h2>
+                <p className="text-foreground-muted text-sm text-center mb-6">{t('modalSubtitle')}</p>
 
                 {/* Extracted Google Button */}
                 <GoogleSignInButton redirectAfterLogin={redirectAfterLogin} />
@@ -40,7 +43,7 @@ export default function AuthModal({ isOpen, onClose, redirectAfterLogin }: AuthM
                 {/* Divider */}
                 <div className="flex items-center gap-4 my-6">
                     <div className="flex-1 h-px bg-border" />
-                    <span className="text-foreground-faint text-xs">veya</span>
+                    <span className="text-foreground-faint text-xs">{t('or')}</span>
                     <div className="flex-1 h-px bg-border" />
                 </div>
 
@@ -48,7 +51,7 @@ export default function AuthModal({ isOpen, onClose, redirectAfterLogin }: AuthM
                 <EmailAuthForm redirectAfterLogin={redirectAfterLogin} onSuccess={onClose} />
 
                 {/* Guest mode note */}
-                <p className="text-foreground-faint text-xs text-center mt-6">Giriş yapmadan da kullanabilirsin — ilerleme kaydedilmez</p>
+                <p className="text-foreground-faint text-xs text-center mt-6">{t('guestNote')}</p>
             </div>
         </>
     );

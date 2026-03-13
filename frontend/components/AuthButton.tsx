@@ -7,10 +7,15 @@
 
 import { useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import AuthModal from './AuthModal';
 
 export default function AuthButton() {
     const { data: session, status } = useSession();
+    const router = useRouter();
+    const t = useTranslations('profile');
+    const tAuth = useTranslations('auth');
     const [showModal, setShowModal] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
 
@@ -63,11 +68,20 @@ export default function AuthButton() {
                             </p>
                             <div className="h-px bg-border my-2" />
                             <button
+                                onClick={() => { router.push('/dashboard/profile'); setShowDropdown(false); }}
+                                className="w-full text-left px-2 py-2 text-sm text-foreground
+                                           hover:bg-card-hover rounded-xl transition-colors duration-200 flex items-center gap-2"
+                            >
+                                <span>👤</span>
+                                <span>{t('title')}</span>
+                            </button>
+                            <button
                                 onClick={() => { signOut({ callbackUrl: '/' }); setShowDropdown(false); }}
                                 className="w-full text-left px-2 py-2 text-sm text-red-500 dark:text-red-400
-                                           hover:bg-card-hover rounded-xl transition-colors duration-200"
+                                           hover:bg-card-hover rounded-xl transition-colors duration-200 flex items-center gap-2"
                             >
-                                Çıkış Yap
+                                <span>🚪</span>
+                                <span>{tAuth('signOut')}</span>
                             </button>
                         </div>
                     </>
@@ -86,7 +100,7 @@ export default function AuthButton() {
                            text-sm font-medium transition-all duration-200 active:scale-95 min-h-[44px]"
             >
                 <span className="text-base">👤</span>
-                <span>Giriş</span>
+                <span>{tAuth('signIn')}</span>
             </button>
 
             <AuthModal isOpen={showModal} onClose={() => setShowModal(false)} />

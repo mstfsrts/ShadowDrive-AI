@@ -3,6 +3,7 @@
 // ─── /dashboard/courses/[categorySlug] — Subcategory or Course List ───
 
 import { useParams, useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import ThemeToggle from '@/components/ThemeToggle';
 import { useCoursesContext } from '../../_contexts/CoursesContext';
 import { slugToCategory, subcategoryToSlug } from '@/lib/slugs';
@@ -12,14 +13,16 @@ export default function CategoryPage() {
     const { categorySlug } = useParams<{ categorySlug: string }>();
     const router = useRouter();
     const { courses } = useCoursesContext();
+    const tc = useTranslations('courses');
+    const tCommon = useTranslations('common');
 
     const categoryName = slugToCategory(categorySlug);
     if (!categoryName) {
         return (
             <main className="min-h-dvh flex flex-col items-center justify-center px-4">
-                <p className="text-foreground-secondary text-lg">Kategori bulunamadı</p>
+                <p className="text-foreground-secondary text-lg">{tCommon('error')}</p>
                 <button onClick={() => router.push('/dashboard/courses')} className="mt-4 text-emerald-500 underline min-h-[44px] flex items-center">
-                    Kurslara Dön
+                    {tCommon('back')}
                 </button>
             </main>
         );
@@ -88,7 +91,7 @@ export default function CategoryPage() {
                 <span className="text-5xl">{meta?.emoji ?? '📂'}</span>
                 <div>
                     <h1 className="text-2xl font-bold text-foreground">{categoryName}</h1>
-                    <p className="text-foreground-secondary text-sm mt-1">{meta?.description}</p>
+                    <p className="text-foreground-secondary text-sm mt-1">{meta?.descriptionKey ? tc(meta.descriptionKey as 'delftseDesc' | 'goedDesc') : ''}</p>
                 </div>
             </div>
 

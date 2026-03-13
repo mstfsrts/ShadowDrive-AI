@@ -7,6 +7,7 @@ export type {
     Scenario,
     PlaybackPhase,
     PlaybackStatus,
+    RecognitionResult,
 
     // CEFR levels
     CEFRLevel,
@@ -26,6 +27,12 @@ export type {
     FavoriteRecord,
     CourseRecord,
     LessonRecord,
+
+    // Pronunciation & Progress
+    PronunciationAttemptData,
+    LessonReportData,
+    ProfileStats,
+    UserGoalData,
 
     // API response wrappers
     ApiError,

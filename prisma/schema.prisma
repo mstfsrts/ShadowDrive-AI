@@ -28,10 +28,14 @@ model User {
 
   accounts      Account[]
   sessions      Session[]
-  progress      Progress[]
-  scenarios     GeneratedScenario[]
-  favorites     Favorite[]
-  customLessons CustomLesson[]
+  progress               Progress[]
+  scenarios              GeneratedScenario[]
+  favorites              Favorite[]
+  customLessons          CustomLesson[]
+  pronunciationAttempts  PronunciationAttempt[]
+  lessonReports          LessonReport[]
+  dailyActivities        DailyActivity[]
+  goal                   UserGoal?
 }
 
 model Account {
@@ -162,4 +166,65 @@ model CustomLesson {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+// ─── Pronunciation & Progress Tracking ────────────────────────────────────────
+
+model PronunciationAttempt {
+  id           String   @id @default(cuid())
+  userId       String
+  lessonType   String   // "course" | "ai" | "custom"
+  lessonId     String
+  lessonTitle  String
+  lineIndex    Int
+  targetText   String
+  transcript   String
+  score        Float    // 0.0 - 1.0
+  correct      Boolean
+  recordingUrl String?
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, lessonId])
+  @@index([userId, createdAt])
+}
+
+model LessonReport {
+  id           String   @id @default(cuid())
+  userId       String
+  lessonType   String   // "course" | "ai" | "custom"
+  lessonId     String
+  lessonTitle  String
+  totalLines   Int
+  correctCount Int
+  averageScore Float
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, lessonId])
+  @@index([userId, createdAt])
+}
+
+model DailyActivity {
+  id              String   @id @default(cuid())
+  userId          String
+  date            DateTime @db.Date
+  lessonsCount    Int      @default(0)
+  practiceMinutes Int      @default(0)
+  createdAt       DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+}
+
+model UserGoal {
+  id           String @id @default(cuid())
+  userId       String @unique
+  dailyTarget  Int    @default(2)
+  weeklyTarget Int    @default(10)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

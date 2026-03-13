@@ -1,6 +1,10 @@
+"use client";
+
 import { useState } from "react";
+import * as React from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 interface EmailAuthFormProps {
     redirectAfterLogin?: string;
@@ -11,6 +15,7 @@ type AuthMode = "signin" | "register" | "forgot-password";
 
 export default function EmailAuthForm({ redirectAfterLogin, onSuccess }: EmailAuthFormProps) {
     const router = useRouter();
+    const t = useTranslations('auth');
     const [mode, setMode] = useState<AuthMode>("signin");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -35,12 +40,12 @@ export default function EmailAuthForm({ redirectAfterLogin, onSuccess }: EmailAu
                 });
                 const data = await res.json();
                 if (!res.ok) {
-                    setError(data.error || "Şifre sıfırlama talebi başarısız.");
+                    setError(data.error || t('resetFail'));
                 } else {
-                    setSuccessMsg(data.message || "Şifre sıfırlama bağlantısı e-postanıza gönderildi.");
+                    setSuccessMsg(data.message || t('resetSuccess'));
                 }
             } catch {
-                setError("Bağlantı hatası.");
+                setError(t('connectionError'));
             } finally {
                 setLoading(false);
             }
@@ -55,7 +60,7 @@ export default function EmailAuthForm({ redirectAfterLogin, onSuccess }: EmailAu
             });
             const data = await res.json();
             if (!res.ok) {
-                setError(data.error || "Kayıt başarısız.");
+                setError(data.error || t('registerFail'));
                 setLoading(false);
                 return;
             }
@@ -69,7 +74,7 @@ export default function EmailAuthForm({ redirectAfterLogin, onSuccess }: EmailAu
         });
 
         if (result?.error) {
-            setError(mode === "register" ? "Kayıt başarılı ancak giriş yapılamadı." : "E-posta veya şifre hatalı.");
+            setError(mode === "register" ? t('registerSuccessLoginFail') : t('loginFail'));
             setLoading(false);
         } else {
             if (onSuccess) onSuccess();
@@ -85,7 +90,7 @@ export default function EmailAuthForm({ redirectAfterLogin, onSuccess }: EmailAu
                 {mode === "register" && (
                     <input
                         type="text"
-                        placeholder="Adın"
+                        placeholder={t('name')}
                         value={name}
                         onChange={e => setName(e.target.value)}
                         className="w-full px-4 py-4 rounded-2xl bg-card-hover border border-border
@@ -96,7 +101,7 @@ export default function EmailAuthForm({ redirectAfterLogin, onSuccess }: EmailAu
 
                 <input
                     type="email"
-                    placeholder="E-posta"
+                    placeholder={t('email')}
                     value={email}
                     onChange={e => setEmail(e.target.value)}
                     required
@@ -109,7 +114,7 @@ export default function EmailAuthForm({ redirectAfterLogin, onSuccess }: EmailAu
                     <div className="relative">
                         <input
                             type={showPassword ? "text" : "password"}
-                            placeholder="Şifre (en az 8 karakter)"
+                            placeholder={t('password')}
                             value={password}
                             onChange={e => setPassword(e.target.value)}
                             required
@@ -123,7 +128,7 @@ export default function EmailAuthForm({ redirectAfterLogin, onSuccess }: EmailAu
                             onClick={() => setShowPassword(v => !v)}
                             className="absolute right-4 top-1/2 -translate-y-1/2 text-foreground-muted
                                        hover:text-foreground transition-colors"
-                            aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
+                            aria-label={showPassword ? t('hidePassword') : t('showPassword')}
                         >
                             {showPassword ? (
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -151,7 +156,13 @@ export default function EmailAuthForm({ redirectAfterLogin, onSuccess }: EmailAu
                                hover:bg-emerald-400 active:scale-[0.98] transition-all duration-300
                                disabled:opacity-50 mt-1 shadow-lg shadow-emerald-500/20"
                 >
-                    {loading ? "Lütfen bekleyin..." : mode === "signin" ? "Giriş Yap" : mode === "register" ? "Hesap Oluştur" : "Sıfırlama Bağlantısı Gönder"}
+                    {loading
+                        ? t('pleaseWait')
+                        : mode === "signin"
+                            ? t('signIn')
+                            : mode === "register"
+                                ? t('register')
+                                : t('resetLink')}
                 </button>
             </form>
 
@@ -167,7 +178,7 @@ export default function EmailAuthForm({ redirectAfterLogin, onSuccess }: EmailAu
                             }}
                             className="text-foreground-secondary text-sm hover:text-foreground transition-colors duration-200"
                         >
-                            Şifremi unuttum
+                            {t('forgotPassword')}
                         </button>
                         <button
                             onClick={() => {
@@ -177,7 +188,7 @@ export default function EmailAuthForm({ redirectAfterLogin, onSuccess }: EmailAu
                             }}
                             className="text-foreground-secondary text-sm hover:text-foreground transition-colors duration-200 mt-2"
                         >
-                            Hesabın yok mu? <span className="text-emerald-500 font-semibold">Kaydol</span>
+                            {t('noAccount')} <span className="text-emerald-500 font-semibold">{t('signUp')}</span>
                         </button>
                     </>
                 ) : (
@@ -189,13 +200,10 @@ export default function EmailAuthForm({ redirectAfterLogin, onSuccess }: EmailAu
                         }}
                         className="text-foreground-secondary text-sm hover:text-foreground transition-colors duration-200"
                     >
-                        Zaten hesabın var mı? <span className="text-emerald-500 font-semibold">Giriş yap</span>
+                        {t('hasAccount')} <span className="text-emerald-500 font-semibold">{t('logIn')}</span>
                     </button>
                 )}
             </div>
         </React.Fragment>
     );
 }
-
-// React import trick for fragment (Since we don't have global React imported here)
-import * as React from "react";
