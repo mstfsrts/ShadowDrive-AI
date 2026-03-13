@@ -23,6 +23,9 @@ else
     if ! npx prisma migrate deploy --schema=./prisma/schema.prisma 2>&1; then
         echo "⚠️  Migration failed (see error above), continuing..."
     fi
+
+    echo "🔄 Ensuring all tables exist (fallback)..."
+    node ./prisma/ensure-tables.cjs || echo "⚠️  ensure-tables failed, continuing..."
 fi
 cd /app
 
