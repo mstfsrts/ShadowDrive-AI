@@ -43,6 +43,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/frontend/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/frontend/.next/static ./frontend/.next/static
 
 # Prisma schema + migrations + compiled seed
+COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/backend/prisma ./backend/prisma
 
 # Prisma CLI + engine binaries (needed for migrate deploy in entrypoint)
