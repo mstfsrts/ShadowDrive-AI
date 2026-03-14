@@ -161,6 +161,23 @@
     "subtitle": "Select your preferred app language",
     "confirm": "Continue"
   },
+  "pronunciation": {
+    "title": "My Pronunciation",
+    "avgScore": "Avg Score",
+    "successRate": "Success",
+    "totalAttempts": "Total",
+    "allCorrect": "All pronunciations correct! Great job.",
+    "critical": "Failed Pronunciations",
+    "needsRetry": "Needs Retry",
+    "startPractice": "Listen & Repeat",
+    "listening": "Listening...",
+    "speakNow": "Speak now!",
+    "getReady": "Get ready...",
+    "youSaid": "You said",
+    "tryAgain": "Try Again",
+    "done": "Done",
+    "skip": "Skip"
+  },
   "settings": {
     "title": "Settings",
     "loginRequired": "Sign in to view settings",

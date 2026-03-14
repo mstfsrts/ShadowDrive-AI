@@ -8,6 +8,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import type { ProfileStats, UserGoalData } from "@/types/dialogue";
+import PronunciationCard from "@/components/PronunciationCard";
 
 interface RecentLesson {
     lessonType: string;
@@ -220,6 +221,9 @@ export default function ProfilePage() {
                     </div>
                 </section>
             )}
+
+            {/* Pronunciation Tracking */}
+            <PronunciationCard />
         </div>
         </main>
     );

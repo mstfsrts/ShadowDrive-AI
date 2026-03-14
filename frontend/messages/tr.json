@@ -161,6 +161,23 @@
     "subtitle": "Uygulama dilinizi seçin",
     "confirm": "Devam Et"
   },
+  "pronunciation": {
+    "title": "Telaffuz Durumum",
+    "avgScore": "Ort. Skor",
+    "successRate": "Başarı",
+    "totalAttempts": "Toplam",
+    "allCorrect": "Tüm telaffuzlar doğru! Harika gidiyorsun.",
+    "critical": "Hatalı Telaffuzlar",
+    "needsRetry": "Tekrar Gerekli",
+    "startPractice": "Dinle ve Tekrar Et",
+    "listening": "Dinleniyor...",
+    "speakNow": "Şimdi söyleyin!",
+    "getReady": "Hazır olun...",
+    "youSaid": "Söylediğiniz",
+    "tryAgain": "Tekrar Dene",
+    "done": "Tamam",
+    "skip": "Geç"
+  },
   "settings": {
     "title": "Ayarlar",
     "loginRequired": "Ayarları görmek için giriş yapın",
