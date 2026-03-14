@@ -175,6 +175,15 @@ model CustomLesson {
   @@index([userId])
 }
 
+// ─── System Configuration ─────────────────────────────────────────────────────
+
+model SystemConfig {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
 // ─── Pronunciation & Progress Tracking ────────────────────────────────────────
 
 model PronunciationAttempt {
