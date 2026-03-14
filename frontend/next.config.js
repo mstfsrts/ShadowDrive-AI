@@ -18,6 +18,15 @@ const BACKEND_URL = process.env.BACKEND_URL ?? "";
 const PROXY_ROUTES = ["/api/courses", "/api/progress", "/api/ai-lessons", "/api/custom-lessons"];
 
 const nextConfig = {
+    images: {
+        remotePatterns: [
+            {
+                protocol: "https",
+                hostname: "lh3.googleusercontent.com",
+            },
+        ],
+    },
+
     // ─── Standalone output for Docker/Dokploy ───
     output: "standalone",
 

@@ -103,6 +103,7 @@ export default function PlayPage() {
             <AudioPlayer
                 scenario={playData.scenario}
                 startFromIndex={playData.startFromIndex}
+                enablePronunciation={true}
                 onComplete={handleComplete}
                 onBack={handleBack}
             />

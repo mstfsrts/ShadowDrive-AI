@@ -109,8 +109,8 @@ function UserAvatar() {
 export default function AppHeader() {
     const pathname = usePathname();
 
-    // Hide header on landing page (has its own header)
-    if (pathname === '/') return null;
+    // Hide header on landing page and admin dashboard (has its own header)
+    if (pathname === '/' || pathname?.startsWith('/admin')) return null;
 
     return (
         <>

@@ -4,7 +4,7 @@
 
 import './openrouter';
 import './gemini';
-// Future: import './anthropic';
-// Future: import './openai';
+import './anthropic';
+import './openai';
 
 export { generateWithProviders, getConfiguredProvider, getConfiguredProviders } from '@/lib/ai-provider';

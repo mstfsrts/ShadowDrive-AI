@@ -54,7 +54,7 @@ providers.push(
             const valid = await bcrypt.compare(password, user.passwordHash);
             if (!valid) return null;
 
-            return { id: user.id, email: user.email, name: user.name, image: user.image };
+            return { id: user.id, email: user.email, name: user.name, image: user.image, role: user.role };
         },
     })
 );
@@ -65,12 +65,26 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     providers,
     callbacks: {
         jwt({ token, user }) {
-            if (user?.id) token.id = user.id;
+            if (user) {
+                token.id = user.id;
+                
+                // Read from ENV to dynamically grant Admin rights
+                if (
+                    user.email && 
+                    process.env.ADMIN_EMAIL && 
+                    user.email.toLowerCase() === process.env.ADMIN_EMAIL.toLowerCase()
+                ) {
+                    token.role = 'ADMIN';
+                } else {
+                    token.role = user.role || 'USER';
+                }
+            }
             return token;
         },
         session({ session, token }) {
             if (token.id && session.user) {
                 session.user.id = token.id as string;
+                session.user.role = token.role as string;
             }
             return session;
         },

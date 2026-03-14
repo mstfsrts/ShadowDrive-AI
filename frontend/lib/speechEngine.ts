@@ -273,6 +273,11 @@ export async function* playScenario(
             } catch {
                 return;
             }
+
+            // Phase D1 Auto-Advance: If score >= 70%, skip retry phases and move directly to next line
+            if (result.supported && result.score >= 0.70) {
+                continue;
+            }
         } else {
             // Legacy behavior: timed silence
             yield {

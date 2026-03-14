@@ -11,6 +11,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  USER
+  ADMIN
+}
+
 // ─── Auth.js required models ───────────────────────────────────────────────
 
 model User {
@@ -22,6 +27,7 @@ model User {
   passwordHash  String?
   resetToken       String?
   resetTokenExpiry DateTime?
+  role          UserRole  @default(USER)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -103,6 +109,7 @@ model GeneratedScenario {
   title     String?
   level     String
   content   Json
+  provider  String?  @default("openrouter")
 
   createdAt DateTime @default(now())
 

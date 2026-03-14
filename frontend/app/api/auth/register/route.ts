@@ -49,10 +49,11 @@ export async function POST(req: NextRequest) {
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
+    const role = process.env.ADMIN_EMAIL && email.toLowerCase() === process.env.ADMIN_EMAIL.toLowerCase() ? 'ADMIN' : 'USER';
 
     const user = await prisma.user.create({
-        data: { email, name: name || null, passwordHash },
-        select: { id: true, email: true, name: true },
+        data: { email, name: name || null, passwordHash, role },
+        select: { id: true, email: true, name: true, role: true },
     });
 
     return NextResponse.json({ user }, { status: 201 });

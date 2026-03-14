@@ -239,3 +239,25 @@ Already deployed: PostgreSQL, Valkey, ShadowDrive app
   - Orange list (41-69%): tekrar gerekli
   - Click phrase -> SinglePhrasePractice opens -> practice -> correct -> removed from list
   - Daily/weekly/monthly success percentages visible
+
+## Phase D: Admin Panel, Voice-First Optimization & LLM Abstraction
+
+### Sub-task D1: Voice-First & Hands-Free Constraints
+- Update `AudioPlayer` flow: TTS -> Auto-Mic -> Score -> Auto-Next/Retry without screen interaction.
+- Maximize touch targets for driving/cycling context.
+- Improve high-contrast visibility.
+
+### Sub-task D2: LLM Service Abstraction
+- Create generic interface for text generation.
+- Decouple OpenRouter from core logic.
+- Prepare provider infrastructure for OpenAI, Anthropic, Gemini.
+
+### Sub-task D3: Admin Dashboard Structure
+- Add `role` enum to User schema (`USER`, `ADMIN`).
+- Implement `/admin` protected route group.
+- Create dashboard for platform stats (DAU, total lessons).
+- Create User Management view with pagination.
+
+### Sub-task D4: API Preparation for React Native (Expo)
+- Standardize all AI interactions as robust REST API endpoints.
+- Abstract auth patterns for seamless JWT or Native mapping.
