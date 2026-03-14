@@ -4,7 +4,7 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import ThemeToggle from '@/components/ThemeToggle';
+
 import { useCoursesContext } from '../../_contexts/CoursesContext';
 import { slugToCategory, subcategoryToSlug } from '@/lib/slugs';
 import { CATEGORY_META, SUBCATEGORY_META } from '../../_constants';
@@ -36,16 +36,7 @@ export default function CategoryPage() {
     if (subcategories.length === 0) {
         // Show courses directly (same as subcategory page)
         return (
-            <main className="min-h-dvh flex flex-col px-4 py-8 max-w-lg mx-auto">
-                <div className="flex items-center justify-between mb-6">
-                    <button
-                        onClick={() => router.push('/dashboard/courses')}
-                        className="flex items-center gap-2 text-foreground-secondary hover:text-foreground transition-colors text-sm min-h-[44px]"
-                    >
-                        <span>←</span> Geri
-                    </button>
-                    <ThemeToggle />
-                </div>
+            <main className="min-h-dvh flex flex-col px-4 py-6 max-w-lg mx-auto">
                 <div className="flex items-center gap-4 mb-8">
                     <span className="text-5xl">{meta?.emoji ?? '📂'}</span>
                     <div>
@@ -76,17 +67,7 @@ export default function CategoryPage() {
 
     // Show subcategory list
     return (
-        <main className="min-h-dvh flex flex-col px-4 py-8 max-w-lg mx-auto">
-            <div className="flex items-center justify-between mb-6">
-                <button
-                    onClick={() => router.push('/dashboard/courses')}
-                    className="flex items-center gap-2 text-foreground-secondary hover:text-foreground transition-colors text-sm min-h-[44px]"
-                >
-                    <span>←</span> Geri
-                </button>
-                <ThemeToggle />
-            </div>
-
+        <main className="min-h-dvh flex flex-col px-4 py-6 max-w-lg mx-auto">
             <div className="flex items-center gap-4 mb-8">
                 <span className="text-5xl">{meta?.emoji ?? '📂'}</span>
                 <div>

@@ -79,13 +79,16 @@ export default function LandingPage() {
                 </button>
 
                 {/* Guest — Ghost */}
-                <button
-                    onClick={() => router.replace("/dashboard")}
-                    className="w-full mt-3 py-3 text-foreground-secondary hover:text-foreground text-sm
-                               transition-colors duration-200"
-                >
-                    {t('guestContinue')}
-                </button>
+                <div className="flex flex-col items-center gap-1.5 mt-3">
+                    <button
+                        onClick={() => router.replace("/dashboard")}
+                        className="py-3 text-foreground-secondary hover:text-foreground text-sm
+                                   transition-colors duration-200"
+                    >
+                        {t('guestContinue')}
+                    </button>
+                    <p className="text-foreground-faint text-xs">{t('guestWarning')}</p>
+                </div>
             </section>
 
             {/* ── Features ───────────────────────────────────── */}

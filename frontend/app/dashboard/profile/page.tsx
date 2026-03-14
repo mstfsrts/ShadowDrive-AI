@@ -5,7 +5,6 @@
 
 import { useSession } from "next-auth/react";
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import type { ProfileStats, UserGoalData } from "@/types/dialogue";
 
@@ -19,7 +18,6 @@ interface RecentLesson {
 
 export default function ProfilePage() {
     const { data: session } = useSession();
-    const router = useRouter();
     const t = useTranslations('profile');
     const [stats, setStats] = useState<ProfileStats | null>(null);
     const [goals, setGoals] = useState<UserGoalData | null>(null);
@@ -72,8 +70,8 @@ export default function ProfilePage() {
 
     if (!session?.user) {
         return (
-            <main className="min-h-dvh flex flex-col px-4 py-8 max-w-lg mx-auto">
-                <ProfileHeader onBack={() => router.back()} title={t('title')} />
+            <main className="min-h-dvh flex flex-col px-4 py-6 max-w-lg mx-auto">
+                <h1 className="text-xl font-bold text-foreground mb-6">{t('title')}</h1>
                 <div className="flex flex-col items-center justify-center py-20">
                     <span className="text-5xl mb-4">👤</span>
                     <p className="text-foreground-secondary text-lg text-center">
@@ -86,8 +84,8 @@ export default function ProfilePage() {
 
     if (loading) {
         return (
-            <main className="min-h-dvh flex flex-col px-4 py-8 max-w-lg mx-auto">
-                <ProfileHeader onBack={() => router.back()} title={t('title')} />
+            <main className="min-h-dvh flex flex-col px-4 py-6 max-w-lg mx-auto">
+                <h1 className="text-xl font-bold text-foreground mb-6">{t('title')}</h1>
                 <div className="flex items-center justify-center py-20">
                     <div className="w-8 h-8 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
                 </div>
@@ -98,8 +96,8 @@ export default function ProfilePage() {
     const user = session.user;
 
     return (
-        <main className="min-h-dvh flex flex-col px-4 py-8 max-w-lg mx-auto">
-        <ProfileHeader onBack={() => router.back()} title={t('title')} />
+        <main className="min-h-dvh flex flex-col px-4 py-6 max-w-lg mx-auto">
+        <h1 className="text-xl font-bold text-foreground mb-6">{t('title')}</h1>
         <div className="flex flex-col gap-6 pb-8">
             {/* User Info Card */}
             <section className="bg-card border border-border/50 rounded-2xl p-5">
@@ -214,23 +212,6 @@ export default function ProfilePage() {
 }
 
 // ─── Sub Components ───
-
-function ProfileHeader({ onBack, title }: { onBack: () => void; title: string }) {
-    return (
-        <div className="flex items-center gap-3 mb-6">
-            <button
-                onClick={onBack}
-                className="flex items-center justify-center w-10 h-10 rounded-xl
-                           bg-card border border-border hover:border-border-hover
-                           text-foreground-secondary hover:text-foreground
-                           transition-all duration-200 active:scale-95"
-            >
-                ←
-            </button>
-            <h1 className="text-xl font-bold text-foreground">{title}</h1>
-        </div>
-    );
-}
 
 function StatCard({ value, label, icon }: { value: number | string; label: string; icon: string }) {
     return (

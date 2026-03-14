@@ -3,6 +3,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { ThemeProvider } from "@/lib/theme";
 import { Providers } from "./providers";
+import AppHeader from "@/components/AppHeader";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -73,7 +74,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <body className="bg-background text-foreground antialiased" suppressHydrationWarning>
                 <NextIntlClientProvider messages={messages}>
                     <Providers>
-                        <ThemeProvider>{children}</ThemeProvider>
+                        <ThemeProvider>
+                            <AppHeader />
+                            {children}
+                        </ThemeProvider>
                     </Providers>
                 </NextIntlClientProvider>
             </body>

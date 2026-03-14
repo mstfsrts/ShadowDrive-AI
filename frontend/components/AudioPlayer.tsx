@@ -166,7 +166,7 @@ export default function AudioPlayer({ scenario, startFromIndex = 0, enablePronun
     }, [stopPlayback, onBack]);
 
     return (
-        <div className="flex flex-col items-center justify-between min-h-dvh py-8 px-4 select-none">
+        <div className="flex flex-col items-center justify-between min-h-dvh py-8 px-4 select-none max-w-lg mx-auto w-full">
             {/* Status Bar */}
             <StatusBar phase={phase} lineIndex={currentStatus?.lineIndex ?? 0} totalLines={currentStatus?.totalLines ?? scenario.lines.length} />
 

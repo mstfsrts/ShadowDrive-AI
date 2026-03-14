@@ -5,7 +5,7 @@
 import { useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import ThemeToggle from '@/components/ThemeToggle';
+
 import ResumePromptModal from '@/components/ResumePromptModal';
 import { useCoursesContext } from '../../../../_contexts/CoursesContext';
 import { useToastContext } from '../../../../_contexts/ToastContext';
@@ -120,7 +120,7 @@ export default function CourseDetailPage() {
     }
 
     return (
-        <main className="min-h-dvh flex flex-col px-4 py-8 max-w-lg mx-auto">
+        <main className="min-h-dvh flex flex-col px-4 py-6 max-w-lg mx-auto">
             {resumeState && (
                 <ResumePromptModal
                     title={resumeState.title}
@@ -131,17 +131,7 @@ export default function CourseDetailPage() {
                 />
             )}
 
-            <div className="flex items-center justify-between mb-6">
-                <button
-                    onClick={() => router.push(`/dashboard/courses/${categorySlug}/${subcategorySlug}`)}
-                    className="flex items-center gap-2 text-foreground-secondary hover:text-foreground transition-colors text-sm min-h-[44px]"
-                >
-                    <span>←</span> Geri
-                </button>
-                <ThemeToggle />
-            </div>
-
-            <div className="flex items-center gap-4 mb-8">
+            <div className="flex items-center gap-4 mb-6">
                 <span className="text-5xl">{course.emoji}</span>
                 <div>
                     <h1 className="text-2xl font-bold text-foreground">{course.title}</h1>

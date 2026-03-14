@@ -3,7 +3,7 @@
 // ─── /dashboard/courses/[categorySlug]/[subcategorySlug] — Course List ───
 
 import { useParams, useRouter } from 'next/navigation';
-import ThemeToggle from '@/components/ThemeToggle';
+
 import { useCoursesContext } from '../../../_contexts/CoursesContext';
 import { slugToCategory, slugToSubcategory } from '@/lib/slugs';
 import { CATEGORY_META, SUBCATEGORY_META } from '../../../_constants';
@@ -36,17 +36,7 @@ export default function SubcategoryPage() {
     const subMeta = subcategoryName ? SUBCATEGORY_META[subcategoryName] : null;
 
     return (
-        <main className="min-h-dvh flex flex-col px-4 py-8 max-w-lg mx-auto">
-            <div className="flex items-center justify-between mb-6">
-                <button
-                    onClick={() => router.push(`/dashboard/courses/${categorySlug}`)}
-                    className="flex items-center gap-2 text-foreground-secondary hover:text-foreground transition-colors text-sm min-h-[44px]"
-                >
-                    <span>←</span> Geri
-                </button>
-                <ThemeToggle />
-            </div>
-
+        <main className="min-h-dvh flex flex-col px-4 py-6 max-w-lg mx-auto">
             <div className="flex items-center gap-4 mb-8">
                 <span className="text-5xl">{subMeta?.emoji ?? meta?.emoji ?? '📂'}</span>
                 <div>

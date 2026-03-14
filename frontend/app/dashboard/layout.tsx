@@ -3,51 +3,15 @@
 // ─── ShadowDrive AI — Dashboard Layout ───
 // Wraps all /dashboard/* pages with:
 // - ToastProvider + CoursesProvider (shared state)
-// - Header (AuthButton + ThemeToggle + branding)
-// - Tab bar (URL-based: Kurslar | AI | Metnim)
-// Header + tabs are shown only on main tab pages; drill-down pages render their own navigation.
+// - Tab bar (URL-based: Kurslar | AI | Metnim) — shown only on main tab pages
+// Global header (AppHeader) is rendered in root layout.
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import AuthButton from '@/components/AuthButton';
-import ThemeToggle from '@/components/ThemeToggle';
-import { LanguageSwitcher } from '@/components/LanguageSelector';
 import { ToastProvider } from './_contexts/ToastContext';
 import { CoursesProvider } from './_contexts/CoursesContext';
 import { DASHBOARD_TABS } from './_constants';
-
-// ─── Dashboard Header ───
-
-function DashboardHeader() {
-    const t = useTranslations('dashboard');
-    return (
-        <>
-            <div className="flex items-center justify-between gap-2 mb-6">
-                <div className="flex-shrink-0 min-w-[44px]">
-                    <AuthButton />
-                </div>
-                <div className="flex items-center gap-2">
-                    <LanguageSwitcher />
-                    <ThemeToggle />
-                </div>
-            </div>
-
-            <div className="flex flex-col items-center mb-8">
-                <div className="mb-3 text-5xl">🚗</div>
-                <h1 className="text-3xl sm:text-4xl font-black tracking-tight mb-2">
-                    <span className="text-gradient">Shadow</span>
-                    <span className="text-foreground">Drive</span>
-                    <span className="text-foreground-muted font-light ml-2 text-xl align-middle">AI</span>
-                </h1>
-                <p className="text-foreground-secondary text-center text-base max-w-xs leading-relaxed">
-                    {t('subtitle')}
-                </p>
-                <div className="mt-4 w-16 h-1 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-300 opacity-60" />
-            </div>
-        </>
-    );
-}
 
 // ─── Tab Switcher (URL-based) ───
 
@@ -74,7 +38,7 @@ function TabSwitcher({ activeTab }: { activeTab: string }) {
     );
 }
 
-// ─── Main tab page paths (show header + tabs only here) ───
+// ─── Main tab page paths (show tabs only here) ───
 const TAB_PATHS = DASHBOARD_TABS.map(t => t.href);
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -86,13 +50,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <ToastProvider>
             <CoursesProvider>
                 {isTabPage ? (
-                    <main className="min-h-dvh flex flex-col px-4 py-8 max-w-lg mx-auto">
-                        <DashboardHeader />
+                    <main className="min-h-dvh flex flex-col px-4 py-6 max-w-lg mx-auto">
                         <TabSwitcher activeTab={activeTab} />
                         {children}
                     </main>
                 ) : (
-                    // Drill-down pages (category, course-detail, etc.) render their own layout
                     children
                 )}
             </CoursesProvider>

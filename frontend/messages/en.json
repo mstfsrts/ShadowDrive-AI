@@ -18,6 +18,7 @@
     "googleSignIn": "Start with Google",
     "emailSignIn": "Sign In / Register with Email",
     "guestContinue": "Continue without signing in →",
+    "guestWarning": "Your progress won't be saved",
     "feature1Title": "Hands-Free",
     "feature1Desc": "No need to look at the screen",
     "feature2Title": "AI-Powered",
