@@ -5,6 +5,7 @@
 
 import { useSession } from "next-auth/react";
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import type { ProfileStats, UserGoalData } from "@/types/dialogue";
 
@@ -18,6 +19,7 @@ interface RecentLesson {
 
 export default function ProfilePage() {
     const { data: session } = useSession();
+    const router = useRouter();
     const t = useTranslations('profile');
     const [stats, setStats] = useState<ProfileStats | null>(null);
     const [goals, setGoals] = useState<UserGoalData | null>(null);
@@ -113,10 +115,22 @@ export default function ProfilePage() {
                             👤
                         </div>
                     )}
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                         <p className="text-foreground font-bold text-lg truncate">{user.name || t('defaultUser')}</p>
                         <p className="text-foreground-muted text-sm truncate">{user.email}</p>
                     </div>
+                    <button
+                        onClick={() => router.push('/dashboard/profile/settings')}
+                        className="flex items-center justify-center w-10 h-10 rounded-xl
+                                   bg-card-hover border border-border/50 text-foreground-muted
+                                   hover:text-foreground hover:border-border-hover transition-all"
+                        title={t('settingsTitle') || 'Settings'}
+                    >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="3" />
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                        </svg>
+                    </button>
                 </div>
             </section>
 

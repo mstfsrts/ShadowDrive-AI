@@ -64,14 +64,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     session: { strategy: 'jwt' },
     providers,
     callbacks: {
-        jwt({ token, user }) {
+        async jwt({ token, user, trigger }) {
             if (user) {
                 token.id = user.id;
-                
+                token.name = user.name;
+                token.picture = user.image;
+
                 // Read from ENV to dynamically grant Admin rights
                 if (
-                    user.email && 
-                    process.env.ADMIN_EMAIL && 
+                    user.email &&
+                    process.env.ADMIN_EMAIL &&
                     user.email.toLowerCase() === process.env.ADMIN_EMAIL.toLowerCase()
                 ) {
                     token.role = 'ADMIN';
@@ -79,6 +81,31 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                     token.role = user.role || 'USER';
                 }
             }
+
+            // Refresh user data from DB when session is updated (e.g., after name change)
+            if (trigger === 'update' && token.id) {
+                const prisma = getPrisma();
+                if (prisma) {
+                    const freshUser = await prisma.user.findUnique({
+                        where: { id: token.id as string },
+                        select: { name: true, image: true, role: true },
+                    });
+                    if (freshUser) {
+                        token.name = freshUser.name;
+                        token.picture = freshUser.image;
+                        if (
+                            token.email &&
+                            process.env.ADMIN_EMAIL &&
+                            (token.email as string).toLowerCase() === process.env.ADMIN_EMAIL.toLowerCase()
+                        ) {
+                            token.role = 'ADMIN';
+                        } else {
+                            token.role = freshUser.role || 'USER';
+                        }
+                    }
+                }
+            }
+
             return token;
         },
         session({ session, token }) {

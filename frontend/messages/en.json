@@ -11,7 +11,8 @@
     "retry": "Retry",
     "free": "Free",
     "adFree": "Ad-free",
-    "noDataStored": "No data stored"
+    "noDataStored": "No data stored",
+    "saving": "Saving..."
   },
   "landing": {
     "tagline": "Turn hours in traffic into language learning. Zero screen.",
@@ -128,7 +129,8 @@
     "goalDetermined": "Determined",
     "goalTip": "Even 1 lesson a day makes a difference. Research shows regular short practice is more effective than long marathons.",
     "recentLessons": "Recent Lessons",
-    "noData": "No pronunciation data found. Your browser may not support speech recognition."
+    "noData": "No pronunciation data found. Your browser may not support speech recognition.",
+    "settingsTitle": "Settings"
   },
   "goals": {
     "exceeded": "You crushed it! {count} lessons completed — your target was {target}!",
@@ -158,5 +160,27 @@
     "title": "Choose Language",
     "subtitle": "Select your preferred app language",
     "confirm": "Continue"
+  },
+  "settings": {
+    "title": "Settings",
+    "loginRequired": "Sign in to view settings",
+    "displayName": "Display Name",
+    "namePlaceholder": "Enter your name",
+    "nameSaved": "Name updated successfully",
+    "saveFailed": "Failed to save",
+    "settingsTitle": "Settings",
+    "changePassword": "Change Password",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm new password",
+    "passwordMinLength": "Password must be at least 8 characters",
+    "passwordMismatch": "Passwords do not match",
+    "passwordChanged": "Password changed successfully",
+    "updatePassword": "Update Password",
+    "dangerZone": "Danger Zone",
+    "deleteWarning": "Deleting your account is irreversible. All your data (progress, pronunciation records, goals) will be permanently deleted.",
+    "typeDelete": "Type DELETE to confirm",
+    "deleteAccount": "Delete Account",
+    "deleteFailed": "Failed to delete account"
   }
 }

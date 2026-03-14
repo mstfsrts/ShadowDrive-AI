@@ -11,7 +11,8 @@
     "retry": "Tekrar Dene",
     "free": "Ücretsiz",
     "adFree": "Reklamsız",
-    "noDataStored": "Veri saklanmaz"
+    "noDataStored": "Veri saklanmaz",
+    "saving": "Kaydediliyor..."
   },
   "landing": {
     "tagline": "Trafikte geçen saatleri dil öğrenmeye dönüştür. Sıfır ekran.",
@@ -128,7 +129,8 @@
     "goalDetermined": "Kararlı",
     "goalTip": "Günde sadece 1 ders bile fark yaratır. Araştırmalar, düzenli kısa pratiklerin uzun maratonlardan daha etkili olduğunu gösteriyor.",
     "recentLessons": "Son Dersler",
-    "noData": "Telaffuz verisi bulunamadı. Tarayıcınız ses tanımayı desteklemiyor olabilir."
+    "noData": "Telaffuz verisi bulunamadı. Tarayıcınız ses tanımayı desteklemiyor olabilir.",
+    "settingsTitle": "Ayarlar"
   },
   "goals": {
     "exceeded": "🔥 Bugün kendini aştın! {count} ders tamamladın — hedefin {target} idi!",
@@ -158,5 +160,27 @@
     "title": "Dil Seçin",
     "subtitle": "Uygulama dilinizi seçin",
     "confirm": "Devam Et"
+  },
+  "settings": {
+    "title": "Ayarlar",
+    "loginRequired": "Ayarları görmek için giriş yapın",
+    "displayName": "Görünen Ad",
+    "namePlaceholder": "Adınızı girin",
+    "nameSaved": "Ad başarıyla güncellendi",
+    "saveFailed": "Kaydetme başarısız oldu",
+    "settingsTitle": "Ayarlar",
+    "changePassword": "Şifre Değiştir",
+    "currentPassword": "Mevcut şifre",
+    "newPassword": "Yeni şifre",
+    "confirmPassword": "Yeni şifre (tekrar)",
+    "passwordMinLength": "Şifre en az 8 karakter olmalı",
+    "passwordMismatch": "Şifreler eşleşmiyor",
+    "passwordChanged": "Şifre başarıyla değiştirildi",
+    "updatePassword": "Şifreyi Güncelle",
+    "dangerZone": "Tehlikeli Bölge",
+    "deleteWarning": "Hesabınızı silmek geri alınamaz. Tüm verileriniz (ilerleme, telaffuz kayıtları, hedefler) kalıcı olarak silinecektir.",
+    "typeDelete": "Onaylamak için DELETE yazın",
+    "deleteAccount": "Hesabı Sil",
+    "deleteFailed": "Hesap silme başarısız oldu"
   }
 }
