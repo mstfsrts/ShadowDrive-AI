@@ -13,6 +13,7 @@ import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import ThemeToggle from './ThemeToggle';
 import { LanguageSwitcher } from './LanguageSelector';
+import { clearBackendToken } from '@/lib/backendFetch';
 
 function UserAvatar() {
     const { data: session, status } = useSession();
@@ -78,7 +79,7 @@ function UserAvatar() {
                                 <span>{t('title')}</span>
                             </button>
                             <button
-                                onClick={() => { signOut({ callbackUrl: '/' }); setShowDropdown(false); }}
+                                onClick={() => { clearBackendToken(); signOut({ callbackUrl: '/' }); setShowDropdown(false); }}
                                 className="w-full text-left px-2 py-2 text-sm text-red-500 dark:text-red-400
                                            hover:bg-card-hover rounded-xl transition-colors duration-200 flex items-center gap-2"
                             >

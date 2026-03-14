@@ -5,6 +5,7 @@ import * as React from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { clearBackendToken } from "@/lib/backendFetch";
 
 interface EmailAuthFormProps {
     redirectAfterLogin?: string;
@@ -77,6 +78,7 @@ export default function EmailAuthForm({ redirectAfterLogin, onSuccess }: EmailAu
             setError(mode === "register" ? t('registerSuccessLoginFail') : t('loginFail'));
             setLoading(false);
         } else {
+            clearBackendToken();
             if (onSuccess) onSuccess();
             if (redirectAfterLogin) {
                 router.replace(redirectAfterLogin);

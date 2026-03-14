@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { clearBackendToken } from "@/lib/backendFetch";
 
 const STORAGE_KEY = 'shadowdrive_google_auth_done';
 
@@ -19,6 +20,8 @@ export default function GoogleSignInButton({ redirectAfterLogin = "/dashboard", 
             if (event.key === STORAGE_KEY && event.newValue) {
                 setIsGoogleLoading(false);
                 localStorage.removeItem(STORAGE_KEY);
+                // Clear stale backend JWT so fresh token is fetched for new user
+                clearBackendToken();
                 // Refresh server components to pick up the new session cookie
                 router.refresh();
                 router.replace(redirectAfterLogin);
@@ -34,6 +37,7 @@ export default function GoogleSignInButton({ redirectAfterLogin = "/dashboard", 
             if (event.data?.type === 'google-auth-success') {
                 setIsGoogleLoading(false);
                 localStorage.removeItem(STORAGE_KEY);
+                clearBackendToken();
                 router.refresh();
                 router.replace(redirectAfterLogin);
             }
