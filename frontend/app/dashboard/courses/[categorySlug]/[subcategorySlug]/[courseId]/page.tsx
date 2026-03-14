@@ -22,7 +22,7 @@ const COLOR_MAP: Record<string, string> = {
 };
 
 export default function CourseDetailPage() {
-    const { categorySlug, subcategorySlug, courseId } = useParams<{
+    const { courseId } = useParams<{
         categorySlug: string;
         subcategorySlug: string;
         courseId: string;
