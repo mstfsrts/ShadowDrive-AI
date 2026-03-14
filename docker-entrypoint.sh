@@ -98,80 +98,87 @@ else
         echo "--- Found $APPLIED_COUNT applied migrations"
     fi
 
-    if [ "$NEED_BASELINE" = "true" ]; then
-        # ─── Safety: create missing tables/types before baselining ───
-        echo "--- Ensuring all tables exist (IF NOT EXISTS safety)..."
-        node -e "
-          const {PrismaClient}=require('@prisma/client');
-          const p=new PrismaClient();
-          (async()=>{
-            try {
-              await p.\$executeRawUnsafe(\`
-                DO \\\$\\\$ BEGIN
-                  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'UserRole') THEN
-                    CREATE TYPE \"UserRole\" AS ENUM ('USER', 'ADMIN');
-                  END IF;
-                END \\\$\\\$;
-                ALTER TABLE \"User\" ADD COLUMN IF NOT EXISTS \"role\" \"UserRole\" NOT NULL DEFAULT 'USER';
-                CREATE TABLE IF NOT EXISTS \"PronunciationAttempt\" (
-                  \"id\" TEXT NOT NULL, \"userId\" TEXT NOT NULL, \"lessonType\" TEXT NOT NULL,
-                  \"lessonId\" TEXT NOT NULL, \"lessonTitle\" TEXT NOT NULL, \"lineIndex\" INTEGER NOT NULL,
-                  \"targetText\" TEXT NOT NULL, \"transcript\" TEXT NOT NULL, \"score\" DOUBLE PRECISION NOT NULL,
-                  \"correct\" BOOLEAN NOT NULL, \"recordingUrl\" TEXT,
-                  \"createdAt\" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                  CONSTRAINT \"PronunciationAttempt_pkey\" PRIMARY KEY (\"id\")
-                );
-                CREATE TABLE IF NOT EXISTS \"LessonReport\" (
-                  \"id\" TEXT NOT NULL, \"userId\" TEXT NOT NULL, \"lessonType\" TEXT NOT NULL,
-                  \"lessonId\" TEXT NOT NULL, \"lessonTitle\" TEXT NOT NULL, \"totalLines\" INTEGER NOT NULL,
-                  \"correctCount\" INTEGER NOT NULL, \"averageScore\" DOUBLE PRECISION NOT NULL,
-                  \"createdAt\" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                  CONSTRAINT \"LessonReport_pkey\" PRIMARY KEY (\"id\")
-                );
-                CREATE TABLE IF NOT EXISTS \"DailyActivity\" (
-                  \"id\" TEXT NOT NULL, \"userId\" TEXT NOT NULL, \"date\" DATE NOT NULL,
-                  \"lessonsCount\" INTEGER NOT NULL DEFAULT 0, \"practiceMinutes\" INTEGER NOT NULL DEFAULT 0,
-                  \"createdAt\" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                  CONSTRAINT \"DailyActivity_pkey\" PRIMARY KEY (\"id\")
-                );
-                CREATE TABLE IF NOT EXISTS \"UserGoal\" (
-                  \"id\" TEXT NOT NULL, \"userId\" TEXT NOT NULL,
-                  \"dailyTarget\" INTEGER NOT NULL DEFAULT 2, \"weeklyTarget\" INTEGER NOT NULL DEFAULT 10,
-                  CONSTRAINT \"UserGoal_pkey\" PRIMARY KEY (\"id\")
-                );
-                CREATE INDEX IF NOT EXISTS \"PronunciationAttempt_userId_lessonId_idx\" ON \"PronunciationAttempt\"(\"userId\", \"lessonId\");
-                CREATE INDEX IF NOT EXISTS \"PronunciationAttempt_userId_createdAt_idx\" ON \"PronunciationAttempt\"(\"userId\", \"createdAt\");
-                CREATE INDEX IF NOT EXISTS \"LessonReport_userId_lessonId_idx\" ON \"LessonReport\"(\"userId\", \"lessonId\");
-                CREATE INDEX IF NOT EXISTS \"LessonReport_userId_createdAt_idx\" ON \"LessonReport\"(\"userId\", \"createdAt\");
-                CREATE UNIQUE INDEX IF NOT EXISTS \"DailyActivity_userId_date_key\" ON \"DailyActivity\"(\"userId\", \"date\");
-                CREATE UNIQUE INDEX IF NOT EXISTS \"UserGoal_userId_key\" ON \"UserGoal\"(\"userId\");
-                DO \\\$\\\$ BEGIN
-                  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'PronunciationAttempt_userId_fkey') THEN
-                    ALTER TABLE \"PronunciationAttempt\" ADD CONSTRAINT \"PronunciationAttempt_userId_fkey\"
-                      FOREIGN KEY (\"userId\") REFERENCES \"User\"(\"id\") ON DELETE CASCADE ON UPDATE CASCADE;
-                  END IF;
-                  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'LessonReport_userId_fkey') THEN
-                    ALTER TABLE \"LessonReport\" ADD CONSTRAINT \"LessonReport_userId_fkey\"
-                      FOREIGN KEY (\"userId\") REFERENCES \"User\"(\"id\") ON DELETE CASCADE ON UPDATE CASCADE;
-                  END IF;
-                  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'DailyActivity_userId_fkey') THEN
-                    ALTER TABLE \"DailyActivity\" ADD CONSTRAINT \"DailyActivity_userId_fkey\"
-                      FOREIGN KEY (\"userId\") REFERENCES \"User\"(\"id\") ON DELETE CASCADE ON UPDATE CASCADE;
-                  END IF;
-                  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'UserGoal_userId_fkey') THEN
-                    ALTER TABLE \"UserGoal\" ADD CONSTRAINT \"UserGoal_userId_fkey\"
-                      FOREIGN KEY (\"userId\") REFERENCES \"User\"(\"id\") ON DELETE CASCADE ON UPDATE CASCADE;
-                  END IF;
-                END \\\$\\\$;
-              \`);
-              console.log('--- Safety SQL complete: all tables ensured');
-            } catch(e) {
-              console.log('--- WARNING: Safety SQL error: ' + e.message);
-            }
-            await p.\$disconnect();
-          })();
-        " 2>&1
+    # ─── Step 2.5: Ensure all tables/columns exist (runs EVERY deploy) ───
+    echo "--- Ensuring all tables exist (IF NOT EXISTS safety)..."
+    node -e "
+      const {PrismaClient}=require('@prisma/client');
+      const p=new PrismaClient();
+      (async()=>{
+        try {
+          await p.\$executeRawUnsafe(\`
+            DO \\\$\\\$ BEGIN
+              IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'UserRole') THEN
+                CREATE TYPE \"UserRole\" AS ENUM ('USER', 'ADMIN');
+              END IF;
+            END \\\$\\\$;
+            ALTER TABLE \"User\" ADD COLUMN IF NOT EXISTS \"role\" \"UserRole\" NOT NULL DEFAULT 'USER';
+            CREATE TABLE IF NOT EXISTS \"PronunciationAttempt\" (
+              \"id\" TEXT NOT NULL, \"userId\" TEXT NOT NULL, \"lessonType\" TEXT NOT NULL,
+              \"lessonId\" TEXT NOT NULL, \"lessonTitle\" TEXT NOT NULL, \"lineIndex\" INTEGER NOT NULL,
+              \"targetText\" TEXT NOT NULL, \"transcript\" TEXT NOT NULL, \"score\" DOUBLE PRECISION NOT NULL,
+              \"correct\" BOOLEAN NOT NULL, \"recordingUrl\" TEXT,
+              \"createdAt\" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              CONSTRAINT \"PronunciationAttempt_pkey\" PRIMARY KEY (\"id\")
+            );
+            CREATE TABLE IF NOT EXISTS \"LessonReport\" (
+              \"id\" TEXT NOT NULL, \"userId\" TEXT NOT NULL, \"lessonType\" TEXT NOT NULL,
+              \"lessonId\" TEXT NOT NULL, \"lessonTitle\" TEXT NOT NULL, \"totalLines\" INTEGER NOT NULL,
+              \"correctCount\" INTEGER NOT NULL, \"averageScore\" DOUBLE PRECISION NOT NULL,
+              \"createdAt\" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              CONSTRAINT \"LessonReport_pkey\" PRIMARY KEY (\"id\")
+            );
+            CREATE TABLE IF NOT EXISTS \"DailyActivity\" (
+              \"id\" TEXT NOT NULL, \"userId\" TEXT NOT NULL, \"date\" DATE NOT NULL,
+              \"lessonsCount\" INTEGER NOT NULL DEFAULT 0, \"practiceMinutes\" INTEGER NOT NULL DEFAULT 0,
+              \"createdAt\" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              CONSTRAINT \"DailyActivity_pkey\" PRIMARY KEY (\"id\")
+            );
+            CREATE TABLE IF NOT EXISTS \"UserGoal\" (
+              \"id\" TEXT NOT NULL, \"userId\" TEXT NOT NULL,
+              \"dailyTarget\" INTEGER NOT NULL DEFAULT 2, \"weeklyTarget\" INTEGER NOT NULL DEFAULT 10,
+              CONSTRAINT \"UserGoal_pkey\" PRIMARY KEY (\"id\")
+            );
+            CREATE TABLE IF NOT EXISTS \"SystemConfig\" (
+              \"id\" TEXT NOT NULL, \"key\" TEXT NOT NULL, \"value\" JSONB NOT NULL,
+              \"updatedAt\" TIMESTAMP(3) NOT NULL,
+              CONSTRAINT \"SystemConfig_pkey\" PRIMARY KEY (\"id\")
+            );
+            CREATE INDEX IF NOT EXISTS \"PronunciationAttempt_userId_lessonId_idx\" ON \"PronunciationAttempt\"(\"userId\", \"lessonId\");
+            CREATE INDEX IF NOT EXISTS \"PronunciationAttempt_userId_createdAt_idx\" ON \"PronunciationAttempt\"(\"userId\", \"createdAt\");
+            CREATE INDEX IF NOT EXISTS \"LessonReport_userId_lessonId_idx\" ON \"LessonReport\"(\"userId\", \"lessonId\");
+            CREATE INDEX IF NOT EXISTS \"LessonReport_userId_createdAt_idx\" ON \"LessonReport\"(\"userId\", \"createdAt\");
+            CREATE UNIQUE INDEX IF NOT EXISTS \"DailyActivity_userId_date_key\" ON \"DailyActivity\"(\"userId\", \"date\");
+            CREATE UNIQUE INDEX IF NOT EXISTS \"UserGoal_userId_key\" ON \"UserGoal\"(\"userId\");
+            CREATE UNIQUE INDEX IF NOT EXISTS \"SystemConfig_key_key\" ON \"SystemConfig\"(\"key\");
+            DO \\\$\\\$ BEGIN
+              IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'PronunciationAttempt_userId_fkey') THEN
+                ALTER TABLE \"PronunciationAttempt\" ADD CONSTRAINT \"PronunciationAttempt_userId_fkey\"
+                  FOREIGN KEY (\"userId\") REFERENCES \"User\"(\"id\") ON DELETE CASCADE ON UPDATE CASCADE;
+              END IF;
+              IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'LessonReport_userId_fkey') THEN
+                ALTER TABLE \"LessonReport\" ADD CONSTRAINT \"LessonReport_userId_fkey\"
+                  FOREIGN KEY (\"userId\") REFERENCES \"User\"(\"id\") ON DELETE CASCADE ON UPDATE CASCADE;
+              END IF;
+              IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'DailyActivity_userId_fkey') THEN
+                ALTER TABLE \"DailyActivity\" ADD CONSTRAINT \"DailyActivity_userId_fkey\"
+                  FOREIGN KEY (\"userId\") REFERENCES \"User\"(\"id\") ON DELETE CASCADE ON UPDATE CASCADE;
+              END IF;
+              IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'UserGoal_userId_fkey') THEN
+                ALTER TABLE \"UserGoal\" ADD CONSTRAINT \"UserGoal_userId_fkey\"
+                  FOREIGN KEY (\"userId\") REFERENCES \"User\"(\"id\") ON DELETE CASCADE ON UPDATE CASCADE;
+              END IF;
+            END \\\$\\\$;
+          \`);
+          console.log('--- Safety SQL complete: all tables ensured');
+        } catch(e) {
+          console.log('--- WARNING: Safety SQL error: ' + e.message);
+        }
+        await p.\$disconnect();
+      })();
+    " 2>&1
 
+    # ─── Step 3: Baseline if needed ───
+    if [ "$NEED_BASELINE" = "true" ]; then
         # ─── Dynamic baselining: resolve all migration directories ───
         echo "--- Baselining all existing migrations..."
         for dir in ./backend/prisma/migrations/*/; do
@@ -182,7 +189,7 @@ else
         echo "--- Baseline complete — all existing migrations marked as applied"
     fi
 
-    # ─── Step 3: Run pending migrations ───
+    # ─── Step 4: Run pending migrations ───
     echo "--- Running prisma migrate deploy..."
     if $PRISMA_CLI migrate deploy $SCHEMA_FLAG 2>&1; then
         echo "--- Migrations applied successfully"
