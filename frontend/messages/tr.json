@@ -88,7 +88,8 @@
     "restartSubtitle": "İlerlemeniz sıfırlanacak ve ders en baştan başlayacak.",
     "restartButton": "Başa Dön",
     "cancel": "İptal",
-    "back": "Geri"
+    "back": "Geri",
+    "micDenied": "Mikrofon izni verilmedi. Telaffuz değerlendirmesi olmadan, sadece dinleme modunda devam ediliyor."
   },
   "lessons": {
     "deleteConfirmTitle": "Bu dersi silmek istediğinize emin misiniz?",

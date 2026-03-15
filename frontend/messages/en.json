@@ -88,7 +88,8 @@
     "restartSubtitle": "Your progress will be reset and the lesson will start from the beginning.",
     "restartButton": "Restart",
     "cancel": "Cancel",
-    "back": "Back"
+    "back": "Back",
+    "micDenied": "Microphone permission denied. Continuing in listen-only mode without pronunciation feedback."
   },
   "lessons": {
     "deleteConfirmTitle": "Are you sure you want to delete this lesson?",

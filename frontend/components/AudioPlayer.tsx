@@ -10,6 +10,7 @@ import { Scenario, PlaybackStatus, PlaybackPhase, RecognitionResult } from "@/ty
 import { playScenario, cancelSpeech, type PronunciationOptions } from "@/lib/speechEngine";
 import { requestMicPermission, releaseMic, type RecordingResult } from "@/lib/audioRecorder";
 import { unlockAudio } from "@/lib/soundEffects";
+import { requestWakeLock, releaseWakeLock, setupWakeLockReacquisition } from "@/lib/wakeLock";
 import { isSpeechRecognitionSupported } from "@/lib/speechRecognition";
 import StatusBar from "./StatusBar";
 import ConfirmModal from "./ConfirmModal";
@@ -41,6 +42,7 @@ export default function AudioPlayer({ scenario, startFromIndex = 0, enablePronun
     const [showRestartConfirm, setShowRestartConfirm] = useState(false);
     const [lastRecognitionResult, setLastRecognitionResult] = useState<RecognitionResult | null>(null);
     const [micGranted, setMicGranted] = useState(false);
+    const [micDeniedNotice, setMicDeniedNotice] = useState(false);
 
     const abortControllerRef = useRef<AbortController | null>(null);
     const isPlayingRef = useRef(false);
@@ -55,6 +57,9 @@ export default function AudioPlayer({ scenario, startFromIndex = 0, enablePronun
         }
     }, [startFromIndex]);
 
+    // Wake lock: keep screen on during playback, cleanup on unmount
+    const wakeLockCleanupRef = useRef<(() => void) | null>(null);
+
     // Cleanup on unmount
     useEffect(() => {
         return () => {
@@ -65,6 +70,8 @@ export default function AudioPlayer({ scenario, startFromIndex = 0, enablePronun
             }
             abortControllerRef.current?.abort();
             releaseMic();
+            releaseWakeLock();
+            wakeLockCleanupRef.current?.();
             document.body.classList.remove("playback-active");
         };
     }, []);
@@ -83,17 +90,31 @@ export default function AudioPlayer({ scenario, startFromIndex = 0, enablePronun
         // Unlock audio context for sound effects (needs user gesture)
         unlockAudio();
 
+        // Keep screen on during lesson playback (mobile)
+        requestWakeLock();
+        if (!wakeLockCleanupRef.current) {
+            wakeLockCleanupRef.current = setupWakeLockReacquisition();
+        }
+
         // Request mic permission on first start if pronunciation is enabled
+        let micAvailable = micGranted;
         if (enablePronunciation && !micGranted) {
             const granted = await requestMicPermission();
             setMicGranted(granted);
+            micAvailable = granted;
+            if (!granted) {
+                setMicDeniedNotice(true);
+                // Auto-dismiss after 5 seconds
+                setTimeout(() => setMicDeniedNotice(false), 5000);
+            }
         }
 
-        // Build pronunciation options
-        const pronunciationOpts: PronunciationOptions = enablePronunciation
+        // Build pronunciation options — if mic denied, disable recognition+recording
+        // (user still gets timed pause to repeat aloud)
+        const pronunciationOpts: PronunciationOptions = enablePronunciation && micAvailable
             ? {
                 enableRecognition: isSpeechRecognitionSupported(),
-                enableRecording: micGranted,
+                enableRecording: true,
                 onAttempt: (lineIndex, result, recording) => {
                     attemptsRef.current.push({ lineIndex, result, recording });
                     setLastRecognitionResult(result);
@@ -169,6 +190,13 @@ export default function AudioPlayer({ scenario, startFromIndex = 0, enablePronun
         <div className="flex flex-col items-center justify-between min-h-dvh py-8 px-4 select-none max-w-lg mx-auto w-full">
             {/* Status Bar */}
             <StatusBar phase={phase} lineIndex={currentStatus?.lineIndex ?? 0} totalLines={currentStatus?.totalLines ?? scenario.lines.length} />
+
+            {/* Mic denied notice */}
+            {micDeniedNotice && (
+                <div className="w-full max-w-lg mx-auto px-4 py-2 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-400 text-sm text-center animate-fade-in">
+                    {t('micDenied')}
+                </div>
+            )}
 
             {/* Current Phrase Display */}
             <div className="flex-1 flex flex-col items-center justify-center w-full max-w-lg px-4">

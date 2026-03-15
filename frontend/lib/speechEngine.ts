@@ -6,7 +6,7 @@
 import { Scenario, PlaybackStatus, PlaybackPhase, CEFRLevel, RecognitionResult } from "@/types/dialogue";
 import { getBestVoice, getRateForLevel, clearVoiceCache } from "@/lib/voiceSelector";
 import { listenAsync, isSpeechRecognitionSupported } from "@/lib/speechRecognition";
-import { recordAsync, requestMicPermission, type RecordingResult } from "@/lib/audioRecorder";
+import { recordAsync, type RecordingResult } from "@/lib/audioRecorder";
 import { cueUserTurn, cuePronunciationResult, unlockAudio } from "@/lib/soundEffects";
 
 /** Options for pronunciation features in playScenario */
@@ -149,15 +149,27 @@ async function listenAndRecord(
     // Dynamic duration based on sentence length (short 5s → long 15s)
     const listenDurationMs = Math.min(15000, Math.max(5000, targetText.length * 80));
 
-    // Pre-acquire mic stream BEFORE starting recognition + recording in parallel.
-    // On Windows, concurrent getUserMedia calls from SpeechRecognition and
-    // MediaRecorder conflict — one kills the other's stream. By opening the
-    // stream once here, recordAsync reuses it and avoids the clash.
-    if (doRecording || doRecognition) {
-        await requestMicPermission();
+    // When both recognition and recording are active, start them sequentially.
+    // Windows Chrome can't handle SpeechRecognition (OS-level mic) and
+    // getUserMedia (MediaRecorder) simultaneously — one kills the other.
+    // Solution: start recognition first, let it acquire the mic, then start recording.
+    if (doRecognition && doRecording) {
+        const recognitionPromise = listenAsync(targetText, signal, listenDurationMs);
+
+        // Brief delay so SpeechRecognition acquires the mic before MediaRecorder tries
+        await new Promise(r => setTimeout(r, 300));
+
+        const recordingPromise = recordAsync(listenDurationMs - 300, signal)
+            .catch(() => undefined); // Recording failure is non-critical
+
+        const [recognitionResult, recordingResult] = await Promise.all([
+            recognitionPromise,
+            recordingPromise,
+        ]);
+        return { result: recognitionResult, recording: recordingResult };
     }
 
-    // Run recognition and recording in parallel
+    // Only one active — no conflict possible
     const [recognitionResult, recordingResult] = await Promise.all([
         doRecognition
             ? listenAsync(targetText, signal, listenDurationMs)
@@ -208,9 +220,13 @@ export async function* playScenario(
         console.log(`[SpeechEngine] No voice for ${nativeLang} — will show text with timed pause`);
     }
 
-    // iOS: resume speechSynthesis when returning from background
+    // Handle visibility changes: pause TTS when hidden, resume when visible.
+    // iOS/mobile: speechSynthesis stops when backgrounded — pause prevents utterance loss.
     const handleVisibility = () => {
-        if (document.visibilityState === "visible" && typeof window !== "undefined") {
+        if (typeof window === "undefined") return;
+        if (document.visibilityState === "hidden") {
+            window.speechSynthesis.pause();
+        } else if (document.visibilityState === "visible") {
             window.speechSynthesis.resume();
         }
     };
