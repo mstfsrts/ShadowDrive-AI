@@ -5,6 +5,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { auth } from '@/auth';
+import { rateLimit } from '@/lib/rateLimit';
 import { generateWithProviders } from '@/lib/providers';
 import { z } from 'zod';
 import type { CEFRLevel } from '@/types/dialogue';
@@ -157,6 +159,22 @@ JSON STRUCTURE:
 }
 
 export async function POST(request: NextRequest) {
+    // Auth check — prevent unauthenticated AI generation
+    const session = await auth();
+    if (!session?.user?.id) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Rate limit — 10 requests per minute per user
+    const rl = await rateLimit(`generate:${session.user.id}`, 10, 60_000);
+    if (!rl.allowed) {
+        const retryAfter = Math.ceil((rl.resetAt - Date.now()) / 1000);
+        return NextResponse.json(
+            { error: 'Rate limit exceeded. Try again shortly.' },
+            { status: 429, headers: { 'Retry-After': String(retryAfter) } },
+        );
+    }
+
     try {
         // 1. Parse & validate request body
         const body = await request.json();

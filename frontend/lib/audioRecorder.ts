@@ -114,7 +114,6 @@ export async function uploadRecording(
     blob: Blob,
     lessonId: string,
     lineIndex: number,
-    userId: string,
 ): Promise<string | null> {
     try {
         const formData = new FormData();
@@ -122,7 +121,6 @@ export async function uploadRecording(
         formData.append('file', blob, `${lessonId}_line${lineIndex}.${ext}`);
         formData.append('lessonId', lessonId);
         formData.append('lineIndex', String(lineIndex));
-        formData.append('userId', userId);
 
         const res = await fetch('/api/recordings/upload', {
             method: 'POST',

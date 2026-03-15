@@ -146,13 +146,16 @@ async function listenAndRecord(
     const doRecognition = pronunciationOpts.enableRecognition && isSpeechRecognitionSupported();
     const doRecording = pronunciationOpts.enableRecording;
 
+    // Dynamic duration based on sentence length (short 5s → long 15s)
+    const listenDurationMs = Math.min(15000, Math.max(5000, targetText.length * 80));
+
     // Run recognition and recording in parallel
     const [recognitionResult, recordingResult] = await Promise.all([
         doRecognition
-            ? listenAsync(targetText, signal)
+            ? listenAsync(targetText, signal, listenDurationMs)
             : Promise.resolve({ transcript: '', score: 0, correct: false, supported: false } as RecognitionResult),
         doRecording
-            ? recordAsync(8000, signal).catch(() => undefined)
+            ? recordAsync(listenDurationMs, signal).catch(() => undefined)
             : Promise.resolve(undefined),
     ]);
 

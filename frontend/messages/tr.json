@@ -130,7 +130,8 @@
     "goalTip": "Günde sadece 1 ders bile fark yaratır. Araştırmalar, düzenli kısa pratiklerin uzun maratonlardan daha etkili olduğunu gösteriyor.",
     "recentLessons": "Son Dersler",
     "noData": "Telaffuz verisi bulunamadı. Tarayıcınız ses tanımayı desteklemiyor olabilir.",
-    "settingsTitle": "Ayarlar"
+    "settingsTitle": "Ayarlar",
+    "recordings": "Kayıtlarım"
   },
   "goals": {
     "exceeded": "🔥 Bugün kendini aştın! {count} ders tamamladın — hedefin {target} idi!",
@@ -176,7 +177,10 @@
     "youSaid": "Söylediğiniz",
     "tryAgain": "Tekrar Dene",
     "done": "Tamam",
-    "skip": "Geç"
+    "skip": "Geç",
+    "recordings": "Kayıtlarım",
+    "noRecordings": "Henüz kayıt yok. Telaffuz pratiği içeren bir ders tamamladığında kayıtların burada görünecek.",
+    "playRecording": "Kaydı oynat"
   },
   "settings": {
     "title": "Ayarlar",

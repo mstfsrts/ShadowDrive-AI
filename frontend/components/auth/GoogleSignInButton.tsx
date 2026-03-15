@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { clearBackendToken } from "@/lib/backendFetch";
 
@@ -12,37 +12,37 @@ interface GoogleSignInButtonProps {
 
 export default function GoogleSignInButton({ redirectAfterLogin = "/dashboard", label = "Google ile Başla" }: GoogleSignInButtonProps) {
     const router = useRouter();
+    const { update: updateSession } = useSession();
     const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
     // Listen for auth completion via localStorage event (works across tabs reliably)
     const handleStorageChange = useCallback(
-        (event: StorageEvent) => {
+        async (event: StorageEvent) => {
             if (event.key === STORAGE_KEY && event.newValue) {
                 setIsGoogleLoading(false);
                 localStorage.removeItem(STORAGE_KEY);
-                // Clear stale backend JWT so fresh token is fetched for new user
                 clearBackendToken();
-                // Refresh server components to pick up the new session cookie
-                router.refresh();
+                // Explicitly refetch session so useSession() returns fresh data
+                await updateSession();
                 router.replace(redirectAfterLogin);
             }
         },
-        [router, redirectAfterLogin],
+        [router, redirectAfterLogin, updateSession],
     );
 
     // Also listen for postMessage (works when opener is preserved)
     const handleMessage = useCallback(
-        (event: MessageEvent) => {
+        async (event: MessageEvent) => {
             if (event.origin !== window.location.origin) return;
             if (event.data?.type === 'google-auth-success') {
                 setIsGoogleLoading(false);
                 localStorage.removeItem(STORAGE_KEY);
                 clearBackendToken();
-                router.refresh();
+                await updateSession();
                 router.replace(redirectAfterLogin);
             }
         },
-        [router, redirectAfterLogin],
+        [router, redirectAfterLogin, updateSession],
     );
 
     useEffect(() => {

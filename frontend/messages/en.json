@@ -130,7 +130,8 @@
     "goalTip": "Even 1 lesson a day makes a difference. Research shows regular short practice is more effective than long marathons.",
     "recentLessons": "Recent Lessons",
     "noData": "No pronunciation data found. Your browser may not support speech recognition.",
-    "settingsTitle": "Settings"
+    "settingsTitle": "Settings",
+    "recordings": "My Recordings"
   },
   "goals": {
     "exceeded": "You crushed it! {count} lessons completed — your target was {target}!",
@@ -176,7 +177,10 @@
     "youSaid": "You said",
     "tryAgain": "Try Again",
     "done": "Done",
-    "skip": "Skip"
+    "skip": "Skip",
+    "recordings": "My Recordings",
+    "noRecordings": "No recordings yet. Complete a lesson with pronunciation practice to see your recordings here.",
+    "playRecording": "Play recording"
   },
   "settings": {
     "title": "Settings",

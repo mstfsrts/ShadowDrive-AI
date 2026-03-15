@@ -224,6 +224,19 @@ export default function ProfilePage() {
 
             {/* Pronunciation Tracking */}
             <PronunciationCard />
+
+            {/* Recordings Link */}
+            <button
+                onClick={() => router.push('/dashboard/profile/recordings')}
+                className="bg-card border border-border/50 rounded-2xl px-5 py-4 flex items-center justify-between
+                           hover:border-border-hover transition-all w-full text-left"
+            >
+                <div className="flex items-center gap-3">
+                    <span className="text-lg">🎙️</span>
+                    <span className="text-foreground font-medium text-sm">{t('recordings')}</span>
+                </div>
+                <span className="text-foreground-faint text-lg">→</span>
+            </button>
         </div>
         </main>
     );

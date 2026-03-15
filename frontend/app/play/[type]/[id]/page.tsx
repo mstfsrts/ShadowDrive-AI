@@ -2,12 +2,13 @@
 
 // ─── /play/[type]/[id] — Standalone Playback Page ───
 // Reads scenario from sessionStorage. Renders AudioPlayer.
-// On complete/back, saves progress and navigates back.
+// On complete/back, saves progress, pronunciation attempts, and navigates back.
 
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import AudioPlayer from '@/components/AudioPlayer';
+import AudioPlayer, { type PronunciationAttempt } from '@/components/AudioPlayer';
+import LessonReport from '@/components/LessonReport';
 import { ToastContainer, useToast } from '@/components/Toast';
 import { getPlaySession, clearPlaySession } from '@/lib/playSession';
 import {
@@ -15,16 +16,19 @@ import {
     incrementStoredCompletionCount,
 } from '@/lib/resumablePlayback';
 import { backendFetch } from '@/lib/backendFetch';
+import { uploadRecording } from '@/lib/audioRecorder';
 
 export default function PlayPage() {
     const router = useRouter();
     const { data: session } = useSession();
     const { toasts, showToast } = useToast();
     const [playData] = useState(() => getPlaySession());
+    const [reportAttempts, setReportAttempts] = useState<PronunciationAttempt[] | null>(null);
 
-    const handleComplete = useCallback(async () => {
+    const handleComplete = useCallback(async (attempts?: PronunciationAttempt[]) => {
         if (!playData) return;
 
+        // Save course progress
         if (playData.isCourse && session?.user?.id) {
             try {
                 const res = await backendFetch(
@@ -62,6 +66,49 @@ export default function PlayPage() {
                 );
             }
         }
+
+        // Save pronunciation attempts to DB
+        if (attempts && attempts.length > 0 && session?.user?.id) {
+            // Show lesson report
+            setReportAttempts(attempts);
+
+            const lessonId = playData.lessonId || playData.id;
+            const lessonTitle = playData.scenario.title;
+            const lessonType = playData.type as 'course' | 'ai' | 'custom';
+
+            // Upload recordings in parallel (fire-and-forget, errors tolerated)
+            const recordingUrls = await Promise.all(
+                attempts.map(async (a) => {
+                    if (a.recording?.blob) {
+                        return uploadRecording(a.recording.blob, lessonId, a.lineIndex);
+                    }
+                    return null;
+                }),
+            );
+
+            // Save attempts to DB
+            try {
+                await fetch('/api/pronunciation-attempts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        attempts: attempts.map((a, idx) => ({
+                            lessonType,
+                            lessonId,
+                            lessonTitle,
+                            lineIndex: a.lineIndex,
+                            targetText: playData.scenario.lines[a.lineIndex]?.targetText || '',
+                            transcript: a.result.transcript,
+                            score: a.result.score,
+                            correct: a.result.correct,
+                            recordingUrl: recordingUrls[idx] || undefined,
+                        })),
+                    }),
+                });
+            } catch {
+                // Attempt save failure should not block the UI
+            }
+        }
     }, [playData, session, showToast]);
 
     const handleBack = useCallback(async (lastLineIndex: number) => {
@@ -76,6 +123,12 @@ export default function PlayPage() {
         clearPlaySession();
         router.back();
     }, [playData, session, router]);
+
+    const handleReportClose = useCallback(() => {
+        setReportAttempts(null);
+        clearPlaySession();
+        router.back();
+    }, [router]);
 
     // If no session data, show fallback
     if (!playData?.scenario) {
@@ -94,6 +147,17 @@ export default function PlayPage() {
                     Kurslara Dön
                 </button>
             </main>
+        );
+    }
+
+    // Show lesson report after completion
+    if (reportAttempts) {
+        return (
+            <LessonReport
+                lessonTitle={playData.scenario.title}
+                attempts={reportAttempts}
+                onClose={handleReportClose}
+            />
         );
     }
 

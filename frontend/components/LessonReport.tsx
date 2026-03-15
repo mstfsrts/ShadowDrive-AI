@@ -4,6 +4,7 @@
 // Shows pronunciation results after a lesson completes.
 // Displays per-line scores, transcript comparisons, and overall stats.
 
+import { useState, useRef, useEffect } from "react";
 import { type PronunciationAttempt } from "./AudioPlayer";
 
 interface LessonReportProps {
@@ -114,6 +115,45 @@ function LineResult({ attempt }: { attempt: PronunciationAttempt }) {
             ? "text-amber-600 dark:text-amber-400"
             : "text-red-600 dark:text-red-400";
 
+    const [playing, setPlaying] = useState(false);
+    const audioRef = useRef<HTMLAudioElement | null>(null);
+    const urlRef = useRef<string | null>(null);
+
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current.onended = null;
+                audioRef.current = null;
+            }
+            if (urlRef.current) URL.revokeObjectURL(urlRef.current);
+        };
+    }, []);
+
+    const handlePlay = () => {
+        if (!attempt.recording?.blob) return;
+
+        if (playing && audioRef.current) {
+            audioRef.current.pause();
+            setPlaying(false);
+            return;
+        }
+
+        if (!urlRef.current) {
+            urlRef.current = URL.createObjectURL(attempt.recording.blob);
+        }
+
+        // Reuse existing Audio or create once
+        if (!audioRef.current) {
+            audioRef.current = new Audio();
+            audioRef.current.onended = () => setPlaying(false);
+        }
+        audioRef.current.src = urlRef.current;
+        audioRef.current.play();
+        setPlaying(true);
+    };
+
     return (
         <div className="bg-card border border-border/50 rounded-2xl px-4 py-3">
             <div className="flex items-start justify-between gap-3">
@@ -127,9 +167,25 @@ function LineResult({ attempt }: { attempt: PronunciationAttempt }) {
                         </p>
                     )}
                 </div>
-                <span className={`text-sm font-bold ${scoreColor} flex-shrink-0`}>
-                    {Math.round(result.score * 100)}%
-                </span>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className={`text-sm font-bold ${scoreColor}`}>
+                        {Math.round(result.score * 100)}%
+                    </span>
+                    {attempt.recording?.blob && (
+                        <button
+                            onClick={handlePlay}
+                            className="w-7 h-7 flex items-center justify-center rounded-full
+                                       bg-card-hover hover:bg-border/50 transition-colors text-xs"
+                            title={playing ? "Pause" : "Play recording"}
+                        >
+                            {playing ? (
+                                <span className="text-emerald-500">⏸</span>
+                            ) : (
+                                <span className="text-foreground-muted">▶</span>
+                            )}
+                        </button>
+                    )}
+                </div>
             </div>
         </div>
     );
