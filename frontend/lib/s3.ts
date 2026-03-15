@@ -9,8 +9,8 @@ export const BUCKET = process.env.MINIO_BUCKET || 'shadowdrive-recordings';
 
 export function getS3(): S3Client | null {
     const endpoint = process.env.MINIO_ENDPOINT;
-    const accessKey = process.env.MINIO_ACCESS_KEY;
-    const secretKey = process.env.MINIO_SECRET_KEY;
+    const accessKey = process.env.MINIO_ACCESS_KEY || process.env.MINIO_ROOT_USER;
+    const secretKey = process.env.MINIO_SECRET_KEY || process.env.MINIO_ROOT_PASSWORD;
 
     if (!endpoint || !accessKey || !secretKey) return null;
 
@@ -32,8 +32,8 @@ export function getS3(): S3Client | null {
 /** Get S3 client pointing to public endpoint (for presigned download URLs). */
 export function getPublicS3(): S3Client | null {
     const endpoint = process.env.MINIO_PUBLIC_ENDPOINT || process.env.MINIO_ENDPOINT;
-    const accessKey = process.env.MINIO_ACCESS_KEY;
-    const secretKey = process.env.MINIO_SECRET_KEY;
+    const accessKey = process.env.MINIO_ACCESS_KEY || process.env.MINIO_ROOT_USER;
+    const secretKey = process.env.MINIO_SECRET_KEY || process.env.MINIO_ROOT_PASSWORD;
 
     if (!endpoint || !accessKey || !secretKey) return null;
 

@@ -110,11 +110,15 @@ export function recordAsync(
  * Upload a recording blob to the server.
  * Returns the URL of the uploaded file, or null if upload fails.
  */
+let storageUnavailable = false;
+
 export async function uploadRecording(
     blob: Blob,
     lessonId: string,
     lineIndex: number,
 ): Promise<string | null> {
+    if (storageUnavailable) return null;
+
     try {
         const formData = new FormData();
         const ext = blob.type.includes('webm') ? 'webm' : 'mp4';
@@ -127,6 +131,10 @@ export async function uploadRecording(
             body: formData,
         });
 
+        if (res.status === 503) {
+            storageUnavailable = true;
+            return null;
+        }
         if (!res.ok) return null;
         const data = await res.json();
         return data.url ?? null;
