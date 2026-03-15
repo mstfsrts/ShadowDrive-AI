@@ -6,7 +6,7 @@
 import { Scenario, PlaybackStatus, PlaybackPhase, CEFRLevel, RecognitionResult } from "@/types/dialogue";
 import { getBestVoice, getRateForLevel, clearVoiceCache } from "@/lib/voiceSelector";
 import { listenAsync, isSpeechRecognitionSupported } from "@/lib/speechRecognition";
-import { recordAsync, type RecordingResult } from "@/lib/audioRecorder";
+import { recordAsync, requestMicPermission, type RecordingResult } from "@/lib/audioRecorder";
 import { cueUserTurn, cuePronunciationResult, unlockAudio } from "@/lib/soundEffects";
 
 /** Options for pronunciation features in playScenario */
@@ -148,6 +148,14 @@ async function listenAndRecord(
 
     // Dynamic duration based on sentence length (short 5s → long 15s)
     const listenDurationMs = Math.min(15000, Math.max(5000, targetText.length * 80));
+
+    // Pre-acquire mic stream BEFORE starting recognition + recording in parallel.
+    // On Windows, concurrent getUserMedia calls from SpeechRecognition and
+    // MediaRecorder conflict — one kills the other's stream. By opening the
+    // stream once here, recordAsync reuses it and avoids the clash.
+    if (doRecording || doRecognition) {
+        await requestMicPermission();
+    }
 
     // Run recognition and recording in parallel
     const [recognitionResult, recordingResult] = await Promise.all([

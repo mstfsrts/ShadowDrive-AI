@@ -92,6 +92,9 @@ export function listenAsync(
         let settled = false;
         let fullTranscript = '';
         let silenceTimer: ReturnType<typeof setTimeout> | null = null;
+        let hasReceivedResult = false;
+        let restartCount = 0;
+        const MAX_RESTARTS = 2;
 
         const finish = (result: RecognitionResult) => {
             if (settled) return;
@@ -133,6 +136,7 @@ export function listenAsync(
         }
 
         recognition.onresult = (event: SpeechRecognitionEvent) => {
+            hasReceivedResult = true;
             // Build full transcript from all results
             let transcript = '';
             for (let i = 0; i < event.results.length; i++) {
@@ -150,7 +154,13 @@ export function listenAsync(
         };
 
         recognition.onend = () => {
-            // In continuous mode, onend may fire when browser decides to stop.
+            // On Windows Chrome, continuous mode may fire onend immediately
+            // before user speaks. Restart if we haven't received any results yet.
+            if (!hasReceivedResult && !settled && restartCount < MAX_RESTARTS) {
+                restartCount++;
+                try { recognition.start(); } catch { finishWithCurrentTranscript(); }
+                return;
+            }
             // Finish with whatever we have.
             finishWithCurrentTranscript();
         };

@@ -64,10 +64,37 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     session: { strategy: 'jwt' },
     providers,
     callbacks: {
-        async jwt({ token, user, trigger }) {
+        async signIn({ user, account, profile }) {
+            // On Google OAuth, sync the User record's email/name/image with
+            // the Google profile. Prevents stale data when a Google Account
+            // record was linked to the wrong User (e.g. after account deletion
+            // and re-registration).
+            if (account?.provider === 'google' && profile?.email && user?.id) {
+                const prisma = getPrisma();
+                if (prisma) {
+                    try {
+                        await prisma.user.update({
+                            where: { id: user.id },
+                            data: {
+                                email: profile.email,
+                                name: profile.name || user.name,
+                                image: (profile as { picture?: string }).picture || user.image,
+                            },
+                        });
+                    } catch {
+                        // Non-critical — don't block sign-in
+                    }
+                }
+            }
+            return true;
+        },
+        async jwt({ token, user, account, profile, trigger }) {
             if (user) {
                 token.id = user.id;
-                token.email = user.email;
+                // For Google login, use profile email (most up-to-date)
+                token.email = (account?.provider === 'google' && profile?.email)
+                    ? profile.email
+                    : user.email;
                 token.name = user.name;
                 token.picture = user.image;
 
